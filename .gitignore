@@ -1,4 +1,10 @@
-
+# robot specific
+.cache/
+log.html
+output.xml
+report.html
+app-data/
+.coverage
 
 # Cached builds
 __pycache__/
