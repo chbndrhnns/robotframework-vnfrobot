@@ -1,1 +1,1 @@
-from .exceptions import *
+from .exc import *

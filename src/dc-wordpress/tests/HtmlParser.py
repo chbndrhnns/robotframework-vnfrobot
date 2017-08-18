@@ -1,16 +1,14 @@
-import HTMLParser
-import inspect
-import pdb
+# -*- coding: utf-8 -*-
+import cgi
+from string import strip
 
 from bs4 import BeautifulSoup
 from robot.api.deco import keyword
 from robot.api import logger
+import exc
+
 from version import VERSION
 from robotlibcore import DynamicCore
-
-
-class DataError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = True
 
 
 class HtmlParser(DynamicCore):
@@ -22,7 +20,7 @@ class HtmlParser(DynamicCore):
     def __init__(self):
         DynamicCore.__init__(self, [])
 
-        logger.info("Importing {}".format(self.__class__))
+        logger.info(u"Importing {}".format(self.__class__))
 
         self.raw_text = None
         self.soup = None
@@ -34,7 +32,7 @@ class HtmlParser(DynamicCore):
         Returns:
             None
         """
-        logger.info("Running keyword '%s' with arguments %s." % (name, args))
+        logger.info(u"Running keyword '%s' with arguments %s." % (name, args))
         return self.keywords[name](*args, **kwargs)
 
     @keyword('Parse')
@@ -50,12 +48,12 @@ class HtmlParser(DynamicCore):
 
         """
         if html is None:
-            raise DataError('HTM data missing.')
+            raise exc.DataError(u'HTML data missing.')
 
         self.soup = BeautifulSoup(html, 'lxml')
 
-    @keyword('Verify title equals ${title}')
-    def get_title(self, title=None):
+    @keyword(u'Assert that title equals ${title}')
+    def verify_title(self, title=None):
         """
         Checks that the title of a HTML document matches a given string.
 
@@ -67,8 +65,13 @@ class HtmlParser(DynamicCore):
 
         """
         if title is None:
-            raise DataError('Title missing.')
+            raise exc.DataError(u'Title missing.')
 
-        if self.soup.title.string == title:
-            return True
-        return False
+        expected_title = unicode(self.soup.title.string)
+
+        processed_title = title.strip('"')
+        processed_title = unicode(cgi.escape(processed_title))
+
+        if expected_title != processed_title:
+            raise exc.DataError(
+                u"Titles do not match: \n\t'{}' is not '{}'".format(processed_title, expected_title))
