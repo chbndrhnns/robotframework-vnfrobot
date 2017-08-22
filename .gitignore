@@ -6,6 +6,7 @@ report.html
 app-data/
 .coverage
 .env
+utils/gitlab/requirements.txt
 
 # Cached builds
 __pycache__/

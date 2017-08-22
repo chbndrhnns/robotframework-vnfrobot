@@ -72,6 +72,7 @@ class SuiteSetup(DynamicCore):
 
         try:
             # noinspection PyCallingNonCallable
+            logger.debug(u'Using orchestrator type "{}"'.format(self.orchestrator_type))
             self.orchestrator = self.orchestrator_type()
             self.orchestrator.parse_descriptor(project_path)
             self.orchestrator.create_infrastructure()
