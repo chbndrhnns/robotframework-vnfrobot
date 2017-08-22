@@ -20,8 +20,8 @@ pages:
   artifacts:
     paths:
     - public
-  only:
-    - master
+#  only:
+#    - master
 
 
 robot-tests:
