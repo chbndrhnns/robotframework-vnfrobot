@@ -8,14 +8,14 @@ from robot.api import logger
 from mock import patch
 
 from DockerOrchestrator import DockerOrchestrator
-from SuiteSetup import SuiteSetup
+from SuiteTools import SuiteTools
 from exc import SetupError, ConnectionError
 
 
-class SuiteSetupTest(TestCase):
+class SuiteToolsTest(TestCase):
     def setUp(self):
         self.project_base_path = os.path.join(os.getcwd(), 'fixtures/')
-        self.setup_class = SuiteSetup()
+        self.setup_class = SuiteTools()
 
     def test__setup__no_project_path__exception(self):
         # do
@@ -51,7 +51,7 @@ class SuiteSetupTest(TestCase):
             self.setup_class.setup(
                 project_path=os.path.join(self.project_base_path, 'docker-compose-missing-compose-file'))
 
-    @patch('SuiteSetup.os.path.getsize')
+    @patch('SuiteTools.os.path.getsize')
     def test__setup__empty_docker_compose_file__exception(self, getsize):
         # prepare
         getsize.side_effect = [0]
@@ -62,7 +62,7 @@ class SuiteSetupTest(TestCase):
 
         self.assertEqual(getsize.call_count, 1)
 
-    @patch('SuiteSetup.os.path.getsize')
+    @patch('SuiteTools.os.path.getsize')
     def test__setup__empty_dockerfile__exception(self, getsize):
         # prepare
         getsize.side_effect = [127, 0]

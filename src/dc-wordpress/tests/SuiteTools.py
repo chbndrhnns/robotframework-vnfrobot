@@ -14,7 +14,7 @@ from version import VERSION
 from robotlibcore import DynamicCore
 
 
-class SuiteSetup(DynamicCore):
+class SuiteTools(DynamicCore):
     """Setup class that creates or reuses an instance of the virtual infrastructure used to perform the tests."""
 
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
