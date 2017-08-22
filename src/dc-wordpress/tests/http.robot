@@ -4,6 +4,10 @@ HTTP Testcase
 *** Settings ***
 Library     /Users/jo/dev/master/vnf-robot/src/dc-wordpress/tests/HtmlParser.py
 Library     /Users/jo/dev/master/vnf-robot/src/dc-wordpress/tests/HTTP.py
+Library     /Users/jo/dev/master/vnf-robot/src/dc-wordpress/tests/SuiteSetup.py
+
+Suite Setup       Setup test suite  project_path=fixtures/docker-compose
+Suite Teardown    Teardown test suite
 
 
 *** Test Cases ***
