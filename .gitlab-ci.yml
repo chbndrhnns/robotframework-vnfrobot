@@ -11,6 +11,16 @@ cache:
     - "$CI_PROJECT_DIR/pip-cache"
   key: "$CI_PROJECT_ID"
 
+linter:
+  stage: test
+  script:
+  - pip install -U pip setuptools
+  - pip install -r requirements.txt
+  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) rflint *.robot
+  only:
+    - master
+
+
 unit:
   stage: test
   script:

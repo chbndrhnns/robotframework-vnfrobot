@@ -2,6 +2,8 @@ HTTP Testcase
 -------------
 
 *** Settings ***
+Documentation   This suite contains a basic setup that spawns infrastructure using docker-compose
+.. and then performs basics tests.
 Library     HtmlParser.py
 Library     HTTP.py
 Library     SuiteSetup.py
