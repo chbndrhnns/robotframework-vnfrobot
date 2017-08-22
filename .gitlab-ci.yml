@@ -8,6 +8,18 @@ cache:
     - "$CI_PROJECT_DIR/pip-cache"
   key: "$CI_PROJECT_ID"
 
+pages:
+  stage: deploy
+  script:
+  - mkdir .public
+  - cp -r * .public
+  - mv .public public
+  artifacts:
+    paths:
+    - public
+    only:
+    - master
+
 
 robot-tests:
   script:
