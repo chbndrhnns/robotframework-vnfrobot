@@ -11,24 +11,32 @@ cache:
     - "$CI_PROJECT_DIR/pip-cache"
   key: "$CI_PROJECT_ID"
 
-pages:
-  stage: test
-  script:
-  - mkdir .public
-  - cp -r * .public
-  - mv .public public
-  artifacts:
-    paths:
-    - public
-  only:
-    - master
-
-
-robot-tests:
+unit:
   stage: test
   script:
   - pip install -U pip setuptools
   - pip install -r requirements.txt
-  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) robot http.robot
+  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) pytest *Test.py
   only:
-  - master
+    - master
+
+#pages:
+#  stage: test
+#  script:
+#  - mkdir .public
+#  - cp -r * .public
+#  - mv .public public
+#  artifacts:
+#    paths:
+#    - public
+#  only:
+#    - master
+#
+#robot-tests:
+#  stage: test
+#  script:
+#  - pip install -U pip setuptools
+#  - pip install -r requirements.txt
+#  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) robot http.robot
+#  only:
+#  - master
