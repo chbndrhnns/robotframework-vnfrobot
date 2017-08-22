@@ -1,0 +1,7 @@
+image: gliderlabs/alpine:latest
+
+robot-tests:
+  script:
+  - apk-install --update py-pip alpine-sdk g++ python-dev openssl-dev libffi libffi-dev bash git
+  - pip install -r requirements.txt
+  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) robot http.robot
