@@ -2,9 +2,12 @@
 
 
 from unittest import TestCase
+from robot.api import logger
+from mock import patch
 
 from DockerOrchestrator import DockerOrchestrator
-from SuiteSetup import SuiteSetup, SetupError
+from SuiteSetup import SuiteSetup
+from exc import SetupError, ConnectionError
 
 
 class SuiteSetupTest(TestCase):
@@ -21,6 +24,17 @@ class SuiteSetupTest(TestCase):
 
         # check
         self.assertIn('project_path', str(exc.exception))
+
+    @patch('DockerOrchestrator.TopLevelCommand.up')
+    def test__setup__no_connection__exception(self, up_command):
+        # prepare
+        setup_class = SuiteSetup()
+        up_command.side_effect = ConnectionError('Could not connect to url=', ['', 'http'])
+
+        # do
+        with self.assertRaisesRegexp(ConnectionError, 'url='):
+            setup_class.setup(project_path=self.project_path)
+
 
     def test__setup__pass(self):
         # prepare

@@ -57,3 +57,6 @@ class DockerOrchestratorTest(TestCase):
         with self.assertRaises(SetupError):
             self.orchestrator.create_infrastructure()
 
+        # check
+        self.assertEqual(command.call_count, 1)
+

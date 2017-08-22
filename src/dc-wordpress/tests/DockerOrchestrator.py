@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-from compose.cli.errors import ConnectionError
+
+from robot.api import logger
+
+import requests.exceptions
 from compose.cli.main import TopLevelCommand, project_from_options
 
 from Orchestrator import Orchestrator
-from tests import SetupError
+from exc import SetupError, ConnectionError
 
 
 class DockerOrchestrator(Orchestrator):
@@ -56,7 +59,12 @@ class DockerOrchestrator(Orchestrator):
     def create_infrastructure(self):
         try:
             return_code = self.commands.up(options=self.default_options)
+
             if return_code is not 0:
                 raise SetupError('Could not create infrastructure')
-        except ConnectionError as exc:
-            pass
+        except requests.exceptions.ConnectionError as exc:
+            logger.error(u'{}'.format(exc))
+            if 'No such file or directory' in str(exc.message):
+                raise ConnectionError('Could not connect to url={}'.format(exc.request.url), exc)
+            else:
+                raise ConnectionError('Not specified connection error.')

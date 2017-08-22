@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
-
 from robot.api.deco import keyword
 from robot.api import logger
 
 from DockerOrchestrator import DockerOrchestrator
 import settings
-from exc import *
+from exc import ConnectionError, SetupError, DataError
 from version import VERSION
 from robotlibcore import DynamicCore
 
@@ -56,6 +54,10 @@ class SuiteSetup(DynamicCore):
             self.orchestrator = self.orchestrator_type()
             self.orchestrator.parse_descriptor(project_path)
             self.orchestrator.create_infrastructure()
+        except ConnectionError as exc:
+            logger.error(u'Connection error: {}\n\n{}'.format(exc.message, exc.args[1]))
+            raise exc
         except (DataError, SetupError) as exc:
-            raise
+            logger.error(u'Connection error: {}\n\n{}'.format(exc.message, exc.args[1]))
+            raise exc
 
