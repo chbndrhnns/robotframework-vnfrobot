@@ -22,7 +22,7 @@ class UtilsTest(TestCase):
         # check
         self.assertEqual(str(uuid), str(UUID(str(uuid))))
 
-    def test__get_uri_attribute__valid_uris__pass(self):
+    def test__get_url_attribute__valid_uris__pass(self):
         # prep
         uris = {
             'http://www.google.de': {
@@ -44,8 +44,5 @@ class UtilsTest(TestCase):
 
         # do
         for uri, expected in uris.iteritems():
-            ret_val = self.utils.get_uri_attributes(uri)
+            ret_val = self.utils.get_url_attributes(uri)
             self.assertTrue(ret_val == expected)
-
-
-            # check
