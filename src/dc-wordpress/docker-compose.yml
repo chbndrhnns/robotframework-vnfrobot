@@ -1,4 +1,5 @@
 version: '2'
+
 services:
   wordpress:
     image: wordpress:latest # https://hub.docker.com/_/wordpress/

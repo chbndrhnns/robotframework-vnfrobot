@@ -20,8 +20,8 @@ pages:
   artifacts:
     paths:
     - public
-#  only:
-#    - master
+  only:
+    - master
 
 
 robot-tests:
@@ -30,3 +30,5 @@ robot-tests:
   - pip install -U pip setuptools
   - pip install -r requirements.txt
   - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) robot http.robot
+  only:
+  - master
