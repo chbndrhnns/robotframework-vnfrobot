@@ -1,3 +1,6 @@
+stages:
+  - test
+
 image: python:2
 
 variables:
@@ -9,6 +12,7 @@ cache:
   key: "$CI_PROJECT_ID"
   
 pages:
+  stage: test
   script:
   - mkdir .public
   - cp -r * .public
@@ -21,6 +25,7 @@ pages:
 
 
 robot-tests:
+  stage: test
   script:
   - pip install -U pip setuptools
   - pip install -r requirements.txt
