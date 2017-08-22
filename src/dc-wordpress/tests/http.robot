@@ -5,6 +5,9 @@ HTTP Testcase
 Library     /Users/jo/dev/master/vnf-robot/src/dc-wordpress/tests/HtmlParser.py
 Library     /Users/jo/dev/master/vnf-robot/src/dc-wordpress/tests/HTTP.py
 
+Suite Setup       Setup test suite
+Suite Teardown    Teardown Actions
+
 
 *** Test Cases ***
 Check for correct title in HTML file

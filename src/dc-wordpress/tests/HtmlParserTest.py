@@ -8,8 +8,6 @@ from bs4 import BeautifulSoup
 from exc import *
 
 
-
-
 class HtmlParserTest(TestCase):
     valid_html = ['<html><head><title>Test title</title></head><body>Test body</body></html>',
                   '<html><head><title>WordPress &rsaquo; Installation</title><meta http-equiv="Content-Type" '
@@ -51,7 +49,7 @@ class HtmlParserTest(TestCase):
 
             # do
             with self.assertRaises(DataError) as exc:
-                result = self.parser.verify_title(title=expected)
+                self.parser.verify_title(title=expected)
 
                 self.assertIn(expected, exc.value.message)
 
@@ -59,7 +57,6 @@ class HtmlParserTest(TestCase):
         for code in self.valid_html:
             # prep
             self.parser.parse_html(html=code)
-            expected = BeautifulSoup(code, 'lxml').title.string
 
             # do & check
             with self.assertRaises(DataError) as exc:

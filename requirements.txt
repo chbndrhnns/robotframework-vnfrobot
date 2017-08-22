@@ -1,3 +1,5 @@
+python-dotenv==0.6.5
+docker-compose==1.15.0
 requests
 responses==0.7.0
 python-dotenv==0.6.5
