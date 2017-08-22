@@ -46,6 +46,8 @@ class DockerOrchestrator(Orchestrator):
         raise NotImplementedError
 
     def parse_descriptor(self, project_path):
+        logger.debug(u'Parsing descriptor at "{}"'.format(project_path))
+
         self.project = project_from_options(project_dir=project_path, options=self.default_options)
         self.commands = TopLevelCommand(self.project)
 
@@ -58,6 +60,8 @@ class DockerOrchestrator(Orchestrator):
 
     def create_infrastructure(self):
         try:
+            logger.debug(u'Creating infrastructure (this can take a while)...')
+
             return_code = self.commands.up(options=self.default_options)
 
             if return_code is not 0:
