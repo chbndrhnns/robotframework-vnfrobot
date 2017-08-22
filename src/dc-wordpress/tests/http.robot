@@ -6,8 +6,8 @@ Library     HtmlParser.py
 Library     HTTP.py
 Library     SuiteSetup.py
 
-Suite Setup       Setup test suite  project_path=/Users/jo/temp
-Suite Teardown    Teardown test suite
+Suite Setup       Setup test suite  project_path=fixtures/docker-compose
+#Suite Teardown    Teardown test suite
 
 
 *** Test Cases ***
