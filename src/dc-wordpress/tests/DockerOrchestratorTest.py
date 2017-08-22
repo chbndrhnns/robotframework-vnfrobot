@@ -10,7 +10,7 @@ from tests import SetupError
 class DockerOrchestratorTest(TestCase):
     def setUp(self):
         self.orchestrator = DockerOrchestrator()
-        self.project_path = 'fixtures/'
+        self.project_path = 'fixtures/docker-compose'
 
     def test__parse_descriptor__valid_descriptor__pass(self):
         # do

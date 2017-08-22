@@ -61,7 +61,8 @@ class DockerOrchestrator(Orchestrator):
             return_code = self.commands.up(options=self.default_options)
 
             if return_code is not 0:
-                raise SetupError('Could not create infrastructure')
+                if return_code is not None:
+                    raise SetupError('Could not create infrastructure', return_code)
         except requests.exceptions.ConnectionError as exc:
             logger.error(u'{}'.format(exc))
             if 'No such file or directory' in str(exc.message):
