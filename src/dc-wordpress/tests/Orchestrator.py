@@ -1,8 +1,10 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 
 class Orchestrator(object):
     __metaclass__ = ABCMeta
+
+    teardown_levels = ['stop', 'clean', 'destroy']
 
     def __init__(self):
         pass
@@ -35,6 +37,14 @@ class Orchestrator(object):
     def create_infrastructure(self):
         """
         Creates infrastructure according to descriptor using the mechanism of the Orchestrator.
+
+        """
+        raise NotImplementedError('{__name__} must be implemented.'.format(**self.__dict__))
+
+    @abstractmethod
+    def destroy_infrastructure(self):
+        """
+        Destroys infrastructure using the mechanism of the Orchestrator.
 
         """
         raise NotImplementedError('{__name__} must be implemented.'.format(**self.__dict__))

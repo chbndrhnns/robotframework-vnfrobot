@@ -7,14 +7,15 @@ from docker.errors import APIError
 from robot.api.deco import keyword
 from robot.api import logger
 
+from Orchestrator import Orchestrator
 from DockerOrchestrator import DockerOrchestrator
 import settings
-from exc import ConnectionError, SetupError, DataError
+from exc import ConnectionError, SetupError, DataError, TeardownError
 from version import VERSION
 from robotlibcore import DynamicCore
 
 
-class SuiteSetup(DynamicCore):
+class SuiteTools(DynamicCore):
     """Setup class that creates or reuses an instance of the virtual infrastructure used to perform the tests."""
 
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
@@ -26,8 +27,9 @@ class SuiteSetup(DynamicCore):
         DynamicCore.__init__(self, [])
 
         self.orchestrator = None
+        self.project_path = None
         self.orchestrator_type = dict.get(self.orchestrator_mapping, settings.orchestrator)
-        logger.info("Importing {}".format(self.__class__))
+        logger.info(u"Importing {}".format(self.__class__))
 
     def run_keyword(self, name, args, kwargs):
         """
@@ -36,7 +38,7 @@ class SuiteSetup(DynamicCore):
         Returns:
             None
         """
-        logger.info("Running keyword '%s' with arguments %s." % (name, args))
+        logger.info(u"Running keyword '%s' with arguments %s." % (name, args))
         return self.keywords[name](*args, **kwargs)
 
     @keyword('Setup test suite')
@@ -52,16 +54,19 @@ class SuiteSetup(DynamicCore):
 
         """
         # TODO: extract docker-compose-specific checks into DockerOrchestrator
+        logger.debug(u'Checking for arguments: "{}"'.format('project_path'))
         if project_path is None or len(project_path) is 0:
             raise SetupError(u'Missing parameter: project_path')
 
         project_file = 'docker-compose.yml'
+        logger.debug(u'Looking for {}'.format(project_file))
         if not os.path.isfile(os.path.join(project_path, project_file)):
             if not os.path.isfile(os.path.join(project_path, 'docker-compose.yaml')):
                 raise SetupError(u'No docker-compose file found in "{}"'.format(project_path))
             else:
                 project_file = 'docker-compose.yaml'
 
+        logger.debug(u'Looking for Dockerfile')
         if not os.path.isfile(os.path.join(project_path, 'Dockerfile')):
             raise SetupError(u'No Dockerfile found in "{}"'.format(project_path))
 
@@ -69,6 +74,8 @@ class SuiteSetup(DynamicCore):
             raise SetupError(u'docker-compose file must not be empty')
         if os.path.getsize(os.path.join(project_path, 'Dockerfile')) is 0:
             raise SetupError(u'Dockerfile must not be empty')
+
+        self.project_path = project_path
 
         try:
             # noinspection PyCallingNonCallable
@@ -91,4 +98,39 @@ class SuiteSetup(DynamicCore):
         except (DataError, SetupError) as exc:
             logger.error(u'Connection error: {}\n\n{}'.format(exc.message, exc.args[1]))
             raise exc
+
+    @keyword('Teardown test suite')
+    def teardown(self, level='destroy'):
+        """
+        After a test session run is completed, the virtual infrastructure needs to be either
+        - stopped (can be restarted quickly),
+        - cleaned (base images are kept, custom configuration is removed) or
+        - destroyed (base images and custom configuration is removed).
+
+        Args:
+            level (str): level of teardown, one of TearDownLevel
+
+        Returns:
+            None
+
+        """
+        # import pydevd
+        # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
+
+        if level not in Orchestrator.teardown_levels:
+            raise TeardownError(u'Teardown "{}" level not in {}'.format(level, Orchestrator.teardown_levels))
+
+        logger.debug(u'Tearing down with level "{}"'.format(level))
+
+        if self.orchestrator is None:
+            raise TeardownError(u'No orchestrator found.')
+
+        try:
+            self.orchestrator.destroy_infrastructure()
+        except TeardownError as exc:
+            logger.error(u'Teardown Error: {}'.format(exc))
+
+
+
+
 
