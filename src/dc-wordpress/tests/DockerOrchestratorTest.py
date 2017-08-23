@@ -60,3 +60,17 @@ class DockerOrchestratorTest(TestCase):
         # check
         self.assertEqual(command.call_count, 1)
 
+    @patch('DockerOrchestrator.TopLevelCommand.up', return_value=0)
+    @patch('DockerOrchestrator.TopLevelCommand.down', return_value=1)
+    def test__stop_infrastructure__pass(self, down, up):
+        # prepare
+        self.orchestrator.parse_descriptor('fixtures/')
+        self.orchestrator.create_infrastructure()
+        down.return_value = None
+
+        # do
+        self.orchestrator.destroy_infrastructure()
+
+        # check
+        self.assertEqual(up.call_count, 1)
+        self.assertEqual(down.call_count, 1)
