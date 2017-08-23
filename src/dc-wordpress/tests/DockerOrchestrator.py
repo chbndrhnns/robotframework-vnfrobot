@@ -19,7 +19,7 @@ class DockerOrchestrator(Orchestrator):
         "--force-recreate": False,
         "--build": False,
         '--no-build': False,
-        '--no-color': False,
+        '--no-color': True,
         "--rmi": "none",
         "--volumes": "",
         "--follow": False,
@@ -35,12 +35,13 @@ class DockerOrchestrator(Orchestrator):
         "--services": False,
         "--volumes": False,
         "--resolve-image-digests": False,
-        "--quiet": True}
+        "--quiet": True,
+    }
 
     default_down_options = {
         "--rmi": None,
         "--volumes": None,
-        "--remove-orphans": None
+        "--remove-orphans": None,
     }
 
     def __init__(self):
