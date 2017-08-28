@@ -1,0 +1,14 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: echoheaders
+spec:
+  rules:
+  - host: rueschel.de
+    http:
+      paths:
+      - path: /httpbin
+        backend:
+          serviceName: httpbin
+          servicePort: 80

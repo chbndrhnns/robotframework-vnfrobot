@@ -17,6 +17,7 @@ __pycache__/
 *.dll
 *.egg
 *.egg-info/
+.DS_Store
 
 # Build directories
 docs/_build/
