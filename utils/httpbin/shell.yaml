@@ -1,0 +1,11 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+      containers:
+      - name: web
+        image: web:latest
+        tty: true
+        stdin: true
