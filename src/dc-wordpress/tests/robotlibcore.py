@@ -22,6 +22,8 @@ https://github.com/robotframework/PythonLibCore
 import inspect
 import sys
 
+from settings import Settings
+
 try:
     from robot.api.deco import keyword
 except ImportError:  # Support RF < 2.9
@@ -43,6 +45,7 @@ __version__ = '1.0rc2'
 class HybridCore(object):
 
     def __init__(self, library_components):
+        self.settings = Settings()
         self.keywords = {}
         self.add_library_components(library_components)
         self.add_library_components([self])
@@ -90,6 +93,7 @@ class HybridCore(object):
 
 class DynamicCore(HybridCore):
     _get_keyword_tags_supported = False  # get_keyword_tags is new in RF 3.0.2
+    settings = Settings()
 
     def run_keyword(self, name, args, kwargs):
         return self.keywords[name](*args, **kwargs)

@@ -74,3 +74,27 @@ class DockerOrchestratorTest(TestCase):
         # check
         self.assertEqual(up.call_count, 1)
         self.assertEqual(down.call_count, 1)
+
+    # def test__get_instance__unix_socket__pass(self):
+    #     # prepare
+    #
+    #     self.orchestrator.get_instance()
+    #
+    #
+    #     # do
+    #
+    #     # check
+
+    # @patch('DockerOrchestrator.TopLevelCommand.down', return_value=1)
+    # def test__get_instance__docker_mac__pass(self, down):
+    #     # prepare
+    #     self.orchestrator.parse_descriptor('fixtures/')
+    #     self.orchestrator.create_infrastructure()
+    #     down.return_value = None
+    #
+    #     # do
+    #     self.orchestrator.destroy_infrastructure()
+    #
+    #     # check
+    #     self.assertEqual(up.call_count, 1)
+    #     self.assertEqual(down.call_count, 1)

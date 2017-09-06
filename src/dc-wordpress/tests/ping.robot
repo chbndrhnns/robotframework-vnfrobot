@@ -11,7 +11,7 @@ Send And Receive, Return Reply
 *** Keywords ***
 Create ICMP Packet
     [Documentation]  ICMP
-    ${ip}     IP      dst=192.168.1.1
+    ${ip}     IP      dst=8.8.8.8
     ${icmp}    ICMP
     ${PACKET}    Compose Packet    ${ip}    ${icmp}
     Log Packets    ${PACKET}

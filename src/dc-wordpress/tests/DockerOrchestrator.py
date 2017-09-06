@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from compose.cli.docker_client import tls_config_from_options
 from robot.api import logger
 
 import requests.exceptions
@@ -26,7 +26,9 @@ class DockerOrchestrator(Orchestrator):
         "--timestamps": True,
         "--tail": "all",
         "-d": True,
-        "--scale": ""
+        "--scale": "",
+        "--host": None,
+        "--tlsverify": None
     }
 
     default_config_options = {
@@ -44,6 +46,11 @@ class DockerOrchestrator(Orchestrator):
     def __init__(self):
         super(DockerOrchestrator, self).__init__()
 
+        self.default_options['--host'] = self.settings.docker_host
+        # if self.settings.docker_cert_path is not None:
+        #     self.tls_config = tls_config_from_options(self.settings)
+        #     self.tls_config = tls_config_from_options(self.settings)
+
         self.project = None
         self.volumes = None
         self.networks = None
@@ -54,6 +61,16 @@ class DockerOrchestrator(Orchestrator):
         raise NotImplementedError
 
     def parse_descriptor(self, project_path):
+        """
+        Reads a docker-compose.yml file from the given path.
+
+        Args:
+            project_path:
+
+        Returns:
+            None
+
+        """
         logger.console(u'Parsing descriptor at "{}"'.format(project_path))
 
         self.project = project_from_options(project_dir=project_path, options=self.default_options)
@@ -94,3 +111,6 @@ class DockerOrchestrator(Orchestrator):
         except Exception as exc:
             logger.console(exc)
             raise TeardownError(u'')
+
+    def is_docker_host_reachable(self):
+        pass

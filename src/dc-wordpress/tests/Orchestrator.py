@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+from settings import Settings
+
 
 class Orchestrator(object):
     __metaclass__ = ABCMeta
@@ -7,7 +9,7 @@ class Orchestrator(object):
     teardown_levels = ['stop', 'clean', 'destroy']
 
     def __init__(self):
-        pass
+        self.settings = Settings()
 
     @abstractmethod
     def get_instance(self):

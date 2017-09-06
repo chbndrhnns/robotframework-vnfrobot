@@ -4,7 +4,6 @@
 from robot.api.deco import keyword
 from robot.api import logger
 
-import settings
 from Utils import Utils
 from exc import *
 from version import VERSION
@@ -58,4 +57,4 @@ class HTTP(DynamicCore):
         alias = "{}-{}".format(url_params['host'], Utils.generate_uuid())
 
         self.requests_lib.create_session(alias=alias, url=url_params['host'])
-        return self.requests_lib.get_request(alias=alias, uri=url_params['path'], timeout=settings.http_get_timeout)
+        return self.requests_lib.get_request(alias=alias, uri=url_params['path'], timeout=self.settings.http_get_timeout)
