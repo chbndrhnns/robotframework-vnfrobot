@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 
+import docker
 import requests
 from docker.errors import DockerException
 from mock import patch
@@ -108,17 +109,15 @@ class DockerOrchestratorTest(TestCase):
         except DockerException as exc:
             self.fail('get_instance() should not fail with "{}"'.format(exc.__repr__()))
 
+    @patch('DockerOrchestrator.docker.api.daemon.DaemonApiMixin.ping')
+    def test__get_instance__host_unreachable__exception(self, ping):
+        # prepare
+        ping.side_effect = docker.errors.APIError(message='')
+        self.orchestrator.settings.docker['DOCKER_HOST'] = 'unix:///var/run/docker.sock'
 
-    # @patch('DockerOrchestrator.TopLevelCommand.down', return_value=1)
-    # def test__get_instance__docker_mac__pass(self, down):
-    #     # prepare
-    #     self.orchestrator.parse_descriptor('fixtures/')
-    #     self.orchestrator.create_infrastructure()
-    #     down.return_value = None
-    #
-    #     # do
-    #     self.orchestrator.destroy_infrastructure()
-    #
-    #     # check
-    #     self.assertEqual(up.call_count, 1)
-    #     self.assertEqual(down.call_count, 1)
+        # do
+        with self.assertRaises(docker.errors.APIError):
+            self.orchestrator.get_instance()
+
+        # check
+        self.assertEqual(ping.call_count, 1)
