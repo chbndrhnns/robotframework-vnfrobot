@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from compose.cli.docker_client import tls_config_from_options
+import docker
 from robot.api import logger
 
 import requests.exceptions
@@ -46,7 +46,7 @@ class DockerOrchestrator(Orchestrator):
     def __init__(self):
         super(DockerOrchestrator, self).__init__()
 
-        self.default_options['--host'] = self.settings.docker_host
+        self.default_options['--host'] = self.settings.docker['DOCKER_HOST']
         # if self.settings.docker_cert_path is not None:
         #     self.tls_config = tls_config_from_options(self.settings)
         #     self.tls_config = tls_config_from_options(self.settings)
@@ -56,9 +56,11 @@ class DockerOrchestrator(Orchestrator):
         self.networks = None
         self.services = None
         self.commands = None
+        self.docker = None
 
     def get_instance(self):
-        raise NotImplementedError
+        self.docker = docker.from_env(environment=self.settings.docker)
+        self.docker.ping()
 
     def parse_descriptor(self, project_path):
         """

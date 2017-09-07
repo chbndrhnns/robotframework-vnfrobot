@@ -28,7 +28,6 @@ class SuiteTools(DynamicCore):
 
         self.orchestrator = None
         self.project_path = None
-        self.settings = Settings()
         self.orchestrator_type = dict.get(self.orchestrator_mapping, self.settings.orchestrator)
         logger.info(u"Importing {}".format(self.__class__))
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 
+import requests
+from docker.errors import DockerException
 from mock import patch
 
 from DockerOrchestrator import DockerOrchestrator
@@ -75,15 +77,37 @@ class DockerOrchestratorTest(TestCase):
         self.assertEqual(up.call_count, 1)
         self.assertEqual(down.call_count, 1)
 
-    # def test__get_instance__unix_socket__pass(self):
-    #     # prepare
-    #
-    #     self.orchestrator.get_instance()
-    #
-    #
-    #     # do
-    #
-    #     # check
+    @patch('DockerOrchestrator.docker.client.APIClient.get')
+    def test__get_instance__no_explicit_host__pass(self, get):
+        # prepare
+        get.return_value = requests.Response()
+        get.return_value.status = 200
+
+        # do
+        try:
+            self.orchestrator.get_instance()
+        except DockerException as exc:
+            self.fail('get_instance() should not fail with "{}"'.format(exc.__repr__()))
+
+    @patch('DockerOrchestrator.docker.client.APIClient.get')
+    def test__get_instance__explicit_host__pass(self, get):
+        # prepare
+        get.return_value = requests.Response()
+        get.return_value.status = 200
+
+        hosts = [
+            'unix:///var/run/docker.sock',
+            'tcp://128.104.222.48:2376'
+        ]
+
+        # do
+        try:
+            for host in hosts:
+                self.orchestrator.settings.docker['DOCKER_HOST'] = host
+                self.orchestrator.get_instance()
+        except DockerException as exc:
+            self.fail('get_instance() should not fail with "{}"'.format(exc.__repr__()))
+
 
     # @patch('DockerOrchestrator.TopLevelCommand.down', return_value=1)
     # def test__get_instance__docker_mac__pass(self, down):

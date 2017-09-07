@@ -11,9 +11,9 @@ class Settings:
         self.log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
 
         # Docker orchestrator
-        self.docker_host = (os.environ.get('DOCKER_HOST') or 'unix://var/run/docker.sock')
-        self.docker_tls_verify = (os.environ.get('DOCKER_TLS_VERIFY') or '1')
-        self.docker_cert_path = (os.environ.get('DOCKER_CERT_PATH') or '')
+        self.docker = {'DOCKER_HOST': (os.environ.get('DOCKER_HOST') or 'unix://var/run/docker.sock'),
+                       # 'DOCKER_CERT_PATH': (os.environ.get('DOCKER_CERT_PATH') or '')
+                       }
 
         # Library: HTTP
         self.http_get_timeout = (os.environ.get('HTTP_GET_TIMEOUT') or '5.0')
