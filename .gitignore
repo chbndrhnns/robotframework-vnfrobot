@@ -1,4 +1,5 @@
 # robot specific
+.DS_Store
 .cache/
 log.html
 output.xml
