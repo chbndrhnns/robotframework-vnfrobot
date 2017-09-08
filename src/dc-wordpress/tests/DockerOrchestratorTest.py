@@ -3,7 +3,8 @@ from unittest import TestCase
 
 import docker
 import requests
-from docker.errors import DockerException
+from docker import DockerClient
+from docker.errors import DockerException, TLSParameterError
 from mock import patch
 
 from DockerOrchestrator import DockerOrchestrator
@@ -90,6 +91,9 @@ class DockerOrchestratorTest(TestCase):
         except DockerException as exc:
             self.fail('get_instance() should not fail with "{}"'.format(exc.__repr__()))
 
+        # check
+        self.assertEqual(get.call_count, 1)
+
     @patch('DockerOrchestrator.docker.client.APIClient.get')
     def test__get_instance__explicit_host__pass(self, get):
         # prepare
@@ -109,6 +113,9 @@ class DockerOrchestratorTest(TestCase):
         except DockerException as exc:
             self.fail('get_instance() should not fail with "{}"'.format(exc.__repr__()))
 
+        # check
+        self.assertEqual(get.call_count, len(hosts))
+
     @patch('DockerOrchestrator.docker.api.daemon.DaemonApiMixin.ping')
     def test__get_instance__host_unreachable__exception(self, ping):
         # prepare
@@ -121,3 +128,32 @@ class DockerOrchestratorTest(TestCase):
 
         # check
         self.assertEqual(ping.call_count, 1)
+
+    @patch('DockerOrchestrator.docker.api.daemon.DaemonApiMixin.ping')
+    def test__get_instance__tls_host__pass(self, ping):
+        # prepare
+        self.orchestrator.settings.docker['DOCKER_HOST'] = 'tcp://192.168.99.100:2376'
+        self.orchestrator.settings.docker['DOCKER_CERT_PATH'] = 'fixtures/certs'
+
+        ping.return_value = None
+
+        # do
+        try:
+            self.orchestrator.get_instance()
+        except DockerException as exc:
+            self.fail('get_instance() should not fail with "{}"'.format(exc.__repr__()))
+
+        self.assertIsInstance(self.orchestrator.docker, DockerClient)
+
+    @patch('DockerOrchestrator.docker.api.daemon.DaemonApiMixin.ping')
+    def test__get_instance__tls_host_invalid__exception(self, ping):
+        # prepare
+        self.orchestrator.settings.docker['DOCKER_HOST'] = 'tcp://192.168.99.100:2376'
+        self.orchestrator.settings.docker['DOCKER_CERT_PATH'] = 'not-existing-dir'
+
+        ping.side_effect = docker.errors.TLSParameterError(msg='Path to a certificate and key files')
+
+        # do
+        with self.assertRaisesRegexp(TLSParameterError, 'Path to a certificate and key files') as exc:
+            self.orchestrator.get_instance()
+

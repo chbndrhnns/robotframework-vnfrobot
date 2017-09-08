@@ -47,9 +47,6 @@ class DockerOrchestrator(Orchestrator):
         super(DockerOrchestrator, self).__init__()
 
         self.default_options['--host'] = self.settings.docker['DOCKER_HOST']
-        # if self.settings.docker_cert_path is not None:
-        #     self.tls_config = tls_config_from_options(self.settings)
-        #     self.tls_config = tls_config_from_options(self.settings)
 
         self.project = None
         self.volumes = None
@@ -59,6 +56,16 @@ class DockerOrchestrator(Orchestrator):
         self.docker = None
 
     def get_instance(self):
+        """
+        Resolves the docker host and tries to ping it to make sure it is reachable.
+
+        The docker instance can be specified by setting environment variables or modifying the .env file.
+        For the variables, see: https://docs.docker.com/machine/reference/env/
+
+        Returns:
+            None
+
+        """
         self.docker = docker.from_env(environment=self.settings.docker)
         self.docker.ping()
 
@@ -79,6 +86,16 @@ class DockerOrchestrator(Orchestrator):
         self.commands = TopLevelCommand(self.project)
 
     def validate_descriptor(self):
+        """
+        Validates a docker-compose descriptor and extracts useful pieces of information:
+        - services
+        - volumes
+        - networks
+
+        Returns:
+            None
+
+        """
         self.commands.config(config_options=self.default_options, options=self.default_config_options)
 
         self.services = [getattr(service, 'name') for service in self.project.services]
@@ -113,6 +130,3 @@ class DockerOrchestrator(Orchestrator):
         except Exception as exc:
             logger.console(exc)
             raise TeardownError(u'')
-
-    def is_docker_host_reachable(self):
-        pass
