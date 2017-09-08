@@ -9,7 +9,7 @@ from robot.api import logger
 
 from Orchestrator import Orchestrator
 from DockerOrchestrator import DockerOrchestrator
-import settings
+from settings import Settings
 from exc import ConnectionError, SetupError, DataError, TeardownError
 from version import VERSION
 from robotlibcore import DynamicCore
@@ -28,7 +28,7 @@ class SuiteTools(DynamicCore):
 
         self.orchestrator = None
         self.project_path = None
-        self.orchestrator_type = dict.get(self.orchestrator_mapping, settings.orchestrator)
+        self.orchestrator_type = dict.get(self.orchestrator_mapping, self.settings.orchestrator)
         logger.info(u"Importing {}".format(self.__class__))
 
     def run_keyword(self, name, args, kwargs):

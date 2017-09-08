@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import docker
 from robot.api import logger
 
 import requests.exceptions
@@ -26,7 +26,9 @@ class DockerOrchestrator(Orchestrator):
         "--timestamps": True,
         "--tail": "all",
         "-d": True,
-        "--scale": ""
+        "--scale": "",
+        "--host": None,
+        "--tlsverify": None
     }
 
     default_config_options = {
@@ -44,22 +46,56 @@ class DockerOrchestrator(Orchestrator):
     def __init__(self):
         super(DockerOrchestrator, self).__init__()
 
+        self.default_options['--host'] = self.settings.docker['DOCKER_HOST']
+
         self.project = None
         self.volumes = None
         self.networks = None
         self.services = None
         self.commands = None
+        self.docker = None
 
     def get_instance(self):
-        raise NotImplementedError
+        """
+        Resolves the docker host and tries to ping it to make sure it is reachable.
+
+        The docker instance can be specified by setting environment variables or modifying the .env file.
+        For the variables, see: https://docs.docker.com/machine/reference/env/
+
+        Returns:
+            None
+
+        """
+        self.docker = docker.from_env(environment=self.settings.docker)
+        self.docker.ping()
 
     def parse_descriptor(self, project_path):
+        """
+        Reads a docker-compose.yml file from the given path.
+
+        Args:
+            project_path:
+
+        Returns:
+            None
+
+        """
         logger.console(u'Parsing descriptor at "{}"'.format(project_path))
 
         self.project = project_from_options(project_dir=project_path, options=self.default_options)
         self.commands = TopLevelCommand(self.project)
 
     def validate_descriptor(self):
+        """
+        Validates a docker-compose descriptor and extracts useful pieces of information:
+        - services
+        - volumes
+        - networks
+
+        Returns:
+            None
+
+        """
         self.commands.config(config_options=self.default_options, options=self.default_config_options)
 
         self.services = [getattr(service, 'name') for service in self.project.services]
