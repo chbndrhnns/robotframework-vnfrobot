@@ -12,3 +12,8 @@ spec:
         backend:
           serviceName: game2048
           servicePort: 80
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> f70e1efe176e6acbb18314916e78c84d0f92a854
