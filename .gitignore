@@ -4,6 +4,7 @@
 log.html
 output.xml
 report.html
+wp-app
 app-data/
 .coverage
 .env
@@ -18,6 +19,7 @@ __pycache__/
 *.dll
 *.egg
 *.egg-info/
+.DS_Store
 
 # Build directories
 docs/_build/

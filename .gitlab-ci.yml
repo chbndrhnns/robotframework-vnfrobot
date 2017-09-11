@@ -16,7 +16,7 @@ linter:
   script:
   - pip install -U pip setuptools
   - pip install -r requirements.txt
-  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) rflint *.robot
+  - cd tests; PYTHONPATH=$PYTHONPATH:$(pwd) rflint *.robot
   only:
     - master
 
@@ -26,7 +26,7 @@ unit:
   script:
   - pip install -U pip setuptools
   - pip install -r requirements.txt
-  - cd src/dc-wordpress/tests; PYTHONPATH=$PYTHONPATH:$(pwd) pytest *Test.py
+  - PYTHONPATH=$PYTHONPATH:$(pwd)/vnf-robot pytest tests/*Test.py
   only:
     - master
 
