@@ -13,3 +13,7 @@ class TeardownError(RuntimeError):
 
 class ConnectionError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = True
+
+
+class TimeoutError(RuntimeError):
+    ROBOT_EXIT_ON_FAILURE = False
