@@ -2,6 +2,11 @@ class DataError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = True
 
 
+class DataFormatError(RuntimeError):
+    ROBOT_EXIT_ON_FAILURE = False
+    ROBOT_CONTINUE_ON_FAILURE = True
+
+
 class SetupError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = True
 
@@ -17,3 +22,6 @@ class ConnectionError(RuntimeError):
 
 class TimeoutError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = False
+    ROBOT_CONTINUE_ON_FAILURE = True
+
+

@@ -3,7 +3,8 @@ import socket
 from string import lower
 
 import ipaddress
-from nclib import TCPServer
+import pydevd
+from nclib import TCPServer, UDPServer
 
 from settings import Settings
 from exc import *
@@ -12,34 +13,57 @@ from robot.api.deco import keyword
 from robotlibcore import DynamicCore
 from version import VERSION
 
+HTTP_PORT = 80
+
+
+class Layer4Port:
+    def __init__(self, port):
+        if port is None:
+            raise DataError(u'None port is not supported.'.format(port))
+        try:
+            self.port = int(port)
+        except ValueError:
+            raise DataError(u'Non-numerical port is not supported.'.format(port))
+
+        if self.port < 0 or self.port > 65535:
+            raise DataError(u'Port must be in range "0 <= port <= 65535". Got "{}"'.format(port))
+
 
 class Layer3Protocol:
     allowed = {
-        'udp': socket.SOCK_DGRAM,
-        'tcp': socket.SOCK_STREAM
+        u'udp': socket.SOCK_DGRAM,
+        u'tcp': socket.SOCK_STREAM
     }
 
     def __init__(self, protocol):
+        error = None
+
         if protocol is None:
-            raise DataError('Only UDP and TCP are support protocols; got None.'.format([protocol]))
-        self.type = self.allowed.get(str.lower(protocol), None)
+            error = DataFormatError(u'Only UDP and TCP are support protocols; got None.'.format(protocol))
+        self.type = self.allowed.get(unicode.lower(protocol), None)
         if self.type is None:
-            raise DataError('Only UDP and TCP are support protocols; got "".'.format([protocol]))
+            error = DataFormatError(u'Only UDP and TCP are support protocols; got "{}".'.format(protocol))
+
+        if error is not None:
+            raise error
 
 
 class HostAddress:
     def __init__(self, address=None):
+        if address is None:
+            raise DataError(u'Cannot parse host None')
+
         error = None
         try:
             self.host_address = ipaddress.ip_address(address)
-        except ipaddress.AddressValueError as exc:
-            error = DataError('Cannot parse provided host "{}"'.format(address))
+        except ValueError as exc:
+            error = DataFormatError(u'Cannot parse host "{}"'.format(address))
 
         try:
             error = None
-            self.host_address = socket.getaddrinfo(address, 80)
+            self.host_address = socket.getaddrinfo(address, HTTP_PORT)
         except socket.gaierror as exc:
-            error = DataError('Cannot parse provided host "{}"'.format(address))
+            error = DataFormatError(u'Cannot parse host "{}"'.format(address))
 
         if error is not None:
             raise error
@@ -66,13 +90,25 @@ class SocketWrapper:
         self.sock.close()
 
 
-class NetcatServerWrapper:
+class NetcatTcpServerWrapper:
     def __init__(self, bindto):
         self.server = None
         self.bindto = bindto
 
     def __enter__(self):
         self.server = TCPServer(self.bindto)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.server.close()
+
+
+class NetcatUdpServerWrapper:
+    def __init__(self, bindto):
+        self.server = None
+        self.bindto = bindto
+
+    def __enter__(self):
+        self.server = UDPServer(self.bindto)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.server.close()
@@ -100,10 +136,10 @@ class Socket(DynamicCore):
         logger.info("Running keyword '%s' with arguments %s." % (name, args))
         return self.keywords[name](*args, **kwargs)
 
-    @keyword('${host}:${port}/${protocol}}')
+    @keyword('${host}:${port:\d+}/${protocol}')
     def check_port(self, host=None, port=None, protocol='TCP'):
         """
-        Issues an HTTP GET request to the specified url.
+        Check whether a port is open on the specified host.
 
         Args:
             host: host or domain name
@@ -115,23 +151,20 @@ class Socket(DynamicCore):
 
         """
 
-        # verify port
-        if port is None:
-            raise DataError('None port is not supported.'.format(port))
-        if port < 0 or port > 65535:
-            raise DataError('Port "{}" is not supported.'.format(port))
-
-        # verify host
-        address_family = HostAddress(host).version
+        # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
 
         # verify protocol
-        proto = Layer3Protocol(protocol).type
+        proto = Layer3Protocol(unicode(protocol)).type
+
+        # verify port
+        l4port = Layer4Port(unicode(port)).port
+
+        # verify host
+        address_family = HostAddress(unicode(host)).version
 
         with SocketWrapper(address_family, proto) as sock:
             try:
-                sock.connect((host, port))
+                sock.connect((host, l4port))
             except socket.error as exc:
                 if 'timed out' in exc.args:
-                    raise TimeoutError()
-                if exc.errno is 8:
-                    raise DataError('Hostname not provided or invalid.')
+                    raise TimeoutError('Port {} unreachable on {}'.format(l4port, host))
