@@ -9,6 +9,8 @@ app-data/
 .coverage
 .env
 utils/gitlab/requirements.txt
+logs/
+.robot/
 
 # Cached builds
 __pycache__/

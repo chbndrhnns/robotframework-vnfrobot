@@ -20,3 +20,6 @@ class Settings:
 
         # Library: SuiteSetup
         self.orchestrator = lower((os.environ.get('ORCHESTRATOR')) or 'docker-compose')
+
+        # Library: Socket
+        self.socket_timeout = (os.environ.get('SOCKET_TIMEOUT') or '0.5')
