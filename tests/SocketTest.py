@@ -83,11 +83,11 @@ class SocketTest(unittest.TestCase):
     def test__check_port__tcp_host_invalid__exception(self):
         # prepare
         port = 8991
-        host = '1r27.0.0.2'
+        host = 'a'
         sock = Socket()
 
         # do
-        with self.assertRaisesRegexp(DataError, u'Cannot parse host'):
+        with self.assertRaisesRegexp(DataFormatError, u'Cannot parse host'):
             sock.check_port(host, port)
 
     def test__check_port__tcp_port_invalid__exception(self):
@@ -97,7 +97,7 @@ class SocketTest(unittest.TestCase):
         sock = Socket()
 
         # do
-        with self.assertRaisesRegexp(DataError, u'be in range'):
+        with self.assertRaisesRegexp(DataFormatError, u'be in range'):
             sock.check_port(host, port)
 
     def test__check_port__tcp_None_port__exception(self):
@@ -107,7 +107,7 @@ class SocketTest(unittest.TestCase):
         sock = Socket()
 
         # do
-        with self.assertRaisesRegexp(DataError, u'not supported'):
+        with self.assertRaisesRegexp(DataFormatError, u'not supported'):
             sock.check_port(host, port)
 
     def test__check_port__tcp_None_host__exception(self):
@@ -117,7 +117,7 @@ class SocketTest(unittest.TestCase):
         sock = Socket()
 
         # do
-        with self.assertRaisesRegexp(DataError, u'Cannot parse host'):
+        with self.assertRaisesRegexp(DataFormatError, u'Cannot parse host'):
             sock.check_port(host, port)
 
     @patch('Socket.socket.socket.connect')
@@ -168,7 +168,7 @@ class SocketTest(unittest.TestCase):
         sock = Socket()
 
         # do
-        with self.assertRaisesRegexp(DataError, u'UDP and TCP'):
+        with self.assertRaisesRegexp(DataFormatError, u'UDP and TCP'):
             sock.check_port(host, port, protocol)
 
 

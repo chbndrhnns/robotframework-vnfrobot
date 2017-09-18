@@ -2,6 +2,8 @@
 
 
 from RequestsLibrary import RequestsLibrary
+from requests import ConnectTimeout
+from urllib3.exceptions import ConnectTimeoutError, ResponseError
 
 from Utils import Utils
 from exc import *
@@ -56,5 +58,15 @@ class HTTP(DynamicCore):
             raise
         alias = "{}-{}".format(url_params['host'], Utils.generate_uuid())
 
-        self.requests_lib.create_session(alias=alias, url=url_params['host'])
-        return self.requests_lib.get_request(alias=alias, uri=url_params['path'], timeout=self.settings.http_get_timeout)
+        try:
+            self.requests_lib.create_session(alias=alias,
+                                             url=url_params['host'],
+                                             max_retries=self.settings.http_max_retries,
+                                             disable_warnings=True)
+            response = self.requests_lib.get_request(alias=alias,
+                                                     uri=url_params['path'],
+                                                     timeout=self.settings.http_get_timeout)
+        except ConnectTimeout as exc:
+            raise TimeoutError(u'Cannot reach {}: {}'.format(url, exc))
+
+        return response

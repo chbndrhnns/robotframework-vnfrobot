@@ -4,8 +4,10 @@
 from unittest import TestCase
 
 import responses
+from mock import patch
+from requests import ConnectTimeout
 
-from HTTP import HTTP, DataError
+from HTTP import HTTP, DataError, TimeoutError
 
 
 class HTTPTest(TestCase):
@@ -49,3 +51,13 @@ class HTTPTest(TestCase):
             self.http.get_simple(url)
 
             self.assertIn('Invalid URL', exc.value.message)
+
+    @patch('HTTP.RequestsLibrary.get_request')
+    def test__get_simple__host_unreachable__exception(self, mock_request):
+        # prepare
+        url = 'http://127.3.0.1/'
+        mock_request.side_effect = ConnectTimeout
+
+        # do
+        with self.assertRaises(TimeoutError) as exc:
+            self.http.get_simple(url)

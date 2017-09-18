@@ -5,8 +5,6 @@ Library     HTTP
 Library     SuiteTools
 
 *** Variables ***
-${html}     "<html><head><title>Best title ever</title></head><body></body></html>"
-
 
 *** Test Cases ***
 HTTP GET returns 404 for localhost
@@ -15,12 +13,11 @@ HTTP GET returns 404 for localhost
     [Setup]  Setup test suite  project_path=tests/fixtures/integration
 
     ${response}=    GET http://127.0.0.1/
-    Should Be Equal As Strings	${response.status_code}	404
+    Should Be Equal As Strings	${response.status_code}	 404
 
 HTTP GET returns error if host is not available
     [Documentation]
-    ...  Test HTTP GET
+    ...  Test HTTP GET and make the test fail if the URL is not reachable.
 
-    ${response}=    GET http://127.2.0.1:8888/
-    Should Be Equal As Strings	${response.status_code}	404
+    Run Keyword and expect error  TimeoutError*  GET http://127.2.0.1:8888/
 
