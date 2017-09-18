@@ -16,3 +16,11 @@ HTTP GET returns 404 for localhost
 
     ${response}=    GET http://127.0.0.1/
     Should Be Equal As Strings	${response.status_code}	404
+
+HTTP GET returns error if host is not available
+    [Documentation]
+    ...  Test HTTP GET
+
+    ${response}=    GET http://127.2.0.1:8888/
+    Should Be Equal As Strings	${response.status_code}	404
+

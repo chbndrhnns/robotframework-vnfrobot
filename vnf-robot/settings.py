@@ -16,7 +16,7 @@ class Settings:
                        }
 
         # Library: HTTP
-        self.http_get_timeout = (os.environ.get('HTTP_GET_TIMEOUT') or '5.0')
+        self.http_get_timeout = (os.environ.get('HTTP_GET_TIMEOUT') or '0.5')
 
         # Library: SuiteSetup
         self.orchestrator = lower((os.environ.get('ORCHESTRATOR')) or 'docker-compose')
