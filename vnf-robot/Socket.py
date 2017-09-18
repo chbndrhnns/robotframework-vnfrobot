@@ -161,9 +161,7 @@ class Socket(DynamicCore):
 
         with SocketWrapper(address_family, proto) as sock:
             try:
-                logger.info(u'Establishing connection to {}:{}/{}'.format(host, l4port, protocol))
-                # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
-
+                # logger.console(u"Connecting to {}:{}/{}".format(host, l4port, protocol))
                 sock.connect((host, l4port))
             except socket.error as exc:
                 if 'Connection refused' in exc.args:
