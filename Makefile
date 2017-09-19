@@ -8,6 +8,11 @@ robot-tests:
 	--timestampoutputs \
 	tests/*.robot
 
+robot-http-test:
+	. .robot/bin/activate && \
+	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
+	-d logs \
+	tests/HTTPTest.robot
 
 socket-tests:
 	. .robot/bin/activate && \

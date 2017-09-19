@@ -19,14 +19,14 @@ HTTP_PORT = 80
 class Layer4Port:
     def __init__(self, port):
         if port is None:
-            raise DataError(u'None port is not supported.'.format(port))
+            raise DataFormatError(u'None port is not supported.'.format(port))
         try:
             self.port = int(port)
         except ValueError:
-            raise DataError(u'Non-numerical port is not supported.'.format(port))
+            raise DataFormatError(u'Non-numerical port is not supported.'.format(port))
 
         if self.port < 0 or self.port > 65535:
-            raise DataError(u'Port must be in range "0 <= port <= 65535". Got "{}"'.format(port))
+            raise DataFormatError(u'Port must be in range "0 <= port <= 65535". Got "{}"'.format(port))
 
 
 class Layer3Protocol:
@@ -150,9 +150,6 @@ class Socket(DynamicCore):
             None
 
         """
-
-        # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
-
         # verify protocol
         proto = Layer3Protocol(unicode(protocol)).type
 
@@ -164,7 +161,12 @@ class Socket(DynamicCore):
 
         with SocketWrapper(address_family, proto) as sock:
             try:
+                logger.info(u'Establishing connection to {}:{}/{}'.format(host, l4port, protocol))
+                # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
+
                 sock.connect((host, l4port))
             except socket.error as exc:
+                if 'Connection refused' in exc.args:
+                    raise ConnectionError('Connection refused for {}:{}/{}'.format(host, l4port, protocol))
                 if 'timed out' in exc.args:
-                    raise TimeoutError('Port {} unreachable on {}'.format(l4port, host))
+                    raise TimeoutError('Timeout for {}:{}/{}'.format(host, l4port, protocol))
