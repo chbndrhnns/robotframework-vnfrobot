@@ -4,12 +4,13 @@ from unittest import TestCase
 import docker
 import os
 import requests
+import requests.exceptions
 from docker import DockerClient
 from docker.errors import DockerException, TLSParameterError
 from mock import patch
 
 from DockerOrchestrator import DockerOrchestrator
-from exc import SetupError
+from exc import SetupError, ConnectionError
 
 absolute_dir = os.path.normpath(os.path.join(os.path.abspath(__file__), '..'))
 
@@ -159,4 +160,26 @@ class DockerOrchestratorTest(TestCase):
         # do
         with self.assertRaisesRegexp(TLSParameterError, 'Path to a certificate and key files') as exc:
             self.orchestrator.get_instance()
+
+    @patch('DockerOrchestrator.docker.api.daemon.DaemonApiMixin.ping')
+    def test__get_instance__insecure_request_fails__exception(self, mock_ping):
+        # prepare
+        self.orchestrator.settings.docker['DOCKER_HOST'] = 'tcp://192.168.99.100:2376'
+        mock_ping.side_effect = requests.exceptions.ConnectionError('BadStatusLine')
+
+        # do
+        with self.assertRaisesRegexp(ConnectionError, 'BadStatusLine'):
+            self.orchestrator.get_instance()
+
+    @patch('DockerOrchestrator.docker.api.daemon.DaemonApiMixin.ping')
+    def test__get_instance__unreachable_host__exception(self, mocked_ping):
+        # prepare
+        self.orchestrator.settings.docker['DOCKER_HOST'] = 'tcp://127.8.8.8:2376'
+        mocked_ping.side_effect = requests.exceptions.ConnectionError('timed out')
+
+        # do
+        with self.assertRaisesRegexp(ConnectionError, 'timed out'):
+            self.orchestrator.get_instance()
+            self.fail()
+
 

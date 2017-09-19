@@ -2,6 +2,7 @@
 import os
 
 import compose.config
+import pydevd
 from compose import service
 from docker.errors import APIError
 
@@ -77,8 +78,8 @@ class SuiteTools(DynamicCore):
         self.project_path = project_path
 
         try:
-            # noinspection PyCallingNonCallable
             logger.debug(u'Using orchestrator type "{}"'.format(self.orchestrator_type))
+            # noinspection PyCallingNonCallable
             self.orchestrator = self.orchestrator_type()
             self.orchestrator.parse_descriptor(project_path)
             self.orchestrator.create_infrastructure()
@@ -89,7 +90,7 @@ class SuiteTools(DynamicCore):
             logger.error(u'Parse error: {}'.format(exc.msg))
             raise SetupError(exc)
         except ConnectionError as exc:
-            logger.error(u'Connection error: {}\n\n{}'.format(exc.message, exc.args[1]))
+            # logger.error(u'Connection error: {}\n\n{}'.format(exc.message, exc.args[1]))
             raise exc
         except APIError as exc:
             logger.error(u'Error: {}\n\n{}'.format(exc.message, exc.explanation))

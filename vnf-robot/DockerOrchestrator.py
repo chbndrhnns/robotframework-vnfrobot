@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import socket
+
 import docker
 import requests.exceptions
 from compose.cli.main import TopLevelCommand, project_from_options
@@ -68,8 +70,13 @@ class DockerOrchestrator(Orchestrator):
             None
 
         """
-        self.docker = docker.from_env(environment=self.settings.docker)
-        self.docker.ping()
+
+        try:
+            timeout = float(self.settings.docker['DOCKER_TIMEOUT'])
+            self.docker = docker.from_env(environment=self.settings.docker, timeout=timeout)
+            self.docker.ping()
+        except requests.exceptions.ConnectionError as exc:
+            raise ConnectionError(u'{}'.format(exc))
 
     def parse_descriptor(self, project_path):
         """
@@ -115,12 +122,14 @@ class DockerOrchestrator(Orchestrator):
             if return_code is not 0:
                 if return_code is not None:
                     raise SetupError('Could not create infrastructure', return_code)
+        except socket.error as exc:
+            raise ConnectionError(u'Could not connect to url={}'.format(exc), exc)
         except requests.exceptions.ConnectionError as exc:
-            logger.error(u'{}'.format(exc))
-            if 'No such file or directory' in str(exc.message):
+            # logger.error(u'{}'.format(exc))
+            if u'No such file or directory' in unicode(exc.message):
                 raise ConnectionError(u'Could not connect to url={}'.format(exc.request.url), exc)
-            else:
-                raise ConnectionError(u'Not specified connection error.')
+            elif u'Connection aborted' in unicode(exc.message):
+                raise ConnectionError(u'Could not connect to url={}'.format(exc.request.url))
 
     def destroy_infrastructure(self):
         try:
