@@ -33,3 +33,7 @@ check open ports again
     Run Keyword and expect error  DataFormatError*   127.0.0.1:9985/HFNDBD
     Run Keyword and expect error  ConnectionError*   127.0.0.1:9986/TCP
 
+Open port and check it is open
+    [Documentation]
+    ...  Open a real port on the host where the tests are run and check it is open afterwards
+    [Setup]
