@@ -72,5 +72,5 @@ class HtmlParser(DynamicCore):
         processed_title = unicode(cgi.escape(processed_title))
 
         if expected_title != processed_title:
-            raise exc.DataError(
+            raise exc.AssertError(
                 u"Titles do not match: \n\t'{}' is not '{}'".format(processed_title, expected_title))

@@ -18,27 +18,34 @@ Sockets can be reached
     ...  Check if the required sockets are open on the deployed nodes
 
     192.168.99.100:5000/tcp
-    192.168.99.100:80/tcp
-    192.168.99.100:5858/tcp
+    192.168.99.100:8080/tcp
+    192.168.99.100:5001/tcp
 
 
-HTML sites are served
+HTML site main
 #    [Tags] layer7
     [Documentation]
-    ...  Test <title> tag
+    ...  Test if correct HTML content is served for main page
 
     ${response}=    GET http://192.168.99.100:5000
     Parse           html=${response.text}
     Assert that title equals "Cats vs Dogs!"
 
-#Get services
-#
-#Get instances count
-#
-#Get log files
-#
-#Get inventory
-#
-#Get logs (continuosly?)
 
-#
+HTML site of result
+#    [Tags] layer7
+    [Documentation]
+    ...  Test if correct HTML content is served for main page
+
+    ${response}=    GET http://192.168.99.100:5001
+    Parse           html=${response.text}
+    Assert that title equals "Cats vs Dogs -- Result"
+
+HTML site of status
+#    [Tags] layer7
+    [Documentation]
+    ...  Test if correct HTML content is served for main page
+
+    ${response}=    GET http://192.168.99.100:8080
+    Parse           html=${response.text}
+    Assert that title equals "Visualizer"

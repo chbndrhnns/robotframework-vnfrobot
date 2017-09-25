@@ -49,7 +49,7 @@ class HtmlParserTest(TestCase):
             expected = "Title Mismatch"
 
             # do
-            with self.assertRaises(DataError) as exc:
+            with self.assertRaises(AssertError) as exc:
                 self.parser.verify_title(title=expected)
 
                 self.assertIn(expected, exc.value.message)
