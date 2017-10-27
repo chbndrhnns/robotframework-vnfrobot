@@ -28,3 +28,6 @@ socket-tests:
 
 install-requirements:
 	npm install -g live-server
+
+serve-docs:
+	python -m rfhub --root /doc apps/lang
