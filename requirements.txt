@@ -46,6 +46,7 @@ robotframework-databaselibrary==1.0.1
 robotframework-debuglibrary==1.0.0
 robotframework-imaplibrary==0.3.0
 robotframework-lint==0.9
+robotframework-hub==0.9
 robotframework-rammbock==0.4.0.1
 robotframework-requests==0.4.7
 robotframework-selenium2library
