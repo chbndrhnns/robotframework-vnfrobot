@@ -16,13 +16,14 @@ Environment Variable
     ...  arguments:
     ...    - content: str
 
+    ...  use: https://stackoverflow.com/a/39993106/6112272
+    [Setup]  set context
+
     $ENV is (not) set
     $ENV is (not) set to $CONTENT
 
     $ENV contains $CONTENT
     $ENV does not contains $CONTENT
-
-    $ENV equals $CONTENT
 
 
 Command
@@ -84,7 +85,9 @@ Kernel parameters
     ...  arguments:
     ...    - value: str
 
-    $PARAMETER is set to $VALUE
+    Kernel parameter $PARAMETER is set to $VALUE
+    Kernel parameter $PARAMETER is not set to $VALUE
+    Kernel parameter $PARAMETER contains $VALUE
 
 
 Placement constraint

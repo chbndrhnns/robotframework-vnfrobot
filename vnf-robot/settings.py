@@ -7,6 +7,7 @@ from dotenv import load_dotenv, find_dotenv
 class Settings:
     def __init__(self):
         load_dotenv(find_dotenv())
+        self.tools = {'goss': {}}
 
         self.log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
 
@@ -25,3 +26,6 @@ class Settings:
 
         # Library: Socket
         self.socket_timeout = (os.environ.get('SOCKET_TIMEOUT') or '1.0')
+
+        # Tool: Goss
+        self.tools['goss']['path'] = (os.environ.get('GOSS_PATH') or 'bin/goss-linux-amd64')
