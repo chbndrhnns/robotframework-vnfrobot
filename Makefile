@@ -31,3 +31,10 @@ install-requirements:
 
 serve-docs:
 	python -m rfhub --root /doc apps/lang
+
+download-tools: tools-goss
+
+tools-goss:
+	curl -L https://github.com/aelsabbahy/goss/releases/download/v0.3.5/goss-linux-386 -o bin/goss-linux-386
+	curl -L https://github.com/aelsabbahy/goss/releases/download/v0.3.5/goss-linux-amd64 -o bin/goss-linux-amd64
+	chmod +x bin/*

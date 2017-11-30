@@ -21,8 +21,15 @@ User
    ...    - home: str
    ...    - shell: str
 
-   $USER does (not) exist
-   $USER  has_attributes=[]
+   ${USER} does (not) exist
+   ${USER}  has_attributes=[]
+
+   User ${USER} does exist
+   User ${USER} does not exist
+   Users [${USER}, ${USER} do exist
+   Users [${USER}, ${USER} do not exist
+   User ${USER} does exist with properties {"uid": "123", "groups": "www"}
+   User ${USER} has the properties {"uid": "123", "groups": "www"}
 
 Group
     [Documentation]
@@ -35,6 +42,10 @@ Group
     [Timeout]
     ... 500 ms
 
-    $GROUP does not exist
-    $GROUP does exist
-    $GROUP does exist with gid $GID
+    Group ${GROUP} does exist
+    Group ${GROUP} does not exist
+
+    Groups [${GROUP1}, ${GROUP2} do exist
+    Groups [${USER}, ${USER} do not exist
+
+    Group ${USER} does exist with properties {"uid": "123", "groups": "www"}

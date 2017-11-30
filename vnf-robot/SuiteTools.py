@@ -2,15 +2,14 @@
 import os
 
 import compose.config
-import pydevd
 from compose import service
 from docker.errors import APIError
-
-from DockerOrchestrator import DockerOrchestrator
-from Orchestrator import Orchestrator
-from exc import ConnectionError, SetupError, DataError, TeardownError
 from robot.api import logger
 from robot.api.deco import keyword
+
+from DockerOrchestrator import DockerOrchestrator
+from exc import ConnectionError, SetupError, DataError, TeardownError
+from interfaces.Orchestrator import Orchestrator
 from robotlibcore import DynamicCore
 from version import VERSION
 

@@ -4,10 +4,10 @@ import socket
 import docker
 import requests.exceptions
 from compose.cli.main import TopLevelCommand, project_from_options
-
-from Orchestrator import Orchestrator
-from exc import SetupError, ConnectionError, TeardownError
 from robot.api import logger
+
+from exc import SetupError, ConnectionError, TeardownError
+from interfaces.Orchestrator import Orchestrator
 
 
 class DockerOrchestrator(Orchestrator):

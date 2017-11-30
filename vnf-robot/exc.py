@@ -29,3 +29,11 @@ class ConnectionError(RuntimeError):
 class TimeoutError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = False
     ROBOT_CONTINUE_ON_FAILURE = True
+
+
+class ArgumentMissingException(BaseException):
+    pass
+
+
+class InvalidPathException(BaseException):
+    pass

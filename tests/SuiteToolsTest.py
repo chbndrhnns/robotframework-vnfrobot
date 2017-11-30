@@ -3,13 +3,13 @@ import os
 import shutil
 from unittest import TestCase
 
-from DockerOrchestrator import DockerOrchestrator
-from SuiteTools import SuiteTools
 from backports import tempfile
 from mock import patch
 
-from Orchestrator import Orchestrator
+from DockerOrchestrator import DockerOrchestrator
+from SuiteTools import SuiteTools
 from exc import SetupError, ConnectionError, TeardownError
+from interfaces.Orchestrator import Orchestrator
 
 
 class SuiteToolsTest(TestCase):
