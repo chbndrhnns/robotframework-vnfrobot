@@ -6,9 +6,6 @@ Documentation
 
 #Address Timeout  500 ms
 
-## TODO: tabular data
-
-
 *** Keywords ***
 Network Address
     [Documentation]
@@ -20,9 +17,12 @@ Network Address
     [Timeout]
     ... 500 ms
 
-    I can (not) reach $ADDRESS
-    $ADDRESS is (not) reachable
-    Connection to $ADDRESS is (not) possible
+    ${NODE}=postgresql
+    ${ADDRESS}=8.8.8.8
+
+    From ${NODE}, I can (not) reach $ADDRESS
+    ${ADDRESS} is (not) reachable
+    Connection to ${ADDRESS} is (not) possible
 
 DNS lookup
     [Documentation]
@@ -39,17 +39,20 @@ DNS lookup
     [Timeout]
     ... 500 ms
 
-    Use DNS server $DNS_SERVER
+    ${DNS}=8.8.8.8
+    ${NAME}=bla.blub.com
 
-    $NAME is (not) resolved to $ADDRESS
-    $NAME is (not) resolved to [$ADDRESS]
-    $NAME is only resolved to $ADDRESS
+    Use DNS server ${DNS_SERVER}
 
-    $NAME resolves to $ADDRESS
-    $NAME resolves to [$ADDRESS]
-    $NAME only resolves to $ADDRESS
+    ${NAME} is (not) resolved to ${ADDRESS}
+    ${NAME} is (not) resolved to [${ADDRESS}]
+    ${NAME} is only resolved to ${ADDRESS}
 
-    Lookup of $NAME1 is (not) successful
+    ${NAME} resolves to ${ADDRESS}
+    ${NAME} resolves to [${ADDRESS}]
+    ${NAME} only resolves to ${ADDRESS}
+
+    Lookup of ${NAME} is (not) successful
 
     '<name> [<ttl>] IN <type> <rdata>' is (not) resolved
 
@@ -65,10 +68,15 @@ Network Interface
    ...    - active: Boolean
    ...    - mac-address: str
 
-   $INT is configured with []
-   $INT is (not) enabled
+   ${INT}=eth0
 
-   $INT is not configured
+   MTU 1500 is configured on ${INT}
+   Mac address AA:BB:CC:DD:EE:FF is configured on ${INT}
+   10.0.0.2/22 is configured on ${INT}
+   10.0.0.2/22 is configured on ${INT}
+
+   Interface ${INT} has the address fe80::76:8dc3:ffe6:4e09
+   Interface ${INT} has the addresses [fe80::76:8dc3:ffe6:4e09, 127.0.0.1/32]
 
 
 Network Port
@@ -83,31 +91,18 @@ Network Port
     [Timeout]
     ...  500 ms
 
-    Process is (not) listening on [$ADDRESS:]$PORT/$PROTOCOL
-    (Not) listening on $PORT/$PROTOCOL
+    ${PORT}=22245
 
-    $ADDRESS:$PORT/$PROTOCOL is open
-    $ADDRESS:$PORT/$PROTOCOL is closed
+    On node ${NODE}, port ${PORT} is open.
+    On node ${NODE}, port ${PORT} is closed.
+
+    From node ${NODE1}, port ${PORT} is open on ${NODE2}
+    From node ${NODE1}, port ${PORT} is closed on ${NODE2}
 
 
-HTTP GET
-    [Documentation]
-    ...  Validate an HTTP GET response.
-    ...  objects:
-    ...    - url
-    ...  arguments:
-    ...    - status: Enum(HTTP Response)
-    ...    - body: [str]
+    ${ADDRESS}:${PORT}/${PROTOCOL} is open on node postgresql.
+    ${ADDRESS}:${PORT}/${PROTOCOL} is closed on node postgresql.
 
-    [Timeout]
-    ... 1000 ms
-
-    [Settings]
-    ... follow-redirects: true
-
-    GET $URL returns $STATUS
-    GET $URL returns one of [$STATUS]
-    GET $URL contains [$BODY]
 
 
 
