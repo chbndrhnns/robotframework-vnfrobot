@@ -134,8 +134,8 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'cmd', cmd)
         Utils.validate_argument(u'exit_status', exit_status)
 
-    @keyword('Command ${cmd:".+"} exits with status ${exit_status:([0-9]{1,3\})|("[0-9]{1,3\}")} and ${stream:stdout|stderr} ${operator:contains|is} ${stream_content:".+"}')
-    def command_with_stream(self, cmd=None, exit_status=None, stream='stdout', operator='contains', stream_content=None):
+    @keyword('Command ${cmd:".+"} exits with status ${exit_status:([0-9]{1,3\})|("[0-9]{1,3\}")} and ${stream:stdout|stderr} contains ${stream_content:".+"}')
+    def command_with_stream(self, cmd=None, exit_status=None, stream='stdout', stream_content=None):
         """
         Validates that an environment variable is set on a specific host.
         The host name is implicitly derived from a setup variable.
@@ -156,6 +156,23 @@ class Runtime(DynamicCore):
         Utils.validate_argument(u'exit_status', exit_status)
         Utils.validate_argument(u'stream', stream)
         Utils.validate_string(u'stream_content', stream_content)
+
+    @keyword('Service ${service:[^\s]+\s|".+"\s}${operator:is|is not} running')
+    def service(self, service=None, operator='is'):
+        """
+        Validates that a service is running on the target machine.
+        The host name is implicitly derived from a setup variable.
+
+        Args:
+            operator: is or is not
+            service: command that should be executed
+
+        Returns:
+            None
+
+        """
+
+        Utils.validate_string(u'service', service)
         Utils.validate_string(u'operator', operator)
 
     def _get_context(self):

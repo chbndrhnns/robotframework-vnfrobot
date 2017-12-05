@@ -100,21 +100,6 @@ class Network(DynamicCore):
         Utils.validate_argument(u'src', src)
         Utils.validate_argument(u'dst', dst)
 
-    # @keyword('${arg:.+}')
-    # def network_catch_all(self, arg):
-    #     """
-    #     Catches any
-    #
-    #     Args:
-    #         arg: any string that cannot be matched against another keyword
-    #
-    #     Returns:
-    #         None
-    #
-    #     """
-    #
-    #     raise exc.DataFormatError('Keyword \'{}\' not valid in this context.'.format(arg))
-
     def _get_context(self):
         s = TestSuite()
         d = TestData()

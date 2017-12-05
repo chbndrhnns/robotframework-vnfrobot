@@ -25,7 +25,7 @@ class TestRuntime(TestCase):
         pass
 
     ###
-    ### Module ENVIRONMENT
+    ### Module Environment
     ###
 
     def test__environment__pass(self):
@@ -78,7 +78,7 @@ class TestRuntime(TestCase):
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
 
     ###
-    ### Module COMMAND
+    ### Module Command
     ###
 
     def test__command__pass(self):
@@ -90,11 +90,9 @@ class TestRuntime(TestCase):
 
     def test__command_with_stream__pass(self):
         tests = [
-            u'Command "bash -c ps aux" exits with status 0',
             u'Command "apt info htop" exits with status 0 and stdout contains "Installed"',
             u'Command "apt install gcc-notexistant" exits with status 1 and stderr contains "not found"',
             u'Command "echo $(ls -l -1)" exits with status 0 and stdout contains "bin"',
-            u'Command "echo `ls -l -1`" exits with status 0',
 
         ]
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
@@ -117,4 +115,61 @@ class TestRuntime(TestCase):
             u'Command "apt info htop" exits with status 0 and stdout contains bla',
         ]
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
+
+    ###
+    ### Module Process
+    ###
+
+    def test__process__pass(self):
+        tests = [
+            u'Process "java -jar bla.jar" is running',
+            u'Process nginx is running',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+    def test__process__fail(self):
+        tests = [
+            u'Process java -jar bla.jar is running',
+            u'Process java -jar bla.jar is not running',
+            u'Process \'nginx\' runs',
+            u'Process nginx runs',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
+
+    def test__process_negation__pass(self):
+        tests = [
+            u'Process "java -jar bla.jar" is not running',
+            u'Process nginx is not running',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+    ###
+    ### Module Service
+    ###
+
+    def test__service__pass(self):
+        tests = [
+            u'Service "apache2" is running',
+            u'Service gitlab-ce is running',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+    def test__service__fail(self):
+        tests = [
+            u'Service gitlab ce is running',
+            u'Service 123 ce is not running',
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
+
+    def test__service_negation__pass(self):
+        tests = [
+            u'Service "apache2" is not running',
+            u'Service gitlab-ce is not running',
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
 

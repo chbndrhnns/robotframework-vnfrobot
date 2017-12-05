@@ -35,14 +35,17 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
     test_name = regex_method.findall(caller_name)[0]
 
     run_count = 0
+    context = test_instance.suite.tests
     for t in tests:
         run_count += 1
         with test_instance.subTest(test=t):
-            context = test_instance.suite.tests.create(u'Expect {}: {}'.format(Result.get(expected_result), t))
-            context.keywords.create(t)
-            result = test_instance.suite.run(options=test_instance.settings)
+            test = context.create(u'Expect {}: {}'.format(Result.get(expected_result), t))
+            test.keywords.create(t)
 
-            if result.return_code > 1:
-                test_instance.assertEqual(run_count, result.return_code, '\'{}\''.format(t))
-            else:
-                test_instance.assertEqual(expected_result, result.return_code, '\'{}\''.format(t))
+    result = test_instance.suite.run(options=test_instance.settings)
+
+    if expected_result is Result.FAIL:
+        test_instance.assertEqual(run_count, result.statistics.total.all.failed)
+    if expected_result is Result.PASS:
+        test_instance.assertEqual(run_count, result.statistics.total.all.passed)
+
