@@ -157,6 +157,24 @@ class Runtime(DynamicCore):
         Utils.validate_argument(u'stream', stream)
         Utils.validate_string(u'stream_content', stream_content)
 
+    @keyword('Process ${process:[^\s]+\s|".+"\s}${operator:is|is not} running')
+    def process(self, process=None, operator='is'):
+        """
+        Validates that a process is running on the target machine.
+        The host name is implicitly derived from a setup variable.
+
+        Args:
+            operator: is or is not
+            process: command that should be executed
+
+        Returns:
+            None
+
+        """
+
+        Utils.validate_string(u'process', process)
+        Utils.validate_string(u'operator', operator)
+
     @keyword('Service ${service:[^\s]+\s|".+"\s}${operator:is|is not} running')
     def service(self, service=None, operator='is'):
         """
@@ -173,6 +191,25 @@ class Runtime(DynamicCore):
         """
 
         Utils.validate_string(u'service', service)
+        Utils.validate_string(u'operator', operator)
+
+    @keyword('Package ${package:[^\s]+\s} ${version:[^\s]+\s} ${operator:is|is not} installed')
+    def package(self, package=None, version='', operator='is'):
+        """
+        Validates that a package is or is not installed on the target machine.
+        The host name is implicitly derived from a setup variable.
+
+        Args:
+            version: expected version number
+            operator: is or is not
+            package: command that should be executed
+
+        Returns:
+            None
+
+        """
+
+        Utils.validate_string(u'package', service)
         Utils.validate_string(u'operator', operator)
 
     def _get_context(self):

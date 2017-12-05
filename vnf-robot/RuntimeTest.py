@@ -172,4 +172,32 @@ class TestRuntime(TestCase):
         ]
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
 
+    ###
+    ### Module Package
+    ###
+
+    def test__package__pass(self):
+        tests = [
+            u'Service "apache2" is running',
+            u'Service gitlab-ce is running',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+    def test__package__fail(self):
+        tests = [
+            u'Service gitlab ce is running',
+            u'Service 123 ce is not running',
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
+
+    def test__package_negation__pass(self):
+        tests = [
+            u'Service "apache2" is not running',
+            u'Service gitlab-ce is not running',
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+
+
 
