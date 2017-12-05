@@ -24,12 +24,9 @@ class TestRuntime(TestCase):
     def tearDown(self):
         pass
 
-    def test__e__pass(self):
-        tests = [
-            u' bla blub lba ',
-
-        ]
-        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+    ###
+    ### Module ENVIRONMENT
+    ###
 
     def test__environment__pass(self):
         tests = [
@@ -77,6 +74,47 @@ class TestRuntime(TestCase):
             u'On no de2, $DOCKER_HOST is set to tcp://node2:6578/',
             u'On , $DOCKER_HOST is set to tcp://node2:6578/'
 
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
+
+    ###
+    ### Module COMMAND
+    ###
+
+    def test__command__pass(self):
+        tests = [
+            u'Command "bash -c ps aux" exits with status 0',
+            u'Command "apt info htop" exits with status "255"'
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+    def test__command_with_stream__pass(self):
+        tests = [
+            u'Command "bash -c ps aux" exits with status 0',
+            u'Command "apt info htop" exits with status 0 and stdout contains "Installed"',
+            u'Command "apt install gcc-notexistant" exits with status 1 and stderr contains "not found"',
+            u'Command "echo $(ls -l -1)" exits with status 0 and stdout contains "bin"',
+            u'Command "echo `ls -l -1`" exits with status 0',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
+
+    def test__command__fail(self):
+        tests = [
+            u'Command bash -c ps aux exits with status 0',
+            u'Command "bash -c ps aux exits with status 0',
+            u'Command "bash -c ps aux exits with status "0',
+            u'Command "bash -c ps aux" exits with status a',
+            u'Command "bash -c ps aux" exits with status 1234',
+            u'Command "bash -c ps aux" exits with status 1234',
+
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
+
+    def test__command_with_stream__fail(self):
+        tests = [
+            u'Command "apt info htop" exits with status 0 and stdout contains ""',
+            u'Command "apt info htop" exits with status 0 and stdout contains bla',
         ]
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
 
