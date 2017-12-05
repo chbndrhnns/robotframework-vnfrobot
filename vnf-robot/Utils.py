@@ -32,6 +32,11 @@ class Utils:
             raise exc.DataError(u'Argument \'{}\' is not valid: must not be empty.'.format(argument_name))
 
     @staticmethod
+    def validate_list(argument_name, value):
+        if value is None:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+
+    @staticmethod
     def get_url_attributes(url):
         """
         Takes URL and splits it after the hostname or port.

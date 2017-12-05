@@ -209,8 +209,113 @@ class Runtime(DynamicCore):
 
         """
 
-        Utils.validate_string(u'package', service)
+        Utils.validate_string(u'package', package)
         Utils.validate_string(u'operator', operator)
+
+    @keyword('Kernel parameter ${param:[^\s]+} ${operator:is|is not} set to ${value:\d+}')
+    def package(self, parameter=None, operator='is', value=None):
+        """
+        Validates that a package is or is not installed on the target machine.
+        The host name is implicitly derived from a setup variable.
+
+        Args:
+            parameter: expected version number
+            operator: is or is not
+            value: command that should be executed
+
+        Returns:
+            None
+
+        """
+
+        Utils.validate_string(u'parameter', parameter)
+        Utils.validate_string(u'operator', operator)
+        Utils.validate_string(u'value', value)
+
+    @keyword('${instance:(^[^\s]+)|(^[I,i]nstance)} is running on ${host:[^\s]+}')
+    def placement_node(self, instance=None, host=None):
+        """
+        Validates that an instance runs on specific host.
+
+        Args:
+            instance: expected version number
+            host: machine where the instance should run
+
+        Returns:
+            None
+
+        """
+        Utils.validate_string(u'instance', instance)
+        Utils.validate_string(u'host', host)
+
+    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} has label ${label"[^\s]+"}')
+    def placement_label(self, instance=None, label=None):
+        """
+        Validates that an instance runs on a host with a specific label.
+
+        Args:
+            label: label name
+            instance: expected version number
+
+        Returns:
+            None
+        """
+
+        self.placement_labels(instance, label)
+
+    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} has labels ${labels:\[(".+")+\]}')
+    def placement_labels(self, instance=None, labels=None):
+        """
+        Validates that an instance runs on a host with specific labels.
+
+        Args:
+            labels: list of labels
+            instance: expected version number
+        Returns:
+            None
+        """
+        if not isinstance(labels, list):
+            roles = list(labels)
+        if labels is None:
+            labels = []
+
+        Utils.validate_string(u'instance', instance)
+        Utils.validate_string(u'labels', labels)
+
+    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} has role ${role:"[^\s]+"}')
+    def placement_role(self, instance=None, role=None):
+        """
+        Validates that an instance runs on a host with a specific role.
+
+        Args:
+            role: role name
+            instance: expected version number
+
+        Returns:
+            None
+        """
+
+        self.placement_roles(instance, role)
+
+    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} has roles ${roles:\[(".+")+\]}')
+    def placement_roles(self, instance=None, roles=None):
+        """
+        Validates that an instance runs on a host with specific roles.
+
+        Args:
+            roles: list of labels
+            instance: expected version number
+
+        Returns:
+            None
+        """
+        if not isinstance(roles, list):
+            roles = list(roles)
+        if roles is None:
+            roles = []
+
+        Utils.validate_string(u'instance', instance)
+        Utils.validate_string(u'roles', roles)
 
     def _get_context(self):
         s = TestSuite()
