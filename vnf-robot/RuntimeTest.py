@@ -243,17 +243,28 @@ class TestRuntime(TestCase):
 
     def test__placement__fail(self):
         tests = [
-            u'node-fjlkjs-2fd1 is running on docker-master',
-            u'Host of node1 of rabbitmq-eu.west.telekom has labels ["db", "powerful-machine"]',
-            u'Host of node1 is running has role slave'
+            u'Instance is running on docker -master',
+            u'node-fjl kjs-2fd1 is running on docker-master',
+            u'Host of rabbitmq-eu.west.telekom has labels "db", "powerful-machine"]',
+            u'Host of instance has label db dba',
+            u'Host of rabbitmq-eu.west.telekom has label db',
+            u'Host of node1 has role ["slave"[',
+            u'Host of node1 has roles [slave]',
+            u'Host of node1 has roles ["slave", "master";]',
         ]
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.FAIL)
 
     def test__placement_negation__pass(self):
         tests = [
-            u'node-fjlkjs-2fd1 is running on docker-master',
-            u'Host of node1 of rabbitmq-eu.west.telekom has labels ["db", "powerful-machine"]',
-            u'Host of node1 is running has role slave'
+            u'Instance is not running on docker-master',
+            u'node-fjlkjs-2fd1 is not running on docker-master',
+            u'Host of rabbitmq-eu.west.telekom has not labels ["db", "powerful-machine"]',
+            u'Host of instance has not label "db"',
+            u'Host of rabbitmq-eu.west.telekom has not label "db"',
+            u'Host of node1 has not role "slave"',
+            u'Host of node1 has not roles ["slave"]',
+            u'Host of node1 has not roles ["slave","master"]',
+            u'Host of node1 has not roles ["slave", "master"]',
         ]
         run_keyword_tests(test_instance=self, tests=tests, setup=None, expected_result=Result.PASS)
 
