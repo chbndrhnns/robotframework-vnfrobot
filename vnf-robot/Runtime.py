@@ -36,7 +36,7 @@ class Runtime(DynamicCore):
         logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
         return self.keywords[name](*args, **kwargs)
 
-    @keyword('On ${host:[^\s,]+}${delim:[,\s]*}${variable:\$\w+} ${operator:is set to|contains} ${value}')
+    @keyword('On ${host:[^\s,]+}${delim:[,\s]*}${variable:\$\w+} ${operator:is set to|contains} ${value:\S+}')
     def environment_with_context(self, host=None, delim=None, *args):
         """
         Validates that an environment variable is set on a specific host.
@@ -56,7 +56,7 @@ class Runtime(DynamicCore):
 
         self.environment(*args)
 
-    @keyword('On ${host:[^\s,]+}${delim:[,\s]*}${variable:\$\w+} ${operator:is not set to|contains not|does not contain} ${value}')
+    @keyword('On ${host:[^\s,]+}${delim:[,\s]*}${variable:\$\w+} ${operator:is not set to|contains not|does not contain} ${value:\S+}')
     def environment_with_context_negation(self, host=None, delim=None, *args):
         """
         Validates that an environment variable is set on a specific host.
@@ -76,7 +76,7 @@ class Runtime(DynamicCore):
 
         self.environment(*args)
 
-    @keyword('${variable:^\$\w+} ${operator:(is set to|contains)} ${value}')
+    @keyword('${variable:^\$\w+} ${operator:(is set to|contains)} ${value:\S+}')
     def environment(self, variable=None, operator=None, val=None):
         """
         Validates that an environment variable is set on a specific host.
@@ -96,7 +96,7 @@ class Runtime(DynamicCore):
         Utils.validate_argument(u'operator', operator)
         Utils.validate_argument(u'value', val)
 
-    @keyword('${variable:^\$\w+} ${operator:(is not set to|does not contain|contains not)} ${value}')
+    @keyword('${variable:^\$\w+} ${operator:(is not set to|does not contain|contains not)} ${value:\S+}')
     def environment_negation(self, variable=None, operator=None, val=None):
         """
         Validates that an environment variable is not set on a specific host.
@@ -157,7 +157,7 @@ class Runtime(DynamicCore):
         Utils.validate_argument(u'stream', stream)
         Utils.validate_string(u'stream_content', stream_content)
 
-    @keyword('Process ${process:[^\s]+\s|".+"\s}${operator:is|is not} running')
+    @keyword('Process ${process:\S+\s|".+"\s}${operator:is|is not} running')
     def process(self, process=None, operator='is'):
         """
         Validates that a process is running on the target machine.
@@ -175,7 +175,7 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'process', process)
         Utils.validate_string(u'operator', operator)
 
-    @keyword('Service ${service:[^\s]+\s|".+"\s}${operator:is|is not} running')
+    @keyword('Service ${service:\S+\s|".+"\s}${operator:is|is not} running')
     def service(self, service=None, operator='is'):
         """
         Validates that a service is running on the target machine.
@@ -193,7 +193,7 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'service', service)
         Utils.validate_string(u'operator', operator)
 
-    @keyword('Package ${package:[^\s]+\s} ${version:[^\s]+\s} ${operator:is|is not} installed')
+    @keyword('Package ${package:\S+\s} ${version:\S+\s} ${operator:is|is not} installed')
     def package(self, package=None, version='', operator='is'):
         """
         Validates that a package is or is not installed on the target machine.
@@ -212,7 +212,7 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'package', package)
         Utils.validate_string(u'operator', operator)
 
-    @keyword('Kernel parameter ${param:[^\s]+} ${operator:is|is not} set to ${value:\d+}')
+    @keyword('Kernel parameter ${param:\S+} ${operator:is|is not} set to ${value:\d+}')
     def package(self, parameter=None, operator='is', value=None):
         """
         Validates that a package is or is not installed on the target machine.
@@ -232,7 +232,7 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'operator', operator)
         Utils.validate_string(u'value', value)
 
-    @keyword('${instance:(^[^\s]+)|(^[I,i]nstance)} ${operator:is|is not} running on ${host:[^\s]+}')
+    @keyword('${instance:(^\S+)|(^[I,i]nstance)} ${operator:is|is not} running on ${host:\S+}')
     def placement_node(self, instance=None, operator='is', host=None):
         """
         Validates that an instance runs on specific host.
@@ -250,7 +250,7 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'operator', operator)
         Utils.validate_string(u'host', host)
 
-    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} ${operator:has|has not} label ${label:"[^\s]+"}')
+    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} label ${label:"\S+"}')
     def placement_label(self, instance=None, operator='has', label=None):
         """
         Validates that an instance runs on a host with a specific label.
@@ -267,7 +267,7 @@ class Runtime(DynamicCore):
         self.placement_labels(instance, operator, label)
 
 
-    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} ${operator:has|has not} labels ${labels:\[(".+")+\]}')
+    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} labels ${labels:\[(".+")+\]}')
     def placement_labels(self, instance=None, operator='has', labels=None):
         """
         Validates that an instance runs on a host with specific labels.
@@ -288,7 +288,7 @@ class Runtime(DynamicCore):
         Utils.validate_string(u'instance', instance)
         Utils.validate_string(u'labels', labels)
 
-    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} ${operator:has|has not} role ${role:"[^\s]+"}')
+    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} role ${role:"\S+"}')
     def placement_role(self, instance=None, operator='has', role=None):
         """
         Validates that an instance runs on a host with a specific role.
@@ -304,7 +304,7 @@ class Runtime(DynamicCore):
 
         self.placement_roles(instance, operator, role)
 
-    @keyword('Host of ${instance:([^\s]+)|([i,I]nstance)} ${operator:has|has not} roles ${roles:\[(".+")+\]}')
+    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} roles ${roles:\[(".+")+\]}')
     def placement_roles(self, instance=None, operator='has', roles=None):
         """
         Validates that an instance runs on a host with specific roles.
