@@ -43,7 +43,9 @@ class Utils:
     def validate_list(argument_name, value):
         if value is None:
             raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
-        if not isinstance(value, list):
+        try:
+            value = list(value)
+        except ValueError as e:
             raise exc.DataError(u'Argument \'{}\' is not valid: must be a list [ "..." ].'.format(argument_name))
 
     @staticmethod

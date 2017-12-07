@@ -307,6 +307,75 @@ class Network(DynamicCore):
     #     Utils.validate_argument(u'operator', operator)
     #     Utils.validate_list(u'address', addresses)
 
+    @keyword(
+        'On ${node:\S+}${trash:[,\s]*} port ${port:\d+|\d+/tcp|\d+/udp} is ${operator:open|closed}')
+    def port_is(self, node=None, trash=None, port=None, status='open'):
+        """
+        Validate that a port is either open or closed
+
+        Args:
+            port: network port number
+            node: instance where the test is run
+            status: open or closed
+            trash: space or no space, ignored
+
+        Returns:
+            None
+
+        """
+
+        Utils.validate_string(u'node', node)
+        Utils.validate_string(u'port', port)
+        Utils.validate_string(u'status', status)
+
+    @keyword(
+        'On ${node:\S+}${trash:[,\s]*} ports ${ports:\[("\S+",?\s*)+\]} are ${operator:open|closed}')
+    def ports_list(self, node=None, trash=None, ports=None, status='open'):
+        """
+        Validate that a port is either open or closed
+
+        Args:
+            ports: list of network port number
+            node: instance where the test is run
+            status: open or closed
+            trash: space or no space, ignored
+
+        Returns:
+            None
+
+        """
+
+        Utils.validate_string(u'node', node)
+        Utils.validate_list(u'ports', ports)
+        Utils.validate_string(u'status', status)
+
+    @keyword(
+        'On ${node:\S+}${trash:[,\s]*}${port_type:udp|TCP|\s*} ports ${port_start:\d+} to ${port_end:\d+} are ${operator:open|closed}')
+    def ports_range(self, node=None, trash=None, port_type='tcp', port_start=None, port_end='None', status='open'):
+        """
+        Validate that a range of ports is either open or closed
+
+        Args:
+            port_type: tcp or udp
+            port_end: end of port range
+            port_start: start of port range
+            node: instance where the test is run
+            status: open or closed
+            trash: space or no space, ignored
+
+        Returns:
+            None
+
+        """
+
+        # TODO: change style to match other port definitions: 22/tcp
+
+        Utils.validate_string(u'node', node)
+        Utils.validate_string(u'port_type', port_type or 'tcp')
+        Utils.validate_string(u'port_start', port_start)
+        Utils.validate_string(u'port_end', port_end)
+        Utils.validate_string(u'status', status)
+
     def _get_context(self):
         s = TestSuite()
         d = TestData()

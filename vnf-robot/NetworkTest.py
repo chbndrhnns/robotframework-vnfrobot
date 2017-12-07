@@ -73,7 +73,7 @@ class TestNetwork(TestCase):
         run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
 
     ###
-    ### Tests for network address
+    ### Tests for dns resolution
     ###
 
     def test__dns_resolve_single__pass(self):
@@ -139,6 +139,10 @@ class TestNetwork(TestCase):
         ]
         run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
 
+    ###
+    ### Tests for network interface properties
+    ###
+
     def test__interface__pass(self):
         tests = [
             u'On node1, eth0 has mtu_size of 1500',
@@ -174,4 +178,41 @@ class TestNetwork(TestCase):
             u'On node1, vlan1.1230 has no address 127.0.0.1',
             u'On node1, eth0 has mtu_size = 1500',
         ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
+
+    ###
+    ### Tests for network port properties
+    ###
+
+    def test__port__pass(self):
+        tests = [
+            u'On node1, port 22 is open',
+            u'On node1, port 22 is closed',
+            u'On node1, port 22/TCP is closed',
+            u'On node1, port 22/tcp is closed',
+            u'On node1, port 22/UDP is closed',
+            u'On node1, port 65535 is closed',
+            u'On node1, ports ["22/tcp", "23/udp"] are open',
+            u'On node1, ports ["65/tcp", "443"] are closed',
+            u'On node1, ports 5000 to 5005 are closed',
+            u'On node1, ports 5000 to 5005 are open',
+            u'On node1, UDP ports 5000 to 5005 are open',
+
+        ]
+
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    def test__port__fail(self):
+        tests = [
+            u'On node1, port 2d2 is open',
+            u'On node1, port 22 is close',
+            u'On node1, port 22/abs is closed',
+            u'On node1, port 22:udp is closed',
+            u'On node1, port 655.353 is closed',
+            u'On node1, ports ["22/tcp", "23/udp"] is open',
+            u'On node1, port ["65/tcp", "443"] are closed',
+            u'On node1, udp port 5000 to 5005 are closed',
+
+        ]
+
         run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
