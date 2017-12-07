@@ -267,7 +267,7 @@ class Runtime(DynamicCore):
         self.placement_labels(instance, operator, label)
 
 
-    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} labels ${labels:\[(".+")+\]}')
+    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} labels ${labels:\[("\S+",?\s*)+\]}')
     def placement_labels(self, instance=None, operator='has', labels=None):
         """
         Validates that an instance runs on a host with specific labels.
@@ -280,10 +280,10 @@ class Runtime(DynamicCore):
         Returns:
             None
         """
-        if not isinstance(labels, list):
-            roles = list(labels)
         if labels is None:
             labels = []
+        if not isinstance(labels, list):
+            labels = list(labels)
 
         Utils.validate_string(u'instance', instance)
         Utils.validate_string(u'labels', labels)
@@ -303,28 +303,6 @@ class Runtime(DynamicCore):
         """
 
         self.placement_roles(instance, operator, role)
-
-    @keyword('Host of ${instance:(\S+)|([i,I]nstance)} ${operator:has|has not} roles ${roles:\[(".+")+\]}')
-    def placement_roles(self, instance=None, operator='has', roles=None):
-        """
-        Validates that an instance runs on a host with specific roles.
-
-        Args:
-            operator: has or has not
-            roles: list of labels
-            instance: expected version number
-
-        Returns:
-            None
-        """
-        if not isinstance(roles, list):
-            roles = list(roles)
-        if roles is None:
-            roles = []
-
-        Utils.validate_string(u'instance', instance)
-        Utils.validate_string(u'operator', operator)
-        Utils.validate_string(u'roles', roles)
 
     def _get_context(self):
         s = TestSuite()

@@ -23,6 +23,10 @@ class TestNetwork(TestCase):
     def tearDown(self):
         pass
 
+    ###
+    ### Tests for network address
+    ###
+
     def test__network_address__pass(self):
         tests = [
             u'From "node1", I can reach "10.10.10.1"',
@@ -67,3 +71,107 @@ class TestNetwork(TestCase):
 
         ]
         run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    ###
+    ### Tests for network address
+    ###
+
+    def test__dns_resolve_single__pass(self):
+        tests = [
+            u'From node-1, "www.google.de" is resolved to "8.8.8.8"',
+            u'From node-1, "www.google.de" is only resolved to "8.8.8.8"',
+            u'From node-1, "www.google.de" is not resolved to "9.9.9.9"',
+
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    def test__dns_resolve_single__fail(self):
+        tests = [
+            u'From node-1, www.google.de" is resolved to "8.8.8.8"',
+            u'From node-1, www.google.de is resolved to "8.8.8.8"',
+            u'From node-1, "www.google.de" is resolved to 9.9.9.9',
+            u'From nod e-1, "www.google.de" is resolved to 9.9.9.9',
+            u'From node-1, "www.google.de" is resolves to "9.9.9.9"',
+
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
+
+    def test__dns_resolve_list__pass(self):
+        tests = [
+            u'From node-1, "www.google.de" is resolved to ["8.8.8.8", "127.127.127.127"]',
+            u'From node-1, "www.google.de" is only resolved to ["8.8.8.8", "127.127.127.127"]',
+            u'From node-1, "www.google.de" is not resolved to ["9.9.9.9","127.0.0.1"]',
+            u'From node-1, "www.google.de" is not resolved to ["9.9.9.9",  "127.0.0.1"]',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    def test__dns_resolve_list__fail(self):
+        tests = [
+            u'From node-1, "www.google.de" is resolved to [8.8.8.8", "127.127.127.127"]',
+            u'From node-1, "www.google.de" is not resolved to ["9.9.9.9", "127.0.0.1"',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
+
+    def test__dns_record__pass(self):
+        tests = [
+            u'"test.example.com. 3600 IN A  172.30.0.7" is resolved',
+            u'"7.0.30.172.in-addr.arpa.           PTR     test.example.com." is resolved',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    def test__dns_record__fail(self):
+        tests = [
+            u'"7.0.30.172.in-addr.arpa.           PTR     test.example.com. is resolved',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
+
+    def test__dns_resolve_boolean__pass(self):
+        tests = [
+            u'From node-1, lookup of "www.google.de" is successful',
+            u'From node-1, lookup of "www.google.de" is not successful',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    def test__dns_resolve_boolean__fail(self):
+        tests = [
+            u'From node-1, lookup of "www.google.de is successful',
+            u'From node-1, lookup of "" is not successful',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)
+
+    def test__interface__pass(self):
+        tests = [
+            u'On node1, eth0 has mtu_size of 1500',
+            u'On node1, "vlan1.1230" has mac_address ab:cd:ef:gh',
+            u'On node1, vlan1.1230 has mac_address ab:cd:ef:gh',
+            u'On node1, vlan1.1230 is active',
+            u'On node1, vlan1.1230 is not active',
+            u'On node1, vlan1.1230 has address 123.7.0.1',
+            u'On node1, vlan1.1230 has address "123.7.0.1"',
+            u'On node1, vlan1.1230 has not address 123.7.0.1/32',
+            u'On node1, vlan1.1230 has properties { "addresses": ["123.7.0.1/32", "125.1.1.5"]}',
+            u'On node1, vlan1.1230 has no address',
+            u'On node1, eth0 has mtu_size >= 1500',
+            u'On node1, eth0 has mtu_size != 1500',
+            u'On node1, eth0 has mtu_size <= 1500',
+            u'On node1, eth0 has mtu_size == 1500',
+            u'On node1, eth0 has mtu_size==1500',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.PASS)
+
+    def test__interface__fail(self):
+        tests = [
+            u'On node1, eth0 has mtu_ size U 1500',
+            u'On node1, eth 0 has MT U 1500',
+            u'On node1, vlan1.1230 has mac_address ab:cd:ef:gh',
+            u'On node1, vlan1.1230 is actived',
+            u'On node1, vlan1.1230 has address 123.7.0.1',
+            u'On node1, vlan1.1230 has not address 123.7.0.1/32',
+            u'On node1, vlan1.1230 has addresses ["123.7.0.1/32]',
+            u'On node1, vlan1.1230 has addresses ["123.7.0.1/32"',
+            u'On node1, vlan1.1230 has addresses "123.7.0.1/32"',
+            u'On node1, vlan1.1230 has addresses ["123.7.0.1/32" "125.1.1.5"]',
+            u'On node1, vlan1.1230 has no address 127.0.0.1',
+            u'On node1, eth0 has mtu_size = 1500',
+        ]
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL)

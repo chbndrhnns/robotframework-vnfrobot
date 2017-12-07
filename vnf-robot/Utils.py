@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
+import json
 import uuid
 from string import lower
 from urlparse import urlparse
@@ -17,12 +16,21 @@ class Utils:
 
     @staticmethod
     def validate_argument(argument_name, value):
+        value = value.strip()
         if value is None:
             raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
         if len(value) is 0:
             raise exc.DataError(u'Argument \'{}\' is not valid: must not be empty.'.format(argument_name))
         if u' ' in value and argument_name != u'operator':
             raise exc.DataError(u'Argument \'{}\' is not valid: must not contain spaces.'.format(argument_name))
+
+    @staticmethod
+    def validate_json(argument_name, value):
+        value = value.strip()
+        try:
+            json.loads(value)
+        except (ValueError, TypeError) as exc:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be JSON.'.format(argument_name))
 
     @staticmethod
     def validate_string(argument_name, value):
@@ -35,6 +43,8 @@ class Utils:
     def validate_list(argument_name, value):
         if value is None:
             raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+        if not isinstance(value, list):
+            raise exc.DataError(u'Argument \'{}\' is not valid: must be a list [ "..." ].'.format(argument_name))
 
     @staticmethod
     def get_url_attributes(url):
