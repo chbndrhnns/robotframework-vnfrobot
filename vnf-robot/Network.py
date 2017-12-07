@@ -117,7 +117,7 @@ class Network(DynamicCore):
 
         """
 
-        self.dns_resolve_list(src, trash=None, fqdn=fqdn, operator=operator, dst=dst)
+        self.dns_resolve_list(src, trash=None, fqdn=fqdn, operator=operator, dst='["{}"]'.format(dst))
 
     @keyword(
         'From ${src:\S+}${trash:[,\s]*} "${fqdn:\S+}" ${operator:is|is only|is not} resolved to ${dst:\[("\S+",?\s*)+\]}')
@@ -138,8 +138,6 @@ class Network(DynamicCore):
         """
         if dst is None:
             dst = []
-        if not isinstance(dst, list):
-            dst = list(dst)
 
         Utils.validate_argument(u'src', src)
         Utils.validate_argument(u'fqdn', fqdn)
@@ -188,7 +186,7 @@ class Network(DynamicCore):
         'On ${node:\S+}${trash:[,\s]*} ${interface:\S+} ${operator:has|has not} ${property:\S+}${comparator:\s*[=><!]{2\}\s*|\s*|\sof\s}${value:\S+}')
     def interface(self, node=None, trash=None, interface=None, operator='is', prop=None, comparator=None, value=None):
         """
-        Validate that a network interface has a specified address
+        Validate that a network interface has a specified property
 
         Args:
             comparator: operation to perform on expected and actual value (==, !=, <=, >=)
@@ -208,8 +206,11 @@ class Network(DynamicCore):
         Utils.validate_string(u'interface', interface)
         Utils.validate_argument(u'operator', operator)
         Utils.validate_argument(u'prop', prop)
+        if 'addresses' in prop.lower():
+            Utils.validate_list(u'value', value)
+        else:
+            Utils.validate_argument(u'value', value)
         Utils.validate_argument(u'comparator', comparator.strip() or '==')
-        Utils.validate_list(u'value', value)
 
     @keyword(
         'On ${node:\S+}${trash:[,\s]*} ${interface:\S+} ${operator:has|has not} properties ${props:{[^\}]+\}}')
@@ -279,13 +280,14 @@ class Network(DynamicCore):
         Utils.validate_argument(u'prop', prop)
 
     # @keyword(
-    #     'On ${node:\S+}${trash:[,\s]*} ${interface:\S+} ${operator:has|has not|has no} ${addresses:[Aa]ddresses\s+\[('
+    #     'On ${node:\S+}${trash:[,\s]*} ${interface:\S+} ${operator:has|has not} ${numerus:address|addresses} ${addresses:\s+\[('
     #     '"\S+",?\s*)+\]}')
-    # def interface_has_addresses(self, node=None, trash=None, interface=None, operator='is', addresses='None'):
+    # def interface_has_addresses(self, node=None, trash=None, interface=None, operator='has', numerus='address', addresses='None'):
     #     """
     #     Validate that a network interface has a specified address
     #
     #     Args:
+    #         numerus: address or addresses
     #         addresses: address to validate
     #         interface: network interface name
     #         node: instance where the test is run
@@ -297,15 +299,19 @@ class Network(DynamicCore):
     #
     #     """
     #
-    #     if addresses is None:
-    #         addresses = []
-    #     if not isinstance(addresses, list):
-    #         addresses = list(addresses)
+    #
+    #     # if addresses is None:
+    #     #     addresses = []
+    #     # if not isinstance(addresses, list):
+    #     #     addresses = list(addresses)
     #
     #     Utils.validate_string(u'node', node)
     #     Utils.validate_string(u'interface', interface)
     #     Utils.validate_argument(u'operator', operator)
-    #     Utils.validate_list(u'address', addresses)
+    #     if 'addresses' in numerus.lower():
+    #         Utils.validate_list(u'addresses', addresses)
+    #     else:
+    #         Utils.validate_argument(u'address', addresses)
 
     @keyword(
         'On ${node:\S+}${trash:[,\s]*} port ${port:\d+|\d+/tcp|\d+/udp} is ${operator:open|closed}')
