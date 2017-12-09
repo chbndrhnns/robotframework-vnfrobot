@@ -29,8 +29,8 @@ class Utils:
         value = value.strip()
         try:
             json.loads(value)
-        except (ValueError, TypeError) as exc:
-            raise exc.DataError(u'Argument \'{}\' is not valid: must not be JSON.'.format(argument_name))
+        except (ValueError, TypeError) as e:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must be JSON.'.format(argument_name))
 
     @staticmethod
     def validate_string(argument_name, value):
