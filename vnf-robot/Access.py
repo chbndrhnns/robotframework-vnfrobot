@@ -77,7 +77,7 @@ class Access(DynamicCore):
     @keyword('${node:"?\S+"?} ${operator:has|has not} user ${user:"?\S+"?} with properties ${props:{[^\}]+\}}')
     def user_has_properties(self, node=None, operator='has', user=None, props=None):
         """
-        Validates that a list of user exists (or does not exist) on a node.
+        Validates that a user exists (or does not exist) on a node with properties.
 
         Args:
             props: Properties to validate: uid, gid, groups, home, shell
@@ -137,7 +137,7 @@ class Access(DynamicCore):
     @keyword('${node:"?\S+"?} ${operator:has|has not} group ${group:"?\S+"?} with properties ${props:{[^\}]+\}}')
     def group_has_properties(self, node=None, operator='has', group=None, props=None):
         """
-        Validates that a list of user exists (or does not exist) on a node.
+        Validates that a group exist with properties.
 
         Args:
             props: Properties to validate: uid, gid, groups, home, shell
