@@ -24,3 +24,13 @@ HTTP GET
     GET $URL returns one of [$STATUS]
     GET $URL contains [$BODY]
 
+    Kernel Parameter    "net.ip4.forwarding"        is           1
+    Kernel Parameter    "net.ip4.forwarding"        is not       1
+    Kernel Parameter    "net.ip4.forwarding"        contains     1
+    Kernel Parameter    "net.ip4.forwarding"        contains not 1
+
+
+    Kernel Parameter    "vm.user_reserve_kbytes"    is greater  58000
+    Kernel Parameter    "vm.user_reserve_kbytes"    is greater  58000
+
+*** Keywords ***
