@@ -1,6 +1,9 @@
 import inspect
 import re
 
+from pytest import fail
+from robot.api import logger
+
 
 class Result:
     def __init__(self):
@@ -29,7 +32,7 @@ def _add_host_context(self, suite=None, host=None):
     return suite.keywords.create(context, type='setup')
 
 
-def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Result.PASS):
+def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Result.PASS, expected_message=None):
     caller_name = inspect.stack()[1][3]
     # TODO: verify that the expected method is called
     test_name = regex_method.findall(caller_name)[0]
@@ -40,12 +43,18 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
         run_count += 1
         with test_instance.subTest(test=t):
             test = context.create(u'Expect {}: {}'.format(Result.get(expected_result), t))
-            test.keywords.create(t)
+            test.keywords.append(t)
 
     result = test_instance.suite.run(options=test_instance.settings)
 
     if expected_result is Result.FAIL:
-        test_instance.assertEqual(run_count, result.statistics.total.all.failed)
+        test_instance.assertEqual(run_count, result.statistics.total.all.failed,
+                                  'Expected failure count does not match actual failure count.')
     if expected_result is Result.PASS:
-        test_instance.assertEqual(run_count, result.statistics.total.all.passed)
+        test_instance.assertEqual(run_count, result.statistics.total.all.passed,
+                                  'Expected pass count does not match actual pass count.')
+
+    if expected_message:
+        for result in result.suite.tests:
+            test_instance.assertIn(expected_message, result.message)
 
