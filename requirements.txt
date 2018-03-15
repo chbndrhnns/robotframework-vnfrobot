@@ -1,3 +1,4 @@
+unittest2
 backports.tempfile
 python-dotenv==0.6.5
 docker-compose==1.15.0

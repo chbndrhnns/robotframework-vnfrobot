@@ -1,5 +1,10 @@
 class DataError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = True
+    # Could be False in case we do a dry run of the test cases before really running them
+    ROBOT_EXIT_ON_FAILURE = False
+
+
+class ParseError(RuntimeError):
+    ROBOT_EXIT_ON_FAILURE = False
 
 
 class AssertError(RuntimeError):

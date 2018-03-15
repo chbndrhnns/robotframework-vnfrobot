@@ -97,6 +97,5 @@ Placement constraint
     ...    - constraint
 
     Container is (not) on host $(HOST)
-    Container is (not) on node $(NODE_ID)
     Container is (not) on node with role $(ROLE)
     Container is (not) on node with labels []

@@ -1,18 +1,55 @@
 # -*- coding: utf-8 -*-
-
-
+import json
 import uuid
 from string import lower
 from urlparse import urlparse
 
 from requests.exceptions import InvalidSchema
 
+import exc
 from exc import *
 
 
 class Utils:
     def __init__(self):
         pass
+
+    @staticmethod
+    def validate_argument(argument_name, value):
+        value = value.strip()
+        if value is None:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+        if len(value) is 0:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be empty.'.format(argument_name))
+        if u' ' in value and argument_name != u'operator':
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not contain spaces.'.format(argument_name))
+
+    @staticmethod
+    def validate_json(argument_name, value):
+        value = value.strip()
+        try:
+            json.loads(value)
+        except (ValueError, TypeError) as e:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must be JSON.'.format(argument_name))
+
+    @staticmethod
+    def validate_string(argument_name, value):
+        if value is None:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+        if len(value) is 0:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be empty.'.format(argument_name))
+
+    @staticmethod
+    def validate_list(argument_name, value):
+        if value is None:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+        if type(value) is not list and '[' not in value:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+        try:
+            a = json.loads(value)
+            print(a)
+        except (ValueError, TypeError) as e:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must be a list [ "..." ].'.format(argument_name))
 
     @staticmethod
     def get_url_attributes(url):
