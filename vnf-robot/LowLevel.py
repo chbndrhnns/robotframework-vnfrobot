@@ -47,8 +47,8 @@ class LowLevel(DynamicCore):
 
         self.sut = SUT(target_type, target)
 
-    @keyword('Get Environment Variables')
-    def get_env_variables(self):
+    @keyword('Environment Variable')
+    def env_variable(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -56,8 +56,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Execute Command')
-    def execute_command(self):
+    @keyword('Command')
+    def command(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -65,8 +65,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Get Process')
-    def get_process(self):
+    @keyword('Process')
+    def process(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -74,8 +74,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Get Service')
-    def get_service(self):
+    @keyword('Service')
+    def service(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -83,8 +83,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Get Kernel Parameters')
-    def get_kernel_parameter(self):
+    @keyword('Kernel Parameter')
+    def kernel_parameter(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -92,8 +92,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Inspect Container')
-    def inspect_container(self):
+    @keyword('Container')
+    def container(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -101,8 +101,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check User')
-    def check_user(self):
+    @keyword('User')
+    def user(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -110,8 +110,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check Group')
-    def check_group(self):
+    @keyword('Group')
+    def group(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -119,8 +119,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check File')
-    def check_file(self):
+    @keyword('File')
+    def file(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -128,8 +128,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check Symbolic Link')
-    def check_symlink(self):
+    @keyword('Symbolic Link')
+    def symlink(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -137,8 +137,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check Address')
-    def check_address(self):
+    @keyword('Address')
+    def address(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -146,8 +146,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Resolve DNS Record')
-    def resolve_dns_record(self):
+    @keyword('DNS')
+    def dns(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -155,8 +155,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check Interface')
-    def check_interface(self):
+    @keyword('Interface')
+    def interface(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:
@@ -164,8 +164,8 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Check Port')
-    def check_port(self):
+    @keyword('Port')
+    def port(self):
         allowed_target = ('node',)
 
         if self.sut.target_type not in allowed_target:

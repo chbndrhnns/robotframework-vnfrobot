@@ -24,20 +24,20 @@ class LowLevelTest(TestCase):
 
     def test__env_vars__no_target__fail(self):
         tests = [
-            Keyword(name=u'Get Environment Variables'),
-            Keyword(name=u'Execute Command'),
-            Keyword(name=u'Get Process'),
-            Keyword(name=u'Get Service'),
-            Keyword(name=u'Get Kernel Parameters'),
-            Keyword(name=u'Inspect Container'),
-            Keyword(name=u'Check User'),
-            Keyword(name=u'Check Group'),
-            Keyword(name=u'Check File'),
-            Keyword(name=u'Check Symbolic link'),
-            Keyword(name=u'Check Address'),
-            Keyword(name=u'Resolve DNS Record'),
-            Keyword(name=u'Check Interface'),
-            Keyword(name=u'Check Port'),
+            Keyword(name=u'Environment Variable'),
+            Keyword(name=u'Command'),
+            Keyword(name=u'Process'),
+            Keyword(name=u'Service'),
+            Keyword(name=u'Kernel Parameter'),
+            Keyword(name=u'Container'),
+            Keyword(name=u'User'),
+            Keyword(name=u'Group'),
+            Keyword(name=u'File'),
+            Keyword(name=u'Symbolic link'),
+            Keyword(name=u'Address'),
+            Keyword(name=u'DNS'),
+            Keyword(name=u'Interface'),
+            Keyword(name=u'Port'),
         ]
         with patch('LowLevel.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL, expected_message=u'SetupError: Target type')
@@ -46,21 +46,20 @@ class LowLevelTest(TestCase):
         self.suite.keywords.append(Keyword(name='Set Target', args=['node', 'flamboyant_saha'], type='setup'))
 
         tests = [
-            Keyword(name=u'Get Environment Variables'),
-            Keyword(name=u'Execute Command'),
-            Keyword(name=u'Get Process'),
-            Keyword(name=u'Get Service'),
-            Keyword(name=u'Get Kernel Parameters'),
-            Keyword(name=u'Inspect Container'),
-            Keyword(name=u'Check User'),
-            Keyword(name=u'Check Group'),
-            Keyword(name=u'Check File'),
-            Keyword(name=u'Check Symbolic link'),
-            Keyword(name=u'Check Address'),
-            Keyword(name=u'Resolve DNS Record'),
-            Keyword(name=u'Check Interface'),
-            Keyword(name=u'Check Port'),
-
+            Keyword(name=u'Environment Variable'),
+            Keyword(name=u'Command'),
+            Keyword(name=u'Process'),
+            Keyword(name=u'Service'),
+            Keyword(name=u'Kernel Parameter'),
+            Keyword(name=u'Container'),
+            Keyword(name=u'User'),
+            Keyword(name=u'Group'),
+            Keyword(name=u'File'),
+            Keyword(name=u'Symbolic link'),
+            Keyword(name=u'Address'),
+            Keyword(name=u'DNS'),
+            Keyword(name=u'Interface'),
+            Keyword(name=u'Port'),
         ]
 
         run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
