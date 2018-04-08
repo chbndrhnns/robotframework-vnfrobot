@@ -172,7 +172,7 @@ class LowLevel(DynamicCore):
 
     @keyword('Port ${raw_entity:\S+}: ${property:\S+} is ${val:\S+}')
     def port(self, raw_entity, raw_prop, raw_val):
-        allowed_context = ['node']
+        allowed_context = ['node', 'network']
         properties = {
             'state': ['open', 'closed']
         }
@@ -183,9 +183,7 @@ class LowLevel(DynamicCore):
         self.validate_property(properties, raw_prop)
         self.validate_value(properties, raw_prop, raw_val)
 
-
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        BuiltIn().fail('Test fail')
 
     @staticmethod
     def validate_value(properties, raw_prop, raw_val):

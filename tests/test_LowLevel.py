@@ -9,7 +9,6 @@ from unittest2 import TestCase
 from robot.api import TestSuite
 from robot.running import Keyword
 
-from exc import SetupError
 from testutils import run_keyword_tests, Result
 
 
