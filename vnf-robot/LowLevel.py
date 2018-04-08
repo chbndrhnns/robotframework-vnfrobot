@@ -27,6 +27,7 @@ class LowLevel(DynamicCore):
         self.context_type = None
         self.context = None
         self.sut = SUT(None, None)
+        self.deployment = None
 
         logger.info(u"Importing {}".format(self.__class__))
 
@@ -40,6 +41,10 @@ class LowLevel(DynamicCore):
         self.context = BuiltIn().get_library_instance(all=True)
 
         logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
+
+        if self.deployment is None and u'Deploy ${descriptor:\\S+}' not in name:
+            raise exc.SetupError('The "Deploy" keyword is necessary before running any other keyword.')
+
         return self.keywords[name](*args, **kwargs)
 
     @keyword('Set ${context_type:\S+} context to ${context:\S+}')
@@ -183,6 +188,8 @@ class LowLevel(DynamicCore):
         self.validate_property(properties, raw_prop)
         self.validate_value(properties, raw_prop, raw_val)
 
+    @keyword('Deploy ${descriptor:\S+}')
+    def deploy(self, descriptor):
         BuiltIn().fail('Test fail')
 
     @staticmethod
