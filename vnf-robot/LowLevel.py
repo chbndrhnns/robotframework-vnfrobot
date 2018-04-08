@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import collections
+import re
+from string import lower
+
 from robot.libraries.BuiltIn import BuiltIn
 
 import exc
@@ -14,13 +17,14 @@ SUT = collections.namedtuple('sut', 'target_type, target')
 
 
 class LowLevel(DynamicCore):
-    """The Filesystem module contains keywords to validate items on file systems."""
+    """The LowLevel module contains low-level keywords for the VNF Robot."""
 
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
     __version__ = VERSION
 
     def __init__(self):
         DynamicCore.__init__(self, [])
+        self.context_type = None
         self.context = None
         self.sut = SUT(None, None)
 
@@ -38,138 +42,188 @@ class LowLevel(DynamicCore):
         logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
         return self.keywords[name](*args, **kwargs)
 
-    @keyword('Set Target')
-    def set_target(self, target_type=None, target=None):
-        if target_type is None:
-            raise exc.SetupError('No target type given.')
-        if target is None:
-            raise exc.SetupError('No target given for target_type.')
+    @keyword('Set ${context_type:\S+} context to ${context:\S+}')
+    def set_context(self, context_type=None, context=None):
+        context_types = ['application', 'service', 'node', 'network']
 
-        self.sut = SUT(target_type, target)
+        if context_type not in context_types:
+            raise exc.SetupError('Invalid context given. Must be {}'.format(context_types))
+        if context is None:
+            raise exc.SetupError('No context given.')
+
+        self.sut = SUT(context_type, context)
 
     @keyword('Environment Variable')
     def env_variable(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Command')
     def command(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Process')
     def process(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Service')
     def service(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Kernel Parameter')
     def kernel_parameter(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Container')
     def container(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('User')
     def user(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Group')
     def group(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('File')
     def file(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Symbolic Link')
     def symlink(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Address')
     def address(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('DNS')
     def dns(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Interface')
     def interface(self):
-        allowed_target = ('node',)
+        allowed_context = ('node',)
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
+
+        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+
+    @keyword('Port ${raw_entity:\S+}: ${property:\S+} is ${val:\S+}')
+    def port(self, raw_entity, raw_prop, raw_val):
+        allowed_context = ['node']
+        properties = {
+            'state': ['open', 'closed']
+        }
+
+        self.validate_context(allowed_context)
+        self.validate_port(raw_entity)
+
+        self.validate_property(properties, raw_prop)
+        self.validate_value(properties, raw_prop, raw_val)
+
+
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
-    @keyword('Port')
-    def port(self):
-        allowed_target = ('node',)
+    @staticmethod
+    def validate_value(properties, raw_prop, raw_val):
+        val = raw_val in properties[raw_prop]
+        if not val:
+            raise exc.ValidationError(
+                'Value "{}" not allowed for {}. Must be any of {}'.format(raw_val, raw_prop, properties.keys()))
 
-        if self.sut.target_type not in allowed_target:
-            raise exc.SetupError('Target type "{}" not allowed.'.format(self.sut.target_type))
+    @staticmethod
+    def validate_property(properties, raw_prop):
+        # Check that the given property and its expected value are valid
+        prop = raw_prop in properties
+        if not prop:
+            raise exc.ValidationError(
+                'Property "{}" not allowed. Must be any of {}'.format(raw_prop, properties.keys()))
 
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+    @staticmethod
+    def validate_port(raw_entity):
+        # Check that raw_entity is valid
+        # 0 < port <= 65535
+        # \d+
+        entity = re.search('(\d+)[/]?(tcp|udp)?', raw_entity, re.IGNORECASE)
+        if not entity:
+            raise exc.ValidationError(
+                'Port "{}" not valid.'.format(raw_entity))
+        port = entity.group(1) if entity else None
+        protocol = lower(entity.group(2)) if entity.group(2) else None
+        if 0 < port <= 65535:
+            raise exc.ValidationError(
+                'Port "{}" not valid. Must be between 1 and 65535'.format(port))
+        elif protocol:
+            if protocol not in ['tcp', 'udp']:
+                raise exc.ValidationError(
+                    'Protocol "{}" not valid. Only udp and tcp are supported'.format(protocol))
+
+    def validate_context(self, allowed_context):
+        # Check that a context is given for the test
+        if self.sut.target_type not in allowed_context:
+            raise exc.SetupError(
+                'Context type "{}" not allowed. Must be any of {}'.format(self.sut.target_type, allowed_context))
 

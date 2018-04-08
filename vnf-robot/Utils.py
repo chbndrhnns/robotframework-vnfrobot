@@ -15,6 +15,17 @@ class Utils:
         pass
 
     @staticmethod
+    def convert_to_int(argument_name, value):
+        value = value.strip()
+        if value is None:
+            raise exc.DataError(u'Argument \'{}\' is not valid: must not be None.'.format(argument_name))
+        try:
+            v = int(value)
+            return v
+        except ValueError:
+            return False
+
+    @staticmethod
     def validate_argument(argument_name, value):
         value = value.strip()
         if value is None:

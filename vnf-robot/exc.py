@@ -21,6 +21,10 @@ class SetupError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = True
 
 
+class ValidationError(RuntimeError):
+    ROBOT_EXIT_ON_FAILURE = False
+
+
 class TeardownError(RuntimeError):
     # ROBOT_EXIT_ON_FAILURE = True
     pass
