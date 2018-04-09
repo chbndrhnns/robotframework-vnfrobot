@@ -1,5 +1,10 @@
+import os
+
+import docker
+from docker.models.services import Service
 from pytest import fixture
 
+import namesgenerator
 from DockerController import DockerController
 from testutils import Result
 from . import path
@@ -7,7 +12,7 @@ from . import path
 from tools.archive import (Archive)
 from tools.easy_docker import (DockerContainer)
 
-test_container = 'goss-test'
+test_container = 'gosstest_' + namesgenerator.get_random_name()
 
 
 @fixture
@@ -55,6 +60,7 @@ def cleanup(d, containers):
 
     for container in containers:
         try:
+            d.dispatch(['service', 'rm', container])
             d.dispatch(['stop', container])
             d.dispatch(['rm', container])
         except AssertionError:
@@ -85,7 +91,7 @@ def test__list_containers__pass(controller):
     assert len(result) > 0
 
 
-def test__get_env(controller):
+def test__get_env__container(controller):
     cleanup(controller, test_container)
 
     controller.dispatch(['run', '-d', '-p', '12345:80', '--name', test_container, 'nginx'])
@@ -96,3 +102,35 @@ def test__get_env(controller):
     cleanup(controller, test_container)
 
 
+def test__get_env__service(controller):
+    stack_name = 'test-stack'
+    service = 'sut'
+
+    service_id = '{}_{}'.format(stack_name, service)
+
+    cleanup(controller, service_id)
+
+    try:
+        controller.dispatch(['stack', 'deploy', '-c', os.path.join(path, 'fixtures', 'dc-test.yml'), stack_name])
+        env = controller.get_env(service_id)
+    finally:
+        cleanup(controller, service_id)
+
+    assert isinstance(env, list)
+    assert [e for e in env if 'PATH' in e]
+
+
+def test__find_service__pass(controller):
+    stack_name = 'test-stack'
+    service = 'sut'
+
+    service_id = '{}_{}'.format(stack_name, service)
+
+    cleanup(controller, service_id)
+
+    controller.dispatch(['stack', 'deploy', '-c', os.path.join(path, 'fixtures', 'dc-test.yml'), stack_name])
+    service = controller.get_service(service_id)
+
+    assert isinstance(service, Service)
+
+    # cleanup(controller, service_id)

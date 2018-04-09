@@ -4,7 +4,7 @@ Library  LowLevel
 *** Variables ***
 #${SKIP_DEPLOY}  True
 ${SKIP_UNDEPLOY}  True
-${DESCRIPTOR}   dc-port.yml
+${DESCRIPTOR}   dc-test.yml
 
 *** Test Cases ***
 Check ports

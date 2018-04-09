@@ -85,6 +85,53 @@ class LowLevelTest(TestCase):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Value')
 
+    def test__variable__pass(self):
+        self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
+
+        tests = [
+            Keyword(name=u'Variable PYTHONPATH: is bla'),
+            Keyword(name=u'Variable PYTHON_PATH: contains bin'),
+            Keyword(name=u'Variable PYTHONPATH: contains /usr/bin'),
+            Keyword(name=u'Variable PYTHONPATH: is not "$PATH:/usr/bin"'),
+        ]
+        run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
+
+    def test__variable__invalid_var__fail(self):
+        self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
+
+        tests = [
+            Keyword(name=u'Variable 80: is b'),
+            Keyword(name=u'Variable abc: is b'),
+            Keyword(name=u'Variable A-B: is b'),
+        ]
+        with patch('LowLevel.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+            run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
+                              expected_message=u'ValidationError: Value')
+
+    def test__variable__get_env__pass(self):
+        self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
+
+        tests = [
+            Keyword(name=u'Variable PATH: contains /usr/bin'),
+            Keyword(name=u'Variable PATH: is /usr/bin'),
+            Keyword(name=u'Variable PATH: is "/usr/bin"'),
+            Keyword(name=u'Variable PATH: is \'/usr/bin\''),
+            Keyword(name=u'Variable NGINX_VERSION: contains 2.0.0beta1'),
+            Keyword(name=u'Variable NGINX_VERSION: is 2.0.0beta1'),
+        ]
+        with patch('LowLevel.DockerController.get_env', return_value=["PATH=/usr/bin", "NGINX_VERSION=2.0.0beta1"]):
+            run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
+
+    def test__variable__invalid_value__fail(self):
+        self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
+
+        tests = [
+            Keyword(name=u'Variable ABC: is ""'),
+        ]
+        with patch('LowLevel.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+            run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
+                              expected_message=u'ValidationError: Value')
+
 
     @pytest.mark.skip
     def test__all_keywords__no_target__fail(self):

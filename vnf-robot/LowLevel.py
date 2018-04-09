@@ -11,9 +11,11 @@ import exc
 from robot.api import logger
 from robot.api.deco import keyword
 
-from DockerController import DockerController
+from DockerController import DockerController, ProcessResult
 from robotlibcore import DynamicCore
 from version import VERSION
+from testutils import string_matchers, number_matchers, get_truth, validate_context, validate_port, validate_property, \
+    validate_value, validate_against_regex
 
 SUT = collections.namedtuple('sut', 'target_type, target')
 
@@ -28,7 +30,7 @@ class LowLevel(DynamicCore):
     def __init__(self):
         DynamicCore.__init__(self, [])
         self.descriptor_file = None
-        self.deployment_name = namesgenerator.get_random_name()
+        self.deployment_name = None
         self.context_type = None
         self.context = None
         self.sut = SUT(None, None)
@@ -37,21 +39,33 @@ class LowLevel(DynamicCore):
         self.containers_created = []
         self.services_created = []
         self.docker_controller = None
+        self.deployment_result = ProcessResult('', '')
+        self.deployment_options = {
+            'SKIP_DEPLOY': False,
+            'SKIP_UNDEPLOY': False,
+        }
 
         logger.info(u"Importing {}".format(self.__class__))
 
+        if BuiltIn().get_variable_value("${SKIP_DEPLOY}"):
+            self.deployment_options['SKIP_DEPLOY'] = True
+
+        if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
+            self.deployment_options['SKIP_UNDEPLOY'] = True
+
+        if BuiltIn().get_variable_value("${DEPLOYMENT_NAME}"):
+            self.deployment_name = BuiltIn().get_variable_value("${DEPLOYMENT_NAME}")
+        else:
+            self.deployment_name = namesgenerator.get_random_name()
+
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
-
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
-        if not BuiltIn().get_variable_value("${SKIP_DEPLOY}"):
-            logger.console('Deploying {}'.format(self.descriptor_file))
-            self.deploy(self.descriptor_file)
-        else:
-            logger.console('Skipping deployment')
+        logger.console('Deploying {}'.format(self.descriptor_file))
+        self.deployment_result = self.deploy(self.descriptor_file)
 
     def _end_suite(self, name, attrs):
-        if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
+        if self.deployment_options['SKIP_DEPLOY']:
             logger.console('Skipping undeployment')
             return
 
@@ -61,6 +75,10 @@ class LowLevel(DynamicCore):
         else:
             logger.console('Skipping: remove deployment')
 
+    def validate_deployment(self):
+        if self.deployment_result.stderr:
+            BuiltIn().fatal_error("Could not deploy the system under test: {}".format(self.deployment_result.stderr))
+
     def run_keyword(self, name, args, kwargs):
         """
         Mandatory method for using robot dynamic libraries
@@ -69,6 +87,9 @@ class LowLevel(DynamicCore):
             None
         """
         self.context = BuiltIn().get_library_instance(all=True)
+
+        logger.console('\nValidating deployment results...')
+        self.validate_deployment()
 
         logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
 
@@ -87,15 +108,6 @@ class LowLevel(DynamicCore):
             raise exc.SetupError('No context given.')
 
         self.sut = SUT(context_type, context)
-
-    @keyword('Environment Variable')
-    def env_variable(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
     @keyword('Command')
     def command(self):
@@ -205,6 +217,30 @@ class LowLevel(DynamicCore):
 
         return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
 
+    @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
+    def env_variable(self, raw_entity, matcher, raw_val):
+        allowed_context = ['service']
+        raw_entity_matcher = '[A-Z][A-Z0-9_]'
+        raw_value_matcher = '[^\s]'
+        service_id = '{}_{}'.format(self.deployment_name, self.sut.target)
+
+        value = raw_val.strip('"\'')
+
+        # Validations
+        validate_context(allowed_context, self.sut.target_type)
+        validate_against_regex('variable', raw_entity, raw_entity_matcher)
+        validate_against_regex('value', value, raw_value_matcher)
+
+        # Get data
+        env = self.docker_controller.get_env(service_id)
+        found = [e.split('=')[1] for e in env if raw_entity in e.split('=')[0]][0]
+
+        if not found:
+            raise exc.ValidationError('No variable {} found.'.format(raw_entity))
+
+        if not get_truth(found, string_matchers[matcher], value):
+            raise exc.ValidationError('Variable {}: {} {}'.format(raw_entity, matcher, value))
+
     @keyword('Port ${raw_entity:\S+}: ${property:\S+} is ${val:\S+}')
     def port(self, raw_entity, raw_prop, raw_val):
         allowed_context = ['service', 'network']
@@ -212,11 +248,13 @@ class LowLevel(DynamicCore):
             'state': ['open', 'closed']
         }
 
-        self.validate_context(allowed_context)
-        self.validate_port(raw_entity)
+        # Validations
+        validate_context(allowed_context, self.sut.target_type)
+        validate_port(raw_entity)
+        validate_property(properties, raw_prop)
+        validate_value(properties, raw_prop, raw_val)
 
-        self.validate_property(properties, raw_prop)
-        self.validate_value(properties, raw_prop, raw_val)
+        # Test
 
     @keyword('Deploy ${descriptor:\S+}')
     def deploy(self, descriptor):
@@ -226,48 +264,13 @@ class LowLevel(DynamicCore):
         self.descriptor_file = descriptor
 
         self.docker_controller = DockerController(base_dir=os.path.dirname(self.suite_source))
-        self.docker_controller.dispatch(['stack', 'deploy', '-c', self.descriptor_file, self.deployment_name])
+        if self.deployment_options['SKIP_DEPLOY']:
+            logger.console('Skipping deployment')
+        else:
+            return self.docker_controller.dispatch(
+                ['stack', 'deploy', '-c', self.descriptor_file, self.deployment_name])
 
     @keyword('Remove deployment')
     def remove_deployment(self):
         self.docker_controller.dispatch(['stack', 'rm', self.deployment_name])
-
-    @staticmethod
-    def validate_value(properties, raw_prop, raw_val):
-        val = raw_val in properties[raw_prop]
-        if not val:
-            raise exc.ValidationError(
-                'Value "{}" not allowed for {}. Must be any of {}'.format(raw_val, raw_prop, properties.keys()))
-
-    @staticmethod
-    def validate_property(properties, raw_prop):
-        # Check that the given property and its expected value are valid
-        prop = raw_prop in properties
-        if not prop:
-            raise exc.ValidationError(
-                'Property "{}" not allowed. Must be any of {}'.format(raw_prop, properties.keys()))
-
-    @staticmethod
-    def validate_port(raw_entity):
-        # Check that raw_entity is valid
-        # 0 < port <= 65535
-        # \d+
-        entity = re.search('(\d+)[/]?(tcp|udp)?', raw_entity, re.IGNORECASE)
-        if not entity:
-            raise exc.ValidationError(
-                'Port "{}" not valid.'.format(raw_entity))
-        port = int(entity.group(1)) if entity else None
-        protocol = lower(entity.group(2)) if entity.group(2) else None
-        if not (0 < port <= 65535):
-            raise exc.ValidationError(
-                'Port "{}" not valid. Must be between 1 and 65535'.format(port))
-        elif protocol:
-            if protocol not in ['tcp', 'udp']:
-                raise exc.ValidationError(
-                    'Protocol "{}" not valid. Only udp and tcp are supported'.format(protocol))
-
-    def validate_context(self, allowed_context):
-        # Check that a context is given for the test
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError(
-                'Context type "{}" not allowed. Must be any of {}'.format(self.sut.target_type, allowed_context))
+        self.docker_controller = None
