@@ -2,14 +2,16 @@
 import collections
 import re
 from string import lower
+import namesgenerator
 
+import os
 from robot.libraries.BuiltIn import BuiltIn
 
 import exc
 from robot.api import logger
 from robot.api.deco import keyword
 
-from Utils import Utils
+from DockerController import DockerController
 from robotlibcore import DynamicCore
 from version import VERSION
 
@@ -20,16 +22,44 @@ class LowLevel(DynamicCore):
     """The LowLevel module contains low-level keywords for the VNF Robot."""
 
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
+    ROBOT_LISTENER_API_VERSION = 2
     __version__ = VERSION
 
     def __init__(self):
         DynamicCore.__init__(self, [])
+        self.descriptor_file = None
+        self.deployment_name = namesgenerator.get_random_name()
         self.context_type = None
         self.context = None
         self.sut = SUT(None, None)
-        self.deployment = None
+        self.ROBOT_LIBRARY_LISTENER = self
+        self.suite_source = None
+        self.containers_created = []
+        self.services_created = []
+        self.docker_controller = None
 
         logger.info(u"Importing {}".format(self.__class__))
+
+    def _start_suite(self, name, attrs):
+        self.suite_source = attrs.get('source', None)
+
+        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
+        if not BuiltIn().get_variable_value("${SKIP_DEPLOY}"):
+            logger.console('Deploying {}'.format(self.descriptor_file))
+            self.deploy(self.descriptor_file)
+        else:
+            logger.console('Skipping deployment')
+
+    def _end_suite(self, name, attrs):
+        if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
+            logger.console('Skipping undeployment')
+            return
+
+        if self.docker_controller:
+            logger.console('Removing deployment "{}"'.format(self.descriptor_file))
+            self.remove_deployment()
+        else:
+            logger.console('Skipping: remove deployment')
 
     def run_keyword(self, name, args, kwargs):
         """
@@ -42,8 +72,8 @@ class LowLevel(DynamicCore):
 
         logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
 
-        if self.deployment is None and u'Deploy ${descriptor:\\S+}' not in name:
-            raise exc.SetupError('The "Deploy" keyword is necessary before running any other keyword.')
+        # if self.deployment is None and u'Deploy ${descriptor:\\S+}' not in name:
+        #     raise exc.SetupError('The "Deploy" keyword is necessary before running any other keyword.')
 
         return self.keywords[name](*args, **kwargs)
 
@@ -177,7 +207,7 @@ class LowLevel(DynamicCore):
 
     @keyword('Port ${raw_entity:\S+}: ${property:\S+} is ${val:\S+}')
     def port(self, raw_entity, raw_prop, raw_val):
-        allowed_context = ['node', 'network']
+        allowed_context = ['service', 'network']
         properties = {
             'state': ['open', 'closed']
         }
@@ -190,7 +220,17 @@ class LowLevel(DynamicCore):
 
     @keyword('Deploy ${descriptor:\S+}')
     def deploy(self, descriptor):
-        BuiltIn().fail('Test fail')
+        if self.suite_source is None:
+            raise exc.SetupError('Cannot determine directory of robot file.')
+
+        self.descriptor_file = descriptor
+
+        self.docker_controller = DockerController(base_dir=os.path.dirname(self.suite_source))
+        self.docker_controller.dispatch(['stack', 'deploy', '-c', self.descriptor_file, self.deployment_name])
+
+    @keyword('Remove deployment')
+    def remove_deployment(self):
+        self.docker_controller.dispatch(['stack', 'rm', self.deployment_name])
 
     @staticmethod
     def validate_value(properties, raw_prop, raw_val):
@@ -216,9 +256,9 @@ class LowLevel(DynamicCore):
         if not entity:
             raise exc.ValidationError(
                 'Port "{}" not valid.'.format(raw_entity))
-        port = entity.group(1) if entity else None
+        port = int(entity.group(1)) if entity else None
         protocol = lower(entity.group(2)) if entity.group(2) else None
-        if 0 < port <= 65535:
+        if not (0 < port <= 65535):
             raise exc.ValidationError(
                 'Port "{}" not valid. Must be between 1 and 65535'.format(port))
         elif protocol:
@@ -231,4 +271,3 @@ class LowLevel(DynamicCore):
         if self.sut.target_type not in allowed_context:
             raise exc.SetupError(
                 'Context type "{}" not allowed. Must be any of {}'.format(self.sut.target_type, allowed_context))
-

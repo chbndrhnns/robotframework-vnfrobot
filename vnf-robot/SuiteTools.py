@@ -40,8 +40,7 @@ class SuiteTools(DynamicCore):
         logger.info(u"Running keyword '%s' with arguments %s." % (name, args))
         return self.keywords[name](*args, **kwargs)
 
-    @keyword('Setup test suite')
-    def setup(self, project_path=None):
+    def deploy(self, project_path=None):
         """
         Setup the virtual infrastructure to run tests on. Supported orchestrators: docker-compose.
 

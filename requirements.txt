@@ -19,7 +19,7 @@ coverage==4.5.1
 cryptography==2.2.2
 dbbot==0.1
 decorator==4.2.1
-docker==3.2.1
+docker<3
 docker-compose==1.20.1
 docker-pycreds==0.2.2
 dockerpty==0.4.1
