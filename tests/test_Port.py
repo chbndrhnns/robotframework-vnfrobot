@@ -4,8 +4,7 @@ import os
 
 import pytest
 from robot.running import TestSuiteBuilder
-
-path = os.path.dirname(os.path.realpath(__file__))
+from . import path
 
 
 def test_port_pass():

@@ -20,7 +20,7 @@ class SuiteToolsTest(TestCase):
     def test__setup__no_project_path__exception(self):
         # do
         with self.assertRaises(SetupError) as exc:
-            self.setup_class.setup()
+            self.setup_class.deploy()
 
         # check
         self.assertIn('project_path', str(exc.exception))
@@ -32,23 +32,23 @@ class SuiteToolsTest(TestCase):
 
         # do & check
         with self.assertRaisesRegexp(ConnectionError, 'url='):
-            self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+            self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
     def test__setup__invalid_dockercompose_file__exception(self):
         # do & check
         with self.assertRaisesRegexp(SetupError, 'docker-compose'):
-            self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose-invalid'))
+            self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose-invalid'))
 
     def test__setup__path_invalid__exception(self):
         # do & check
         with self.assertRaisesRegexp(SetupError, 'No docker-compose file found in'):
-            self.setup_class.setup(
+            self.setup_class.deploy(
                 project_path=os.path.join(self.project_base_path, 'docker-compose-missing-compose-file'))
 
     def test__setup__no_dockercompose_file__exception(self):
         # do & check
         with self.assertRaisesRegexp(SetupError, u'docker-compose'):
-            self.setup_class.setup(
+            self.setup_class.deploy(
                 project_path=os.path.join(self.project_base_path, 'docker-compose-missing-compose-file'))
 
     @patch('SuiteTools.os.path.getsize')
@@ -58,7 +58,7 @@ class SuiteToolsTest(TestCase):
 
         # do & check
         with self.assertRaisesRegexp(SetupError, u'docker-compose file must not be empty'):
-            self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+            self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
         self.assertEqual(getsize.call_count, 1)
 
@@ -69,14 +69,14 @@ class SuiteToolsTest(TestCase):
 
         # do & check
         with self.assertRaisesRegexp(SetupError, u'Dockerfile must not be empty'):
-            self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+            self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
         self.assertEqual(getsize.call_count, 2)
 
     def test__setup__no_dockerfile__exception(self):
         # do & check
         with self.assertRaisesRegexp(SetupError, 'Dockerfile'):
-            self.setup_class.setup(
+            self.setup_class.deploy(
                 project_path=os.path.join(self.project_base_path, 'docker-compose-missing-Dockerfile'))
 
     @patch('DockerOrchestrator.TopLevelCommand.up')
@@ -85,7 +85,7 @@ class SuiteToolsTest(TestCase):
         up_command.return_value = None
 
         # do
-        self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+        self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
         # check
         self.assertIsInstance(self.setup_class.orchestrator, DockerOrchestrator)
@@ -101,7 +101,7 @@ class SuiteToolsTest(TestCase):
             up_command.return_value = None
 
             # do
-            self.setup_class.setup(project_path=destination)
+            self.setup_class.deploy(project_path=destination)
 
             # check
             self.assertIsInstance(self.setup_class.orchestrator, DockerOrchestrator)
@@ -118,7 +118,7 @@ class SuiteToolsTest(TestCase):
         # prepare
         up_command.return_value = None
         down_command.return_value = None
-        self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+        self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
         # do
         self.setup_class.teardown(TearDownLevel.destroy)
@@ -131,7 +131,7 @@ class SuiteToolsTest(TestCase):
     def test__teardown__invalid_level__exceptioin(self, up_command):
         # prepare
         up_command.return_value = None
-        self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+        self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
         # do
         with self.assertRaisesRegexp(TeardownError, 'not in'):
@@ -149,7 +149,7 @@ class SuiteToolsTest(TestCase):
 
         # do
         for level in Orchestrator.teardown_levels:
-            self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+            self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
             self.setup_class.teardown(level=level)
 
         # check
@@ -162,7 +162,7 @@ class SuiteToolsTest(TestCase):
         # prepare
         up_command.return_value = 0
         down_command.return_value = 1
-        self.setup_class.setup(project_path=os.path.join(self.project_base_path, 'docker-compose'))
+        self.setup_class.deploy(project_path=os.path.join(self.project_base_path, 'docker-compose'))
 
         # do
         self.setup_class.teardown(level='destroy')

@@ -5,3 +5,14 @@ services:
     image: nginx
     ports:
     - 12345:80
+    networks:
+    - robot
+    volumes:
+    - ./goss:/goss
+
+networks:
+  robot:
+    external: true
+
+volumes:
+  goss:
