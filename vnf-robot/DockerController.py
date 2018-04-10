@@ -8,6 +8,7 @@ from docker import errors
 import docker
 from robot.api import logger
 
+import exc
 from testutils import Result
 
 ProcessResult = namedtuple('ProcessResult', 'stdout stderr')
@@ -17,6 +18,7 @@ class DockerController():
     def __init__(self, base_dir):
         self.base_dir = base_dir
         self._docker = docker.from_env()
+        self.helper = 'helper'
 
     def get_env(self, entity):
 
@@ -56,6 +58,11 @@ class DockerController():
     def get_container(self, container):
         return self._docker.containers.get(container)
 
+    def remove_container(self, container):
+        c = self._docker.containers.get(container)
+        c.stop()
+        c.remove()
+
     def get_containers(self):
         return self._docker.containers.list()
 
@@ -68,19 +75,35 @@ class DockerController():
     def create_volume(self, name):
         return self._dispatch(['volume', 'create', name])
 
+    def get_volume(self, name):
+        res = self._dispatch(['volume', 'inspect', name])
+        if res.stderr:
+            return exc.SetupError('Could not find volume {}'.format(name))
+
     def add_data_to_volume(self, volume, path):
-        res = self._dispatch(['run', '-v', '{}:/data'.format(volume), '--name', 'helper', 'busybox', 'true'])
+        try:
+            self.remove_container(self.helper)
+        except docker.errors.NotFound:
+            pass
+
+        res = self._dispatch(['run', '-v', '{}:/data'.format(volume), '--name', self.helper, 'busybox', 'true'])
         assert len(res.stderr) == 0
-        res = self._dispatch(['cp', '{}/.'.format(path), 'helper:/data'])
+        res = self._dispatch(['cp', '{}/.'.format(path), '{}:/data'.format(self.helper)])
         assert len(res.stderr) == 0
-        res = self._dispatch(['stop', 'helper'])
+        res = self._dispatch(['stop', self.helper])
         assert len(res.stderr) == 0
-        res = self._dispatch(['rm', 'helper'])
+        res = self._dispatch(['rm', self.helper])
         assert len(res.stderr) == 0
 
     def list_files_on_volume(self, volume):
+        try:
+            self.get_volume(volume)
+        except exc.SetupError:
+            raise
+
         res = self._dispatch(['run', '--rm', '-v', '{}:/data'.format(volume), 'busybox', 'ls', '/data'])
         assert len(res.stderr) == 0
+
         return res
 
     def run_sidecar(self, image=None, goss_config=None, command=None):
@@ -190,9 +213,6 @@ def wait_on_service_container_status(client, service=None, status='Running'):
     def condition():
         if service:
             res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
-        else:
-            res = client.containers.get(container)
-
         if res:
             return lower(res[0].attrs['State']['Status']) == lower(status)
         return False

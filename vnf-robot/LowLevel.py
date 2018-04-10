@@ -39,6 +39,7 @@ class LowLevel(DynamicCore):
             'SKIP_DEPLOY': False,
             'SKIP_UNDEPLOY': False,
         }
+        self.goss_volume = 'goss-helper'
 
         logger.info(u"Importing {}".format(self.__class__))
 
