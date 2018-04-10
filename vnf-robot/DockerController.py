@@ -4,43 +4,44 @@ from collections import namedtuple
 import time
 from string import lower
 
+import os
 from docker import errors
 import docker
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
+from tools.archive import Archive
 
-import exc
+from exc import NotFoundError, SetupError, DeploymentError
 from testutils import Result
 
 ProcessResult = namedtuple('ProcessResult', 'stdout stderr')
 
 
-class DockerController():
+class DockerController:
     def __init__(self, base_dir):
         self.base_dir = base_dir
         self._docker = docker.from_env()
+        self._docker_api = docker.APIClient(base_url='unix://var/run/docker.sock')
         self.helper = 'helper'
 
-    def get_env(self, entity):
+    def get_containers_for_service(self, service):
+        try:
+            wait_on_service_replication(self._docker, service)
+            self._docker.services.get(service)
+            wait_on_service_container_status(self._docker, service)
+            return self._docker.containers.list(all=True,
+                                             filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+        except docker.errors.NotFound as exc:
+            raise DeploymentError(exc)
 
+    def get_env(self, entity):
         # first, try if entity is a container
         try:
             wait_on_container_status(self._docker, entity)
             c = self._docker.containers.get(entity)
         except docker.errors.NotFound as exc:
-            # BuiltIn().log('{} is not a container. Trying as service...'.format(entity), level='DEBUG', console=True)
-
             # second, try if entity is a service
-            try:
-                wait_on_service_replication(self._docker, entity)
-                self._docker.services.get(entity)
-                wait_on_service_container_status(self._docker, entity)
-                c = self._docker.containers.list(all=True,
-                                                 filters={'label': 'com.docker.swarm.service.name={}'.format(entity)})
-            except docker.errors.ContainerError as exc:
-                # BuiltIn().log("Cannot find container or service {}: {}".format(entity, exc), level='DEBUG',
-                #               console=True)
-                return Result.FAIL
+            c = self.get_containers_for_service(entity)
 
             if isinstance(c, list):
                 # BuiltIn().log(
@@ -54,8 +55,7 @@ class DockerController():
         try:
             s = self._docker.services.get(service)
         except docker.errors.NotFound as exc:
-            BuiltIn().log("Cannot find service {}: {}".format(service, exc), level='ERROR', console=True)
-            return Result.FAIL
+            raise NotFoundError('Cannot find service {}: {}'.format(service, exc))
 
         return s
 
@@ -73,7 +73,7 @@ class DockerController():
     def deploy_stack(self, descriptor, name):
         res = self._dispatch(['stack', 'deploy', '-c', descriptor, name])
         if res.stderr:
-            raise exc.DeploymentError(res.stderr)
+            raise DeploymentError(res.stderr)
 
         return True
 
@@ -86,7 +86,7 @@ class DockerController():
     def get_volume(self, name):
         res = self._dispatch(['volume', 'inspect', name])
         if res.stderr:
-            return exc.SetupError('Could not find volume {}'.format(name))
+            return SetupError('Could not find volume {}'.format(name))
 
     def add_data_to_volume(self, volume, path):
         try:
@@ -106,7 +106,7 @@ class DockerController():
     def list_files_on_volume(self, volume):
         try:
             self.get_volume(volume)
-        except exc.SetupError:
+        except SetupError:
             raise
 
         res = self._dispatch(['run', '--rm', '-v', '{}:/data'.format(volume), 'busybox', 'ls', '/data'])
@@ -143,6 +143,9 @@ class DockerController():
         if deployment_name in res.stdout.strip('\n\r'):
             return True
         return False
+
+    def copy_to_container(self, container, path, data):
+        self._docker
 
 
 ### helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py
@@ -228,8 +231,8 @@ def wait_on_service_container_status(client, service=None, status='Running'):
     def condition():
         if service:
             res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
-        if res:
-            return lower(res[0].attrs['State']['Status']) == lower(status)
+            if res:
+                return lower(res[0].attrs['State']['Status']) == lower(status)
         return False
 
     # logger.console('Waiting for a container belonging to service {}...'.format(service))

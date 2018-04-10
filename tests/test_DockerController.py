@@ -1,16 +1,22 @@
 import os
 
+from docker.errors import APIError
 import docker
+import pytest
 from docker.models.services import Service
+from docker.models.containers import Container
 from pytest import fixture
 
 import namesgenerator
 from DockerController import DockerController
 from testutils import Result
+from tools.archive import Archive
 from . import path
 
-from tools.archive import (Archive)
-from tools.easy_docker import (DockerContainer)
+
+@fixture
+def goss_test():
+    return os.path.join(path, 'fixtures', 'goss-port.yaml')
 
 
 @fixture
@@ -38,38 +44,6 @@ def test_stack():
     return 'dc-test', os.path.join(path, 'fixtures', 'dc-test.yml')
 
 
-# https://github.com/jhidding/easy-docker.py
-
-### Copy data to a volume
-# docker run -v my-jenkins-volume:/data --name helper busybox true
-# docker cp . helper:/data
-# docker rm helper
-
-
-def test_put_file_and_execute():
-    sed_program = """# usage: sed -f rot13.sed
-    y/abcdefghijklmnopqrstuvwxyz/nopqrstuvwxyzabcdefghijklm/
-    y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/NOPQRSTUVWXYZABCDEFGHIJKLM/
-    """
-
-    message = "Vf gurer nalobql BHG gurer?"
-
-    with DockerContainer('busybox') as c:
-        c.put_archive(
-            Archive('w')
-                .add_text_file('rot13.sed', sed_program)
-                .add_text_file('input.txt', message)
-                .close())
-
-        c.run([
-            '/bin/sh', '-c',
-            "/bin/sed -f 'rot13.sed' < input.txt > output.txt"])
-
-        secret = c.get_archive('output.txt').get_text_file('output.txt')
-
-        print(secret)
-
-
 def _cleanup_volumes(d, volumes):
     if volumes is None:
         volumes = []
@@ -79,6 +53,10 @@ def _cleanup_volumes(d, volumes):
     for v in volumes:
         res = d._dispatch(['volume', 'rm', v])
         assert len(res.stderr) == 0
+
+
+def _cleanup_stack(d, stack):
+    res = d._dispatch(['stack', 'rm', stack])
 
 
 def _cleanup(d, containers):
@@ -104,7 +82,7 @@ def test__get_stack__pass(controller, test_stack):
         controller.deploy_stack(test_stack[1], test_stack[0])
         res = controller.find_stack(test_stack[0])
     finally:
-        controller._dispatch(['stack', 'rm', test_stack[0]])
+        _cleanup_stack(controller, test_stack[0])
 
     assert res
 
@@ -199,3 +177,53 @@ def test__add_data_to_volume(controller, goss_volume, goss_files):
         assert 'goss-linux-386' in res.stdout
     finally:
         _cleanup_volumes(controller, goss_volume)
+
+
+def test__copy_to_container(controller, goss_test):
+    filename = 'goss.yaml'
+
+    with open(goss_test, 'r') as f:
+        content = f.read()
+        to_send = Archive('w').add_text_file(filename, content).close()
+
+        try:
+            c = controller._docker.containers.run('busybox', 'true', detach=True, )
+            assert isinstance(c, Container)
+            controller._docker_api.put_archive(c.id, '/', to_send.buffer)
+            strm, stat = controller._docker_api.get_archive(c.id, '/{}'.format(filename))
+
+            to_receive = Archive('r', strm.read())
+
+        finally:
+            _cleanup(controller, 'busybox')
+
+        actual = to_receive.get_text_file('goss.yaml')
+        assert content == actual
+
+
+def test__inject_goss_data_into_stack_container__pass(controller, test_stack, goss_file):
+    pytest.fail('not implemented')
+
+    name = test_stack[0]
+    path = test_stack[1]
+
+    service = 'sut'
+
+    service_id = '{}_{}'.format(name, service)
+
+    try:
+        res = controller.deploy_stack(path, name)
+        assert res
+
+        c = controller.get_containers_for_service(service_id)
+        assert len(c) > 0
+        container = c[0]
+
+
+
+
+
+
+    finally:
+        # _cleanup_stack(controller, name)
+        pass
