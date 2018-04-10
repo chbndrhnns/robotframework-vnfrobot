@@ -9,6 +9,7 @@ from pytest import fixture
 
 import namesgenerator
 from DockerController import DockerController
+from exc import DeploymentError, NotFoundError
 from testutils import Result
 from tools.archive import Archive
 from . import path
@@ -179,26 +180,49 @@ def test__add_data_to_volume(controller, goss_volume, goss_files):
         _cleanup_volumes(controller, goss_volume)
 
 
-def test__copy_to_container(controller, goss_test):
-    filename = 'goss.yaml'
+def test__put_file__pass(controller, goss_test):
+    c = controller._docker.containers.run('busybox', 'true', detach=True)
 
-    with open(goss_test, 'r') as f:
-        content = f.read()
-        to_send = Archive('w').add_text_file(filename, content).close()
+    try:
+        controller.put_file(c.id, goss_test)
+    except (DeploymentError, NotFoundError) as exc:
+        pytest.fail(exc)
 
-        try:
-            c = controller._docker.containers.run('busybox', 'true', detach=True, )
-            assert isinstance(c, Container)
-            controller._docker_api.put_archive(c.id, '/', to_send.buffer)
-            strm, stat = controller._docker_api.get_archive(c.id, '/{}'.format(filename))
 
-            to_receive = Archive('r', strm.read())
+def test__put_file__file_not_found__fail(controller, goss_test):
+    c = controller._docker.containers.run('busybox', 'true', detach=True)
 
-        finally:
-            _cleanup(controller, 'busybox')
+    with pytest.raises(NotFoundError):
+        controller.put_file(c.id, 'goss.yaml')
 
-        actual = to_receive.get_text_file('goss.yaml')
-        assert content == actual
+
+def test__put_file__destination_does_not_exist__fail(controller, goss_test):
+    c = controller._docker.containers.run('busybox', 'true', detach=True)
+
+    with pytest.raises(DeploymentError):
+        controller.put_file(c.id, goss_test, '/goss/goss.yaml')
+
+
+def test__get_file__pass(controller):
+    c = controller._docker.containers.run('busybox', 'true', detach=True)
+
+    try:
+        f = controller.get_file(c.id, '/etc/', 'hosts')
+        assert len(f) > 0
+        assert '127.0.0.1' in f
+    except (DeploymentError, NotFoundError) as exc:
+        pytest.fail(exc)
+
+
+def test__get_file__not_found__fail(controller):
+    c = controller._docker.containers.run('busybox', 'true', detach=True)
+
+    with pytest.raises(DeploymentError):
+        f = controller.get_file(c.id, '/etc/', 'hostsbla')
+
+
+def test__run_goss_in_container__pass():
+    pass
 
 
 def test__inject_goss_data_into_stack_container__pass(controller, test_stack, goss_file):

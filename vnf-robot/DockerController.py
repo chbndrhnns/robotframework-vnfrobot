@@ -6,6 +6,7 @@ from string import lower
 
 import os
 from docker import errors
+from docker.models.containers import Container
 import docker
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
@@ -30,7 +31,7 @@ class DockerController:
             self._docker.services.get(service)
             wait_on_service_container_status(self._docker, service)
             return self._docker.containers.list(all=True,
-                                             filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+                                                filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
         except docker.errors.NotFound as exc:
             raise DeploymentError(exc)
 
@@ -144,11 +145,37 @@ class DockerController:
             return True
         return False
 
-    def copy_to_container(self, container, path, data):
-        self._docker
+    def put_file(self, entity, file_to_transfer='', destination='/'):
+        if not os.path.isfile(file_to_transfer):
+            raise NotFoundError('File {} not found'.format(file_to_transfer))
 
+        filename = os.path.basename(file_to_transfer)
 
-### helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py
+        # try:
+        #     container = self.get_container(entity)
+        #     assert isinstance(container, Container)
+        #     container_id = container.id
+        # except docker.errors.NotFound as exc:
+        #     raise NotFoundError(exc)
+
+        with open(file_to_transfer, 'r') as f:
+            content = f.read()
+            to_send = Archive('w').add_text_file(filename, content).close()
+
+            try:
+                self._docker_api.put_archive(entity, destination, to_send.buffer)
+            except docker.errors.APIError as exc:
+                raise DeploymentError(exc)
+
+    def get_file(self, entity, path, filename):
+        try:
+            strm, stat = self._docker_api.get_archive(entity, '{}/{}'.format(path, filename))
+        except docker.errors.APIError as exc:
+            raise DeploymentError(exc)
+
+        return Archive('r', strm.read()).get_text_file(filename)
+
+# helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py
 
 def start_process(base_dir, options):
     proc = subprocess.Popen(
