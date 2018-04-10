@@ -61,7 +61,6 @@ class LowLevel(DynamicCore):
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
-        logger.console('Deploying {}'.format(self.descriptor_file))
         self.deployment_result = self.deploy(self.descriptor_file)
 
     def _end_suite(self, name, attrs):
@@ -87,14 +86,9 @@ class LowLevel(DynamicCore):
             None
         """
         self.context = BuiltIn().get_library_instance(all=True)
-
-        logger.console('\nValidating deployment results...')
         self.validate_deployment()
 
-        logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
-
-        # if self.deployment is None and u'Deploy ${descriptor:\\S+}' not in name:
-        #     raise exc.SetupError('The "Deploy" keyword is necessary before running any other keyword.')
+        # logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
 
         return self.keywords[name](*args, **kwargs)
 
@@ -224,22 +218,22 @@ class LowLevel(DynamicCore):
         raw_value_matcher = '[^\s]'
         service_id = '{}_{}'.format(self.deployment_name, self.sut.target)
 
-        value = raw_val.strip('"\'')
+        expected_value = raw_val.strip('"\'')
 
         # Validations
         validate_context(allowed_context, self.sut.target_type)
         validate_against_regex('variable', raw_entity, raw_entity_matcher)
-        validate_against_regex('value', value, raw_value_matcher)
+        validate_against_regex('value', expected_value, raw_value_matcher)
 
         # Get data
         env = self.docker_controller.get_env(service_id)
-        found = [e.split('=')[1] for e in env if raw_entity in e.split('=')[0]][0]
+        actual_value = [e.split('=')[1] for e in env if raw_entity == e.split('=')[0]]
 
-        if not found:
+        if not actual_value:
             raise exc.ValidationError('No variable {} found.'.format(raw_entity))
 
-        if not get_truth(found, string_matchers[matcher], value):
-            raise exc.ValidationError('Variable {}: {} {}'.format(raw_entity, matcher, value))
+        if not get_truth(actual_value[0], string_matchers[matcher], expected_value):
+            raise exc.ValidationError('Variable {}: {} {}, actual: {}'.format(raw_entity, matcher, expected_value, actual_value[0]))
 
     @keyword('Port ${raw_entity:\S+}: ${property:\S+} is ${val:\S+}')
     def port(self, raw_entity, raw_prop, raw_val):
@@ -267,6 +261,9 @@ class LowLevel(DynamicCore):
         if self.deployment_options['SKIP_DEPLOY']:
             logger.console('Skipping deployment')
         else:
+            if self.descriptor_file is None:
+                BuiltIn().fatal_error('No descriptor file specifed.')
+            logger.console('Deploying {}'.format(self.descriptor_file))
             return self.docker_controller.dispatch(
                 ['stack', 'deploy', '-c', self.descriptor_file, self.deployment_name])
 

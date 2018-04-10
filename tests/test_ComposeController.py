@@ -1,5 +1,4 @@
 import os
-import pytest
 from . import path
 
 from ComposeController import ComposeController

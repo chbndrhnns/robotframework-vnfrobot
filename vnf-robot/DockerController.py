@@ -36,7 +36,7 @@ class DockerController():
             return Result.FAIL
 
         if isinstance(c, list):
-            logger.console("Found {} containers in this service. Getting env for one should be enough.".format(len(c)))
+            logger.debug("Found {} containers in this service. Getting env for one should be enough.".format(len(c)))
             return c[0].attrs['Config']['Env']
 
         return c.attrs['Config']['Env']

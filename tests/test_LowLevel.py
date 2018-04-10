@@ -16,7 +16,7 @@ class LowLevelTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.settings = {'log_level': logging.DEBUG, 'output': None, 'stdout': StringIO()}
+        cls.settings = {'log_level': logging.DEBUG}
 
     def setUp(self):
         self.suite = TestSuite('Test low level keywords')
@@ -85,17 +85,6 @@ class LowLevelTest(TestCase):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Value')
 
-    def test__variable__pass(self):
-        self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
-
-        tests = [
-            Keyword(name=u'Variable PYTHONPATH: is bla'),
-            Keyword(name=u'Variable PYTHON_PATH: contains bin'),
-            Keyword(name=u'Variable PYTHONPATH: contains /usr/bin'),
-            Keyword(name=u'Variable PYTHONPATH: is not "$PATH:/usr/bin"'),
-        ]
-        run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
-
     def test__variable__invalid_var__fail(self):
         self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
 
@@ -108,7 +97,7 @@ class LowLevelTest(TestCase):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Value')
 
-    def test__variable__get_env__pass(self):
+    def test__variable__pass(self):
         self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
 
         tests = [
@@ -121,6 +110,15 @@ class LowLevelTest(TestCase):
         ]
         with patch('LowLevel.DockerController.get_env', return_value=["PATH=/usr/bin", "NGINX_VERSION=2.0.0beta1"]):
             run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
+
+    def test__variable__variable_does_not_exist__fail(self):
+        self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
+
+        tests = [
+            Keyword(name=u'Variable PTH: contains /usr/bin'),
+        ]
+        with patch('LowLevel.DockerController.get_env', return_value=["PATH=/usr/bin"]):
+            run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.FAIL)
 
     def test__variable__invalid_value__fail(self):
         self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
