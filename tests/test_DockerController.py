@@ -12,7 +12,10 @@ from . import path
 from tools.archive import (Archive)
 from tools.easy_docker import (DockerContainer)
 
-test_container = 'gosstest_' + namesgenerator.get_random_name()
+
+@fixture
+def test_container():
+    return 'gosstest_' + namesgenerator.get_random_name()
 
 
 @fixture
@@ -67,12 +70,12 @@ def cleanup(d, containers):
             pass
 
 
-def test__create_container__pass(controller):
+def test__create_container__pass(controller, test_container):
     controller.dispatch(['run', '-d', '-p', '12345:80', '--name', test_container, 'nginx'])
     cleanup(controller, test_container)
 
 
-def test__run_sidecar__pass(controller):
+def test__run_sidecar__pass(controller, test_container):
     cleanup(controller, test_container)
 
     controller.dispatch(['run', '-d', '-p', '12345:80', '--name', test_container, 'nginx'])
@@ -91,15 +94,17 @@ def test__list_containers__pass(controller):
     assert len(result) > 0
 
 
-def test__get_env__container(controller):
+def test__get_env__container(controller, test_container):
     cleanup(controller, test_container)
 
-    controller.dispatch(['run', '-d', '-p', '12345:80', '--name', test_container, 'nginx'])
-    env = controller.get_env(test_container)
-    assert isinstance(env, list)
-    assert [e for e in env if 'PATH' in e]
-
-    cleanup(controller, test_container)
+    try:
+        res = controller.dispatch(['run', '-d', '--name', test_container, 'nginx'])
+        assert len(res.stderr) == 0
+        env = controller.get_env(test_container)
+        assert isinstance(env, list)
+        assert [e for e in env if 'PATH' in e]
+    finally:
+        cleanup(controller, test_container)
 
 
 def test__get_env__service(controller):

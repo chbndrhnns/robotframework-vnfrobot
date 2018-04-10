@@ -19,25 +19,28 @@ class DockerController():
         self._docker = docker.from_env()
 
     def get_env(self, entity):
-        wait_on_service_replication(self._docker, entity)
 
         # first, try if entity is a container
         try:
+            wait_on_container_status(self._docker, entity)
             c = self._docker.containers.get(entity)
         except docker.errors.NotFound as exc:
-            pass
-        # second, try if entity is a service
-        try:
-            self._docker.services.get(entity)
-            wait_on_container_status(self._docker, entity)
-            c = self._docker.containers.list(all=True, filters={'label': 'com.docker.swarm.service.name={}'.format(entity)})
-        except docker.errors.ContainerError as exc:
-            logger.console("Cannot find container or service {}: {}".format(entity, exc))
-            return Result.FAIL
+            logger.console('{} is not a container. Trying as service...'.format(entity))
 
-        if isinstance(c, list):
-            logger.debug("Found {} containers in this service. Getting env for one should be enough.".format(len(c)))
-            return c[0].attrs['Config']['Env']
+            # second, try if entity is a service
+            try:
+                wait_on_service_replication(self._docker, entity)
+                self._docker.services.get(entity)
+                wait_on_service_container_status(self._docker, entity)
+                c = self._docker.containers.list(all=True,
+                                                 filters={'label': 'com.docker.swarm.service.name={}'.format(entity)})
+            except docker.errors.ContainerError as exc:
+                logger.console("Cannot find container or service {}: {}".format(entity, exc))
+                return Result.FAIL
+
+            if isinstance(c, list):
+                logger.debug("Found {} containers in this service. Getting env for one should be enough.".format(len(c)))
+                return c[0].attrs['Config']['Env']
 
         return c.attrs['Config']['Env']
 
@@ -49,6 +52,9 @@ class DockerController():
             return Result.FAIL
 
         return s
+
+    def get_container(self, container):
+        return self._docker.containers.get(container)
 
     def get_containers(self):
         return self._docker.containers.list()
@@ -117,11 +123,34 @@ def wait_on_service_replication(client, service):
         res = client.services.get(service)
         replicas = res.attrs['Spec']['Mode']['Replicated']['Replicas']
         return replicas > 0
+
     # logger.console('Waiting for service {}...'.format(service))
     return wait_on_condition(condition)
 
 
-def wait_on_container_status(client, service, status='Running'):
+def wait_on_container_status(client, container, status='Running'):
+    """
+    Wait until a container is in the desired state.
+
+    Args:
+        client: Docker client
+        service: service name to search for
+        status: desired status, default: Running
+
+    Returns:
+
+    """
+
+    def condition():
+        res = client.containers.get(container)
+        if res:
+            return res.attrs['State'][status] == True
+        return False
+
+    return wait_on_condition(condition)
+
+
+def wait_on_service_container_status(client, service=None, status='Running'):
     """
     Wait until a first container that belongs to a service is in the desired state.
 
@@ -133,8 +162,13 @@ def wait_on_container_status(client, service, status='Running'):
     Returns:
 
     """
+
     def condition():
-        res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+        if service:
+            res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+        else:
+            res = client.containers.get(container)
+
         if res:
             return lower(res[0].attrs['State']['Status']) == lower(status)
         return False

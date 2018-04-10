@@ -6,14 +6,12 @@ from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 from robot.api.deco import keyword
 
-from modules import variable, context, port
+from modules import variable, port
 from tools import orchestrator
-from DockerController import ProcessResult
 from modules.context import set_context, SUT
 from robotlibcore import DynamicCore
 from version import VERSION
-from testutils import string_matchers, validate_context, validate_port, validate_property, \
-    validate_value, validate_deployment
+from testutils import string_matchers, validate_deployment
 
 
 class LowLevel(DynamicCore):
@@ -35,7 +33,7 @@ class LowLevel(DynamicCore):
         self.containers_created = []
         self.services_created = []
         self.docker_controller = None
-        self.deployment_result = ProcessResult('', '')
+        self.deployment_result = None
         self.deployment_options = {
             'SKIP_DEPLOY': False,
             'SKIP_UNDEPLOY': False,
@@ -57,7 +55,7 @@ class LowLevel(DynamicCore):
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
-        self.deployment_result = self.deploy(self.descriptor_file)
+        self.deploy_kw(self.descriptor_file)
 
     def _end_suite(self, name, attrs):
         if self.deployment_options['SKIP_DEPLOY']:
@@ -84,68 +82,68 @@ class LowLevel(DynamicCore):
         return self.keywords[name](*args, **kwargs)
 
     @keyword('Set ${context_type:\S+} context to ${context:\S+}')
-    def set_context(self, context_type=None, context=None):
+    def set_context_kw(self, context_type=None, context=None):
         self.sut = set_context(context_type, context)
 
     @keyword('Command')
-    def command(self):
+    def command_kw(self):
         pass
 
     @keyword('Process')
-    def process(self):
+    def process_kw(self):
         pass
 
     @keyword('Service')
-    def service(self):
+    def service_kw(self):
         pass
 
     @keyword('Kernel Parameter')
-    def kernel_parameter(self):
+    def kernel_parameter_kw(self):
         pass
 
     @keyword('Container')
-    def container(self):
+    def container_kw(self):
         pass
 
     @keyword('User')
-    def user(self):
+    def user_kw(self):
         pass
 
     @keyword('Group')
-    def group(self):
+    def group_kw(self):
         pass
 
     @keyword('File')
-    def file(self):
+    def file_kw(self):
         pass
 
     @keyword('Symbolic Link')
-    def symlink(self):
+    def symlink_kw(self):
         pass
 
     @keyword('Address')
-    def address(self):
+    def address_kw(self):
         pass
 
     @keyword('DNS')
-    def dns(self):
+    def dns_kw(self):
         pass
 
     @keyword('Interface')
-    def interface(self):
+    def interface_kw(self):
         pass
 
     @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
-    def env_variable(self, raw_entity, matcher, raw_val):
+    def env_variable_kw(self, raw_entity, matcher, raw_val):
         variable.validate(self, raw_entity, matcher, raw_val)
 
     @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
-    def port(self, raw_entity, raw_prop, matcher, raw_val):
+    def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
         port.validate(self, raw_entity, raw_prop, matcher, raw_val)
 
     @keyword('Deploy ${descriptor:\S+}')
-    def deploy(self, descriptor):
-        orchestrator.deploy(self, descriptor)
+    def deploy_kw(self, descriptor):
+        self.deployment_result = orchestrator.deploy(self, descriptor)
 
     @keyword('Remove deployment')
     def remove_deployment(self):
