@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from abc import ABCMeta, abstractproperty, abstractmethod
-from string import lower
 
 from interfaces.ExternalTool import ExternalTool
 from settings import Settings
