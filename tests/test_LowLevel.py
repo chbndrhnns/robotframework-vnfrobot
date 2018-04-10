@@ -1,7 +1,7 @@
 import logging
 import pytest
 from mock import patch
-
+from robot.running.model import Variable
 
 from unittest2 import TestCase
 
@@ -20,6 +20,7 @@ class LowLevelTest(TestCase):
     def setUp(self):
         self.suite = TestSuite('Test low level keywords')
         self.suite.resource.imports.library('LowLevel')
+        self.suite.resource.variables.append(Variable('${SKIP_DEPLOY}', 'True'))
 
     def tearDown(self):
         pass

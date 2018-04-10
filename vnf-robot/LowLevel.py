@@ -6,6 +6,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 from robot.api.deco import keyword
 
+from exc import SetupError
 from modules import variable, port
 from tools import orchestrator
 from modules.context import set_context, SUT
@@ -143,7 +144,11 @@ class LowLevel(DynamicCore):
 
     @keyword('Deploy ${descriptor:\S+}')
     def deploy_kw(self, descriptor):
-        self.deployment_result = orchestrator.deploy(self, descriptor)
+        try:
+            self.deployment_result = orchestrator.deploy(self, descriptor)
+        except SetupError as exc:
+            BuiltIn().fail(exc)
+
 
     @keyword('Remove deployment')
     def remove_deployment(self):
