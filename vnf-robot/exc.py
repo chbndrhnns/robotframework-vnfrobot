@@ -46,3 +46,11 @@ class ArgumentMissingException(BaseException):
 
 class InvalidPathException(BaseException):
     pass
+
+
+class NotFoundError(RuntimeError):
+    pass
+
+
+class DeploymentError(RuntimeError):
+    pass

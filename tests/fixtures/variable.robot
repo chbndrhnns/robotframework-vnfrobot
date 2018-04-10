@@ -2,9 +2,8 @@
 Library  LowLevel
 
 *** Variables ***
-#${SKIP_DEPLOY}      True
+${USE_DEPLOYMENT}   frosty_einstein
 ${SKIP_UNDEPLOY}    True
-#${DEPLOYMENT_NAME}
 ${DESCRIPTOR}       dc-test.yml
 
 *** Test Cases ***

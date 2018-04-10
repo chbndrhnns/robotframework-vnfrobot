@@ -30,16 +30,6 @@ number_matchers = string_matchers.copy().update({
 })
 
 
-def validate_deployment(instance):
-    res = getattr(instance, 'deployment_result', None)
-
-    if not res:
-        BuiltIn().fatal_error('Deployment has not taken place. Reason is unknown.')
-
-    if instance.deployment_result.stderr:
-        BuiltIn().fatal_error('Could not deploy the system under test: {}'.format(instance.deployment_result.stderr))
-
-
 def get_truth(inp, relate, val):
     # special case: contains not is not covered by the operator module
     if relate == 'contains_not':

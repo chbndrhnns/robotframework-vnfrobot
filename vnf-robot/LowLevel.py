@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import namesgenerator
 
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -12,7 +11,7 @@ from tools import orchestrator
 from modules.context import set_context, SUT
 from robotlibcore import DynamicCore
 from version import VERSION
-from testutils import string_matchers, validate_deployment
+from testutils import string_matchers
 
 
 class LowLevel(DynamicCore):
@@ -31,36 +30,28 @@ class LowLevel(DynamicCore):
         self.sut = SUT(None, None)
         self.ROBOT_LIBRARY_LISTENER = self
         self.suite_source = None
-        self.containers_created = []
-        self.services_created = []
         self.docker_controller = None
-        self.deployment_result = None
         self.deployment_options = {
-            'SKIP_DEPLOY': False,
             'SKIP_UNDEPLOY': False,
         }
         self.goss_volume = 'goss-helper'
 
         logger.info(u"Importing {}".format(self.__class__))
 
-        if BuiltIn().get_variable_value("${SKIP_DEPLOY}"):
-            self.deployment_options['SKIP_DEPLOY'] = True
-
         if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
             self.deployment_options['SKIP_UNDEPLOY'] = True
 
-        if BuiltIn().get_variable_value("${DEPLOYMENT_NAME}"):
-            self.deployment_name = BuiltIn().get_variable_value("${DEPLOYMENT_NAME}")
-        else:
-            self.deployment_name = namesgenerator.get_random_name()
+        self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}")
 
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
         self.deploy_kw(self.descriptor_file)
 
+        assert True
+
     def _end_suite(self, name, attrs):
-        if self.deployment_options['SKIP_DEPLOY']:
+        if self.deployment_options['SKIP_UNDEPLOY']:
             logger.console('Skipping undeployment')
             return
 
@@ -78,7 +69,6 @@ class LowLevel(DynamicCore):
             None
         """
         self.context = BuiltIn().get_library_instance(all=True)
-        validate_deployment(self)
 
         # logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
         return self.keywords[name](*args, **kwargs)
@@ -147,7 +137,7 @@ class LowLevel(DynamicCore):
     @keyword('Deploy ${descriptor:\S+}')
     def deploy_kw(self, descriptor):
         try:
-            self.deployment_result = orchestrator.deploy(self, descriptor)
+            orchestrator.deploy(self, descriptor)
         except SetupError as exc:
             BuiltIn().fail(exc)
 

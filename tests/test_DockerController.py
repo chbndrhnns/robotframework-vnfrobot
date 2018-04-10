@@ -33,6 +33,11 @@ def goss_files():
     return os.path.join(path, 'fixtures', 'goss')
 
 
+@fixture
+def test_stack():
+    return 'dc-test', os.path.join(path, 'fixtures', 'dc-test.yml')
+
+
 # https://github.com/jhidding/easy-docker.py
 
 ### Copy data to a volume
@@ -86,6 +91,22 @@ def _cleanup(d, containers):
         d._dispatch(['service', 'rm', container])
         d._dispatch(['stop', container])
         d._dispatch(['rm', container])
+
+
+def test__get_stack__fail(controller, test_stack):
+    res = controller.find_stack(test_stack[0])
+
+    assert not res
+
+
+def test__get_stack__pass(controller, test_stack):
+    try:
+        controller.deploy_stack(test_stack[1], test_stack[0])
+        res = controller.find_stack(test_stack[0])
+    finally:
+        controller._dispatch(['stack', 'rm', test_stack[0]])
+
+    assert res
 
 
 def test__create_container__pass(controller, test_container):

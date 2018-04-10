@@ -20,7 +20,7 @@ class LowLevelTest(TestCase):
     def setUp(self):
         self.suite = TestSuite('Test low level keywords')
         self.suite.resource.imports.library('LowLevel')
-        self.suite.resource.variables.append(Variable('${SKIP_DEPLOY}', 'True'))
+        self.suite.resource.variables.append(Variable('${USE_DEPLOYMENT}', 'Bla'))
 
     def tearDown(self):
         pass

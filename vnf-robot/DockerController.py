@@ -28,7 +28,7 @@ class DockerController():
             wait_on_container_status(self._docker, entity)
             c = self._docker.containers.get(entity)
         except docker.errors.NotFound as exc:
-            BuiltIn().log('{} is not a container. Trying as service...'.format(entity), level='DEBUG', console=True)
+            # BuiltIn().log('{} is not a container. Trying as service...'.format(entity), level='DEBUG', console=True)
 
             # second, try if entity is a service
             try:
@@ -38,11 +38,14 @@ class DockerController():
                 c = self._docker.containers.list(all=True,
                                                  filters={'label': 'com.docker.swarm.service.name={}'.format(entity)})
             except docker.errors.ContainerError as exc:
-                BuiltIn().log("Cannot find container or service {}: {}".format(entity, exc), level='DEBUG', console=True)
+                # BuiltIn().log("Cannot find container or service {}: {}".format(entity, exc), level='DEBUG',
+                #               console=True)
                 return Result.FAIL
 
             if isinstance(c, list):
-                BuiltIn().log("Found {} containers in this service. Getting env for one should be enough.".format(len(c)), level='DEBUG', console=True)
+                # BuiltIn().log(
+                #     "Found {} containers in this service. Getting env for one should be enough.".format(len(c)),
+                #     level='DEBUG', console=True)
                 return c[0].attrs['Config']['Env']
 
         return c.attrs['Config']['Env']
@@ -67,10 +70,14 @@ class DockerController():
     def get_containers(self):
         return self._docker.containers.list()
 
-    def stack_deploy(self, descriptor, name):
-        return self._dispatch(['stack', 'deploy', '-c', descriptor, name])
+    def deploy_stack(self, descriptor, name):
+        res = self._dispatch(['stack', 'deploy', '-c', descriptor, name])
+        if res.stderr:
+            raise exc.DeploymentError(res.stderr)
 
-    def stack_undeploy(self, name):
+        return True
+
+    def undeploy_stack(self, name):
         return self._dispatch(['stack', 'rm', name])
 
     def create_volume(self, name):
@@ -129,6 +136,13 @@ class DockerController():
         BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
+
+    def find_stack(self, deployment_name):
+        res = self._dispatch(['stack', 'ps', deployment_name, '--format', '" {{ .Name }}"'])
+
+        if deployment_name in res.stdout.strip('\n\r'):
+            return True
+        return False
 
 
 ### helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py

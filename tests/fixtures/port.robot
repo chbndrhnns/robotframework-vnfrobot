@@ -2,7 +2,7 @@
 Library  LowLevel
 
 *** Variables ***
-#${SKIP_DEPLOY}  True
+#${USE_DEPLOYMENT}
 ${SKIP_UNDEPLOY}  True
 ${DESCRIPTOR}   dc-test.yml
 
