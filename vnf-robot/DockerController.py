@@ -7,6 +7,7 @@ from string import lower
 from docker import errors
 import docker
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 
 import exc
 from testutils import Result
@@ -27,7 +28,7 @@ class DockerController():
             wait_on_container_status(self._docker, entity)
             c = self._docker.containers.get(entity)
         except docker.errors.NotFound as exc:
-            logger.console('{} is not a container. Trying as service...'.format(entity))
+            BuiltIn().log('{} is not a container. Trying as service...'.format(entity), level='DEBUG', console=True)
 
             # second, try if entity is a service
             try:
@@ -37,11 +38,11 @@ class DockerController():
                 c = self._docker.containers.list(all=True,
                                                  filters={'label': 'com.docker.swarm.service.name={}'.format(entity)})
             except docker.errors.ContainerError as exc:
-                logger.console("Cannot find container or service {}: {}".format(entity, exc))
+                BuiltIn().log("Cannot find container or service {}: {}".format(entity, exc), level='DEBUG', console=True)
                 return Result.FAIL
 
             if isinstance(c, list):
-                logger.debug("Found {} containers in this service. Getting env for one should be enough.".format(len(c)))
+                BuiltIn().log("Found {} containers in this service. Getting env for one should be enough.".format(len(c)), level='DEBUG', console=True)
                 return c[0].attrs['Config']['Env']
 
         return c.attrs['Config']['Env']
@@ -50,7 +51,7 @@ class DockerController():
         try:
             s = self._docker.services.get(service)
         except docker.errors.NotFound as exc:
-            logger.console("Cannot find service {}: {}".format(service, exc))
+            BuiltIn().log("Cannot find service {}: {}".format(service, exc), level='ERROR', console=True)
             return Result.FAIL
 
         return s
@@ -115,9 +116,9 @@ class DockerController():
         try:
             result = self._docker.containers.run(image=image, command=command, auto_remove=True, network_mode='host',
                                                  tty=True)
-            logger.console(result)
+            BuiltIn().log(result, level='DEBUG', console=True)
         except docker.errors.ContainerError as exc:
-            logger.console(exc)
+            BuiltIn().log(exc, level='DEBUG', console=True)
             return Result.FAIL
 
         return Result.PASS
@@ -125,7 +126,7 @@ class DockerController():
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
         o = project_options + options
-        logger.console('Dispatching: docker {}'.format(o))
+        BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
 
@@ -138,15 +139,15 @@ def start_process(base_dir, options):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=base_dir)
-    logger.console("Running process: %s" % proc.pid)
+    logger.debug("Running process: %s" % proc.pid)
     return proc
 
 
 def wait_on_process(proc, returncode=0):
     stdout, stderr = proc.communicate()
     if proc.returncode != returncode:
-        logger.console("Stderr: {}".format(stderr))
-        logger.console("Stdout: {}".format(stdout))
+        logger.debug("Stderr: {}".format(stderr))
+        logger.debug("Stdout: {}".format(stdout))
         # assert proc.returncode == returncode
     return ProcessResult(stdout.decode('utf-8'), stderr.decode('utf-8'))
 

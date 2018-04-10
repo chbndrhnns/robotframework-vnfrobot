@@ -1,5 +1,4 @@
 import os
-from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 import exc
@@ -34,12 +33,12 @@ def deploy(instance, descriptor):
     instance.descriptor_file = descriptor
 
     if instance.deployment_options['SKIP_DEPLOY']:
-        logger.console('Skipping deployment')
+        BuiltIn().log('Skipping deployment', level="INFO", console=True)
         return ProcessResult(stderr='', stdout='')
     else:
         if instance.descriptor_file is None:
             raise exc.SetupError('No descriptor file specified.')
-        logger.console('Deploying {}'.format(instance.descriptor_file))
+        BuiltIn().log('Deploying {}'.format(instance.descriptor_file), level='INFO', console=True)
         return instance.docker_controller.stack_deploy(instance.descriptor_file, instance.deployment_name)
 
 

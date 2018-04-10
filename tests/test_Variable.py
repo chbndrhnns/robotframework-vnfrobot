@@ -1,8 +1,4 @@
-import unittest
-
 import os
-
-import pytest
 from robot.running import TestSuiteBuilder
 from . import path
 
