@@ -8,6 +8,6 @@ def test__read_compose_file__pass():
     descriptor = 'dc-test.yml'
     ctl = ComposeController(base_dir=os.path.join(path, 'fixtures'))
 
-    ctl.dispatch(['-f', descriptor, 'up', '-d'])
+    ctl._dispatch(['-f', descriptor, 'up', '-d'])
 
-    ctl.dispatch(['-f', descriptor, 'down'])
+    ctl._dispatch(['-f', descriptor, 'down'])

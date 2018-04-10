@@ -20,10 +20,11 @@ def deploy(instance, descriptor):
         if instance.descriptor_file is None:
             raise exc.SetupError('No descriptor file specified.')
         logger.console('Deploying {}'.format(instance.descriptor_file))
-        return instance.docker_controller.dispatch(
-            ['stack', 'deploy', '-c', instance.descriptor_file, instance.deployment_name])
+        return instance.docker_controller.stack_deploy(instance.descriptor_file, instance.deployment_name)
 
 
 def undeploy(instance):
-    instance.docker_controller.dispatch(['stack', 'rm', instance.deployment_name])
+    res = instance.docker_controller.stack_undeploy(instance.deployment_name)
+    assert len(res.stderr) == 0
     instance.docker_controller = None
+    return res

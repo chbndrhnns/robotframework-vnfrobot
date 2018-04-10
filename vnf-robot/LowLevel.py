@@ -65,7 +65,7 @@ class LowLevel(DynamicCore):
 
         if self.docker_controller and self.descriptor_file:
             logger.debug('Removing deployment "{}"'.format(self.descriptor_file))
-            self.remove_deployment()
+            self.remove_deployment_kw()
         else:
             logger.console('Skipping: remove deployment')
 
@@ -138,7 +138,8 @@ class LowLevel(DynamicCore):
     def env_variable_kw(self, raw_entity, matcher, raw_val):
         variable.validate(self, raw_entity, matcher, raw_val)
 
-    @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
+    @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
+        '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
         port.validate(self, raw_entity, raw_prop, matcher, raw_val)
 
@@ -149,7 +150,6 @@ class LowLevel(DynamicCore):
         except SetupError as exc:
             BuiltIn().fail(exc)
 
-
     @keyword('Remove deployment')
-    def remove_deployment(self):
+    def remove_deployment_kw(self):
         orchestrator.undeploy(self)

@@ -59,6 +59,30 @@ class DockerController():
     def get_containers(self):
         return self._docker.containers.list()
 
+    def stack_deploy(self, descriptor, name):
+        return self._dispatch(['stack', 'deploy', '-c', descriptor, name])
+
+    def stack_undeploy(self, name):
+        return self._dispatch(['stack', 'rm', name])
+
+    def create_volume(self, name):
+        return self._dispatch(['volume', 'create', name])
+
+    def add_data_to_volume(self, volume, path):
+        res = self._dispatch(['run', '-v', '{}:/data'.format(volume), '--name', 'helper', 'busybox', 'true'])
+        assert len(res.stderr) == 0
+        res = self._dispatch(['cp', '{}/.'.format(path), 'helper:/data'])
+        assert len(res.stderr) == 0
+        res = self._dispatch(['stop', 'helper'])
+        assert len(res.stderr) == 0
+        res = self._dispatch(['rm', 'helper'])
+        assert len(res.stderr) == 0
+
+    def list_files_on_volume(self, volume):
+        res = self._dispatch(['run', '--rm', '-v', '{}:/data'.format(volume), 'busybox', 'ls', '/data'])
+        assert len(res.stderr) == 0
+        return res
+
     def run_sidecar(self, image=None, goss_config=None, command=None):
         try:
             self._docker.images.get(image)
@@ -75,7 +99,7 @@ class DockerController():
 
         return Result.PASS
 
-    def dispatch(self, options, project_options=None, returncode=0):
+    def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
         o = project_options + options
         logger.console('Dispatching: docker {}'.format(o))
