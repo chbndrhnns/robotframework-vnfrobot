@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
-import collections
-import re
-from string import lower
 import namesgenerator
 
-import os
 from robot.libraries.BuiltIn import BuiltIn
 
-import exc
 from robot.api import logger
 from robot.api.deco import keyword
 
-from DockerController import DockerController, ProcessResult
+from modules import variable, context, port
+from tools import orchestrator
+from DockerController import ProcessResult
+from modules.context import set_context, SUT
 from robotlibcore import DynamicCore
 from version import VERSION
-from testutils import string_matchers, number_matchers, get_truth, validate_context, validate_port, validate_property, \
-    validate_value, validate_against_regex
-
-SUT = collections.namedtuple('sut', 'target_type, target')
+from testutils import string_matchers, validate_context, validate_port, validate_property, \
+    validate_value, validate_deployment
 
 
 class LowLevel(DynamicCore):
@@ -68,15 +64,11 @@ class LowLevel(DynamicCore):
             logger.console('Skipping undeployment')
             return
 
-        if self.docker_controller:
-            logger.console('Removing deployment "{}"'.format(self.descriptor_file))
+        if self.docker_controller and self.descriptor_file:
+            logger.debug('Removing deployment "{}"'.format(self.descriptor_file))
             self.remove_deployment()
         else:
             logger.console('Skipping: remove deployment')
-
-    def validate_deployment(self):
-        if self.deployment_result.stderr:
-            BuiltIn().fatal_error("Could not deploy the system under test: {}".format(self.deployment_result.stderr))
 
     def run_keyword(self, name, args, kwargs):
         """
@@ -86,188 +78,75 @@ class LowLevel(DynamicCore):
             None
         """
         self.context = BuiltIn().get_library_instance(all=True)
-        self.validate_deployment()
+        validate_deployment(self)
 
         # logger.info(u"\nRunning keyword '%s' with arguments %s." % (name, args), also_console=True)
-
         return self.keywords[name](*args, **kwargs)
 
     @keyword('Set ${context_type:\S+} context to ${context:\S+}')
     def set_context(self, context_type=None, context=None):
-        context_types = ['application', 'service', 'node', 'network']
-
-        if context_type not in context_types:
-            raise exc.SetupError('Invalid context given. Must be {}'.format(context_types))
-        if context is None:
-            raise exc.SetupError('No context given.')
-
-        self.sut = SUT(context_type, context)
+        self.sut = set_context(context_type, context)
 
     @keyword('Command')
     def command(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Process')
     def process(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Service')
     def service(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Kernel Parameter')
     def kernel_parameter(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Container')
     def container(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('User')
     def user(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Group')
     def group(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('File')
     def file(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Symbolic Link')
     def symlink(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Address')
     def address(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('DNS')
     def dns(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Interface')
     def interface(self):
-        allowed_context = ('node',)
-
-        if self.sut.target_type not in allowed_context:
-            raise exc.SetupError('Context type "{}" not allowed.'.format(self.sut.target_type))
-
-        return dict([('OS_USERNAME', 'admin'), ('OS_AUTH_URL', 'http://localhost:5000/api')])
+        pass
 
     @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
     def env_variable(self, raw_entity, matcher, raw_val):
-        allowed_context = ['service']
-        raw_entity_matcher = '[A-Z][A-Z0-9_]'
-        raw_value_matcher = '[^\s]'
-        service_id = '{}_{}'.format(self.deployment_name, self.sut.target)
+        variable.validate(self, raw_entity, matcher, raw_val)
 
-        expected_value = raw_val.strip('"\'')
-
-        # Validations
-        validate_context(allowed_context, self.sut.target_type)
-        validate_against_regex('variable', raw_entity, raw_entity_matcher)
-        validate_against_regex('value', expected_value, raw_value_matcher)
-
-        # Get data
-        env = self.docker_controller.get_env(service_id)
-        actual_value = [e.split('=')[1] for e in env if raw_entity == e.split('=')[0]]
-
-        if not actual_value:
-            raise exc.ValidationError('No variable {} found.'.format(raw_entity))
-
-        if not get_truth(actual_value[0], string_matchers[matcher], expected_value):
-            raise exc.ValidationError('Variable {}: {} {}, actual: {}'.format(raw_entity, matcher, expected_value, actual_value[0]))
-
-    @keyword('Port ${raw_entity:\S+}: ${property:\S+} is ${val:\S+}')
-    def port(self, raw_entity, raw_prop, raw_val):
-        allowed_context = ['service', 'network']
-        properties = {
-            'state': ['open', 'closed']
-        }
-
-        # Validations
-        validate_context(allowed_context, self.sut.target_type)
-        validate_port(raw_entity)
-        validate_property(properties, raw_prop)
-        validate_value(properties, raw_prop, raw_val)
-
-        # Test
+    @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
+    def port(self, raw_entity, raw_prop, matcher, raw_val):
+        port.validate(self, raw_entity, raw_prop, matcher, raw_val)
 
     @keyword('Deploy ${descriptor:\S+}')
     def deploy(self, descriptor):
-        if self.suite_source is None:
-            raise exc.SetupError('Cannot determine directory of robot file.')
-
-        self.descriptor_file = descriptor
-
-        self.docker_controller = DockerController(base_dir=os.path.dirname(self.suite_source))
-        if self.deployment_options['SKIP_DEPLOY']:
-            logger.console('Skipping deployment')
-        else:
-            if self.descriptor_file is None:
-                BuiltIn().fatal_error('No descriptor file specifed.')
-            logger.console('Deploying {}'.format(self.descriptor_file))
-            return self.docker_controller.dispatch(
-                ['stack', 'deploy', '-c', self.descriptor_file, self.deployment_name])
+        orchestrator.deploy(self, descriptor)
 
     @keyword('Remove deployment')
     def remove_deployment(self):
-        self.docker_controller.dispatch(['stack', 'rm', self.deployment_name])
-        self.docker_controller = None
+        orchestrator.undeploy(self)

@@ -6,6 +6,7 @@ from string import lower
 
 from pytest import fail
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 
 import exc
 
@@ -28,6 +29,10 @@ number_matchers = string_matchers.copy().update({
     'is lesser equal': operator.le
 })
 
+
+def validate_deployment(instance):
+    if instance.deployment_result.stderr:
+        BuiltIn().fatal_error("Could not deploy the system under test: {}".format(instance.deployment_result.stderr))
 
 def get_truth(inp, relate, val):
     # special case: contains not is not covered by the operator module
