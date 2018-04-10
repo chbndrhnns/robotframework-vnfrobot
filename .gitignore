@@ -8,7 +8,7 @@ wp-app
 app-data/
 .coverage
 .env
-utils/gitlab/requirements.txt
+vnf-robot-old/utils/gitlab/requirements.txt
 logs/
 .robot/
 
@@ -24,7 +24,7 @@ __pycache__/
 .DS_Store
 
 # Build directories
-docs/_build/
+vnf-robot-old/docs/_build/
 build/
 dist/
 
