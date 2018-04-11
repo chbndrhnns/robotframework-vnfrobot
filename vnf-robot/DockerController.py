@@ -169,7 +169,7 @@ class DockerController:
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
         o = project_options + options
-        BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
+        BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG')
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
 
@@ -180,31 +180,32 @@ class DockerController:
             return True
         return False
 
-    def put_file(self, entity, file_to_transfer='', destination='/'):
-        if not os.path.isfile(file_to_transfer):
-            raise NotFoundError('File {} not found'.format(file_to_transfer))
+    def put_file(self, entity, file_to_transfer='', destination='/', content=None):
+        # we have a real file
+        if file_to_transfer and not content:
+            if not os.path.isfile(file_to_transfer):
+                raise NotFoundError('File {} not found'.format(file_to_transfer))
 
-        filename = os.path.basename(file_to_transfer)
+            filename = os.path.basename(file_to_transfer)
+            with open(file_to_transfer, 'r') as f:
+                content = f.read()
+                self._send_file(content, destination, entity, filename)
+        # we have a string
+        elif content and file_to_transfer:
+            self._send_file(content, destination, entity, file_to_transfer)
 
-        # try:
-        #     container = self.get_container(entity)
-        #     assert isinstance(container, Container)
-        #     container_id = container.id
-        # except docker.errors.NotFound as exc:
-        #     raise NotFoundError(exc)
+        else:
+            raise DeploymentError('Invalid parameter combination.')
 
-        with open(file_to_transfer, 'r') as f:
-            content = f.read()
-            to_send = Archive('w').add_text_file(filename, content).close()
-
-            try:
-                BuiltIn().log('Putting file {} on {} at {}'.format(filename, entity, destination), level='DEBUG')
-                res = self._docker_api.put_archive(entity, destination, to_send.buffer)
-                assert res
-                # self.file_exists(entity, filename)
-            except docker.errors.APIError as exc:
-                raise DeploymentError(exc)
-
+    def _send_file(self, content, destination, entity, filename):
+        to_send = Archive('w').add_text_file(filename, content).close()
+        try:
+            BuiltIn().log('Putting file {} on {} at {}'.format(filename, entity, destination), level='DEBUG')
+            res = self._docker_api.put_archive(entity, destination, to_send.buffer)
+            assert res
+            # self.file_exists(entity, filename)
+        except docker.errors.APIError as exc:
+            raise DeploymentError(exc)
 
     def get_file(self, entity, path, filename):
         try:

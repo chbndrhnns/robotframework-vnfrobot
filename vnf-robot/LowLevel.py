@@ -5,7 +5,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 from robot.api.deco import keyword
 
-from exc import SetupError, NotFoundError
+from exc import SetupError, NotFoundError, DataFormatError
 from modules import variable, port
 from tools import orchestrator
 from modules.context import set_context, SUT
@@ -22,6 +22,8 @@ class LowLevel(DynamicCore):
     __version__ = VERSION
 
     def __init__(self):
+        DynamicCore.__init__(self, [])
+
         self.descriptor_file = None
         self.deployment_name = None
         self.context_type = None
@@ -42,8 +44,6 @@ class LowLevel(DynamicCore):
 
         self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}")
         assert True
-
-        DynamicCore.__init__(self, [])
 
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
@@ -139,7 +139,10 @@ class LowLevel(DynamicCore):
     @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
         '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
-        port.validate(self, raw_entity, raw_prop, matcher, raw_val)
+        try:
+            port.validate(self, raw_entity, raw_prop, matcher, raw_val)
+        except DataFormatError as exc:
+            BuiltIn().fail(exc)
 
     @keyword('Deploy ${descriptor:\S+}')
     def deploy_kw(self, descriptor):

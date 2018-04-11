@@ -1,6 +1,6 @@
 *** Settings ***
 Library     LowLevel
-Variables   settings.py
+Variables   common.py
 
 *** Test Cases ***
 Check variables

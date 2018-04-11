@@ -7,7 +7,7 @@ def validate(instance, raw_entity, matcher, raw_val):
     raw_entity_matcher = '[A-Z][A-Z0-9_]'
     raw_value_matcher = '[^\s]'
 
-    expected_value = raw_val.strip('"\'')
+    expected_value = unicode(raw_val.strip('"\''))
 
     # Validations
     validate_context(allowed_context, instance.sut.target_type)

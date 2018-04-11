@@ -4,6 +4,7 @@ import re
 import operator
 from string import lower
 
+import ipaddress
 from pytest import fail
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
@@ -41,19 +42,32 @@ def get_truth(inp, relate, val):
     return relate(val, inp)
 
 
-def validate_value(properties, raw_prop, raw_val):
-    val = raw_val in properties[raw_prop]
-    if not val:
-        raise exc.ValidationError(
-            'Value "{}" not allowed for {}. Must be any of {}'.format(raw_val, raw_prop, properties.keys()))
+def validate_value(properties, raw_prop, value):
+
+    validator = properties[raw_prop]
+
+    if isinstance(validator, list):
+        valid = value in properties[raw_prop]
+        if not valid:
+            raise exc.ValidationError(
+                'Value "{}" not allowed for {}. Must be any of {}'.format(value, raw_prop, properties[raw_prop]))
+    elif isinstance(validator(), Validator):
+        v = validator()
+        if not v.validate(value):
+            raise exc.ValidationError(
+                'Value "{}" not allowed for {}. Must be any of {}'.format(value, raw_prop, v.name))
+
+    return value
 
 
 def validate_property(properties, raw_prop):
     # Check that the given property and its expected value are valid
     prop = raw_prop in properties
-    if not prop:
+    if not properties[raw_prop]:
         raise exc.ValidationError(
             'Property "{}" not allowed. Must be any of {}'.format(raw_prop, properties.keys()))
+
+    return raw_prop
 
 
 def validate_against_regex(context, raw_value, regex):
@@ -66,26 +80,29 @@ def validate_port(raw_entity):
     # Check that raw_entity is valid
     # 0 < port <= 65535
     # \d+
-    entity = re.search('(\d+)[/]?(tcp|udp)?', raw_entity, re.IGNORECASE)
+    entity = re.search('(\d+)[/]?(\w{,3})?', raw_entity, re.IGNORECASE)
     if not entity:
         raise exc.ValidationError(
             'Port "{}" not valid.'.format(raw_entity))
     port = int(entity.group(1)) if entity else None
-    protocol = lower(entity.group(2)) if entity.group(2) else None
+    protocol = entity.group(2) if entity.groups is not None else None
     if not (0 < port <= 65535):
         raise exc.ValidationError(
             'Port "{}" not valid. Must be between 1 and 65535'.format(port))
-    elif protocol:
-        if protocol not in ['tcp', 'udp']:
-            raise exc.ValidationError(
+    if len(protocol) > 0 and lower(protocol) not in ['tcp', 'udp']:
+        raise exc.ValidationError(
                 'Protocol "{}" not valid. Only udp and tcp are supported'.format(protocol))
 
+    return port, protocol
 
-def validate_context(allowed_context, target_type):
+
+def validate_context(allowed_context, given_context):
     # Check that a context is given for the test
-    if target_type not in allowed_context:
+    if given_context not in allowed_context:
         raise exc.SetupError(
-            'Context type "{}" not allowed. Must be any of {}'.format(target_type, allowed_context))
+            'Context type "{}" not allowed. Must be any of {}'.format(given_context, allowed_context))
+
+    return given_context
 
 
 class Result:
@@ -140,3 +157,19 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
     if expected_message:
         for result in result.suite.tests:
             test_instance.assertIn(expected_message, result.message)
+
+
+class Validator:
+    pass
+
+
+class IpAddress(Validator):
+    def __init__(self):
+        self.name = 'IP address'
+
+    @staticmethod
+    def validate(address):
+        try:
+            return True if ipaddress.ip_address(address) else False
+        except Exception:
+            pass
