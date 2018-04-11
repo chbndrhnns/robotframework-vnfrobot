@@ -3,61 +3,11 @@ import os
 import pytest
 from docker.models.containers import Container
 from docker.models.services import Service
-from pytest import fixture
 
-import namesgenerator
 from DockerController import DockerController
-from exc import DeploymentError, NotFoundError, SetupError
+from exc import DeploymentError, NotFoundError
 from testutils import Result
 from . import path
-
-
-@fixture
-def service_id(stack_infos):
-    return '{}_sut'.format(stack_infos[0])
-
-
-@fixture
-def goss_test():
-    return os.path.join(path, 'fixtures', 'goss-port.yaml')
-
-
-@fixture
-def container_name():
-    return 'gosstest_' + namesgenerator.get_random_name()
-
-
-@fixture
-def goss_volume():
-    return 'gosstest_' + namesgenerator.get_random_name()
-
-
-@fixture(scope='session')
-def controller():
-    return DockerController(base_dir=path)
-
-
-@fixture
-def container(controller):
-    return controller.run_busybox()
-
-
-@fixture
-def goss_files():
-    return os.path.join(path, 'fixtures', 'goss')
-
-
-@fixture
-def stack_infos():
-    return 'dc-test', os.path.join(path, 'fixtures', 'dc-test.yml')
-
-
-@fixture
-def stack(controller, stack_infos):
-    name = stack_infos[0]
-    path = stack_infos[1]
-    return name, path, controller.deploy_stack(path, name)
-
 
 def _cleanup_volumes(d, volumes):
     if volumes is None:
@@ -195,21 +145,21 @@ def test__add_data_to_volume(controller, goss_volume, goss_files):
         _cleanup_volumes(controller, goss_volume)
 
 
-def test__put_file__pass(controller, container, goss_test):
+def test__put_file__pass(controller, container, gossfile):
     try:
-        controller.put_file(container.id, goss_test)
+        controller.put_file(container.id, gossfile)
     except (DeploymentError, NotFoundError) as exc:
         pytest.fail(exc)
 
 
-def test__put_file__file_not_found__fail(controller, container, goss_test):
+def test__put_file__file_not_found__fail(controller, container, gossfile):
     with pytest.raises(NotFoundError):
         controller.put_file(container.id, 'goss.yaml')
 
 
-def test__put_file__destination_does_not_exist__fail(controller, container, goss_test):
+def test__put_file__destination_does_not_exist__fail(controller, container, gossfile):
     with pytest.raises(DeploymentError):
-        controller.put_file(container.id, goss_test, '/goss/goss.yaml')
+        controller.put_file(container.id, gossfile, '/goss/goss.yaml')
 
 
 def test__get_file__pass(controller, container):
@@ -227,35 +177,25 @@ def test__get_file__not_found__fail(container, controller):
 
 
 def test__execute__invalid_container_object__fail(controller):
-    c = ''
+    c = Container()
     with pytest.raises(ValueError):
         controller.execute(c, '/bin/bash')
 
 
 def test__execute__no_command__fail(controller):
-    container = ''
+    container = Container()
     with pytest.raises(ValueError):
         controller.execute(container, '/bin/bash')
+
 
 def test__execute_in_stack__pass(controller, stack, service_id):
     string = 'hello'
     try:
         containers = controller.get_containers_for_service(service_id)
-        # res = controller.execute(containers[0], ['sh', '-c', '\'echo "{}"\''.format(string)])
-        res = controller.execute(containers[0], 'sh -c "echo hello"')
+        res = controller.execute(containers[0], ['sh', '-c', '\'echo "{}"\''.format(string)])
         assert string in res
     finally:
         _cleanup(controller, service_id)
-
-
-def test__run_goss_in_container__pass(controller, stack, service_id):
-    try:
-        res = controller.get_containers_for_service(service_id)
-        assert isinstance(res, list)
-        container = res[0]
-        assert isinstance(container, Container)
-    finally:
-        controller.undeploy_stack(stack[0])
 
 
 @pytest.mark.skip

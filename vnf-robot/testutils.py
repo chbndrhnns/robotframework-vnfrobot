@@ -128,7 +128,7 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
             test = context.create(u'Expect {}: {}'.format(Result.get(expected_result), t))
             test.keywords.append(t)
 
-    result = test_instance.suite.run_detached(output=None)
+    result = test_instance.suite.run(output=None)
 
     if expected_result is Result.FAIL:
         test_instance.assertEqual(run_count, result.statistics.total.all.failed,

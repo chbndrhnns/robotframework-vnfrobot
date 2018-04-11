@@ -10,6 +10,8 @@ from docker.models.containers import Container
 import docker
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
+
+import namesgenerator
 from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
@@ -22,8 +24,13 @@ class DockerController:
     def __init__(self, base_dir):
         self.base_dir = base_dir
         self._docker = docker.from_env()
-        self._docker_api = docker.APIClient(base_url='unix://var/run/docker.sock')
         self.helper = 'helper'
+
+        if not self.base_dir:
+            self.base_dir = os.getcwd()
+            BuiltIn().log('base_dir not specified. Assuming current working dir: {}')
+
+        self._docker_api = docker.APIClient(base_url='unix://var/run/docker.sock')
 
     def execute(self, container=None, command=None):
         if not command:
@@ -45,7 +52,7 @@ class DockerController:
             return self._docker.containers.list(all=True,
                                                 filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
         except docker.errors.NotFound as exc:
-            raise DeploymentError(exc)
+            raise NotFoundError(exc)
 
     def get_env(self, entity):
         # first, try if entity is a container
@@ -54,7 +61,11 @@ class DockerController:
             c = self._docker.containers.get(entity)
         except docker.errors.NotFound as exc:
             # second, try if entity is a service
-            c = self.get_containers_for_service(entity)
+
+            try:
+                c = self.get_containers_for_service(entity)
+            except NotFoundError as exc:
+                raise NotFoundError('Could not find service {}'.format(entity))
 
             if isinstance(c, list):
                 # BuiltIn().log(
@@ -119,8 +130,8 @@ class DockerController:
     def list_files_on_volume(self, volume):
         try:
             self.get_volume(volume)
-        except SetupError:
-            raise
+        except SetupError as exc:
+            raise exc
 
         res = self._dispatch(['run', '--rm', '-v', '{}:/data'.format(volume), 'busybox', 'ls', '/data'])
         assert len(res.stderr) == 0
@@ -135,7 +146,7 @@ class DockerController:
 
         try:
             result = self._docker.containers.run(image=image, command=command, auto_remove=True, network_mode='host',
-                                                          tty=True)
+                                                 tty=True)
             BuiltIn().log(result, level='DEBUG', console=True)
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
@@ -143,16 +154,14 @@ class DockerController:
 
         return Result.PASS
 
-    # def run_busybox(self):
-    #     try:
-    #         name = namesgenerator.get_random_name()
-    #         self._docker.containers.run('busybox', 'true', name=name, detach=True)
-    #         container = self._docker.containers.list(filters={"name": name})[0]
-    #         return self._docker.containers.get(container.id)
-    #     except docker.errors.NotFound as exc:
-    #         raise NotFoundError(exc)
-    #     except docker.errors.APIError as exc:
-    #         raise DeploymentError(exc)
+    def run_busybox(self):
+        try:
+            name = namesgenerator.get_random_name()
+            return self._docker.containers.run('busybox', 'true', name=name, detach=True)
+        except docker.errors.NotFound as exc:
+            raise NotFoundError(exc)
+        except docker.errors.APIError as exc:
+            raise DeploymentError(exc)
 
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
@@ -186,9 +195,13 @@ class DockerController:
             to_send = Archive('w').add_text_file(filename, content).close()
 
             try:
-                self._docker_api.put_archive(entity, destination, to_send.buffer)
+                BuiltIn().log('Putting file {} on {} at {}'.format(filename, entity, destination), level='DEBUG')
+                res = self._docker_api.put_archive(entity, destination, to_send.buffer)
+                assert res
+                # self.file_exists(entity, filename)
             except docker.errors.APIError as exc:
                 raise DeploymentError(exc)
+
 
     def get_file(self, entity, path, filename):
         try:
@@ -197,6 +210,7 @@ class DockerController:
             raise DeploymentError(exc)
 
         return Archive('r', strm.read()).get_text_file(filename)
+
 
 # helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py
 

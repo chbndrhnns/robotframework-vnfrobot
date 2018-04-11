@@ -1,13 +1,9 @@
 *** Settings ***
-Library  LowLevel
-
-*** Variables ***
-#${USE_DEPLOYMENT}
-${SKIP_UNDEPLOY}  True
-${DESCRIPTOR}   dc-test.yml
+Library     LowLevel
+Variables   settings.py
 
 *** Test Cases ***
 Check ports
     Set service context to sut
-    Port 12345: state is open
+    Port 12345: state is closed
 

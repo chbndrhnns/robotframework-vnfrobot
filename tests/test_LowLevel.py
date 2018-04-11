@@ -1,6 +1,5 @@
 import logging
-import pytest
-from mock import patch
+from mock import patch, MagicMock, PropertyMock, Mock
 from robot.running.model import Variable
 
 from unittest2 import TestCase
@@ -8,6 +7,7 @@ from unittest2 import TestCase
 from robot.api import TestSuite
 from robot.running import Keyword
 
+from DockerController import DockerController
 from testutils import run_keyword_tests, Result
 
 
@@ -20,7 +20,6 @@ class LowLevelTest(TestCase):
     def setUp(self):
         self.suite = TestSuite('Test low level keywords')
         self.suite.resource.imports.library('LowLevel')
-        self.suite.resource.variables.append(Variable('${USE_DEPLOYMENT}', 'Bla'))
 
     def tearDown(self):
         pass
@@ -108,7 +107,10 @@ class LowLevelTest(TestCase):
             Keyword(name=u'Variable NGINX_VERSION: contains 2.0.0beta1'),
             Keyword(name=u'Variable NGINX_VERSION: is 2.0.0beta1'),
         ]
-        with patch('LowLevel.orchestrator.DockerController.get_env', return_value=["PATH=/usr/bin", "NGINX_VERSION=2.0.0beta1"]):
+
+        with patch('LowLevel.orchestrator._get_controller') as mock:
+            mock.return_value = MagicMock(DockerController)
+            mock.return_value.get_env.return_value = ["PATH=/usr/bin", "NGINX_VERSION=2.0.0beta1"]
             run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
 
     def test__variable__variable_does_not_exist__fail(self):
@@ -129,4 +131,3 @@ class LowLevelTest(TestCase):
         with patch('modules.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Value')
-

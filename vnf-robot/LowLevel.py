@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
+import sys
 from robot.libraries.BuiltIn import BuiltIn
 
 from robot.api import logger
 from robot.api.deco import keyword
 
-from exc import SetupError
+from exc import SetupError, NotFoundError
 from modules import variable, port
 from tools import orchestrator
 from modules.context import set_context, SUT
@@ -22,12 +22,11 @@ class LowLevel(DynamicCore):
     __version__ = VERSION
 
     def __init__(self):
-        DynamicCore.__init__(self, [])
         self.descriptor_file = None
         self.deployment_name = None
         self.context_type = None
         self.context = None
-        self.sut = SUT(None, None)
+        self.sut = SUT(None, None, None)
         self.ROBOT_LIBRARY_LISTENER = self
         self.suite_source = None
         self.docker_controller = None
@@ -42,13 +41,15 @@ class LowLevel(DynamicCore):
             self.deployment_options['SKIP_UNDEPLOY'] = True
 
         self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}")
+        assert True
+
+        DynamicCore.__init__(self, [])
 
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
-        self.deploy_kw(self.descriptor_file)
 
-        assert True
+        self.deploy_kw(self.descriptor_file)
 
     def _end_suite(self, name, attrs):
         if self.deployment_options['SKIP_UNDEPLOY']:
@@ -75,7 +76,10 @@ class LowLevel(DynamicCore):
 
     @keyword('Set ${context_type:\S+} context to ${context:\S+}')
     def set_context_kw(self, context_type=None, context=None):
-        self.sut = set_context(context_type, context)
+        try:
+            self.sut = set_context(self, context_type, context)
+        except NotFoundError as exc:
+            BuiltIn().fatal_error(exc)
 
     @keyword('Command')
     def command_kw(self):
@@ -127,7 +131,10 @@ class LowLevel(DynamicCore):
 
     @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
     def env_variable_kw(self, raw_entity, matcher, raw_val):
-        variable.validate(self, raw_entity, matcher, raw_val)
+        try:
+            variable.validate(self, raw_entity, matcher, raw_val)
+        except NotFoundError as exc:
+            BuiltIn().fail(exc)
 
     @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
         '|'.join(string_matchers.keys())))
@@ -136,10 +143,13 @@ class LowLevel(DynamicCore):
 
     @keyword('Deploy ${descriptor:\S+}')
     def deploy_kw(self, descriptor):
+        if self.descriptor_file is None:
+            BuiltIn().log('No descriptor file specified. Assuming fake deployment...')
+            return
         try:
             orchestrator.deploy(self, descriptor)
         except SetupError as exc:
-            BuiltIn().fail(exc)
+            BuiltIn().fatal_error(exc)
 
     @keyword('Remove deployment')
     def remove_deployment_kw(self):
