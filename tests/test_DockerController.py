@@ -9,6 +9,7 @@ from exc import DeploymentError, NotFoundError
 from testutils import Result
 from . import path
 
+
 def _cleanup_volumes(d, volumes):
     if volumes is None:
         volumes = []
@@ -42,13 +43,8 @@ def test__get_stack__fail(controller, stack_infos):
     assert not res
 
 
-def test__get_stack__pass(controller, stack_infos):
-    try:
-        controller.deploy_stack(stack_infos[1], stack_infos[0])
-        res = controller.find_stack(stack_infos[0])
-    finally:
-        _cleanup_stack(controller, stack_infos[0])
-
+def test__get_stack__pass(controller, stack):
+    res = controller.find_stack(stack[0])
     assert res
 
 
@@ -69,80 +65,42 @@ def test__run_sidecar__pass(controller, container_name):
     assert result == Result.PASS
 
 
-def test__list_containers__pass(controller):
+def test__list_containers__pass(controller, containers):
     controller = DockerController(base_dir=path)
 
-    res = controller.get_containers()
-
-    assert isinstance(res, list)
-
-
-def test__get_env__container(controller, container_name):
-    _cleanup(controller, container_name)
-
-    try:
-        res = controller._dispatch(['run', '-d', '--name', container_name, 'nginx'])
-        assert len(res.stderr) == 0
-        env = controller.get_env(container_name)
-        assert isinstance(env, list)
-        assert [e for e in env if 'PATH' in e]
-    finally:
-        _cleanup(controller, container_name)
+    assert isinstance(containers, list)
+    assert len(containers) > 0
 
 
-def test__get_env__service(controller):
-    stack_name = 'test-stack'
-    service = 'sut'
+def test__get_env__container(controller, container):
+    env = controller.get_env(container.name)
+    assert isinstance(env, list)
+    assert [e for e in env if 'PATH' in e]
 
-    service_id = '{}_{}'.format(stack_name, service)
 
-    _cleanup(controller, service_id)
-
-    try:
-        controller._dispatch(['stack', 'deploy', '-c', os.path.join(path, 'fixtures', 'dc-test.yml'), stack_name])
-        env = controller.get_env(service_id)
-    finally:
-        _cleanup(controller, service_id)
+def test__get_env__service(controller, stack, service_id):
+    env = controller.get_env(service_id)
 
     assert isinstance(env, list)
     assert [e for e in env if 'PATH' in e]
 
 
-def test__find_service__pass(controller):
-    stack_name = 'test-stack'
-    service = 'sut'
-
-    service_id = '{}_{}'.format(stack_name, service)
-
-    _cleanup(controller, service_id)
-
-    controller._dispatch(['stack', 'deploy', '-c', os.path.join(path, 'fixtures', 'dc-test.yml'), stack_name])
+def test__find_service__pass(controller, stack, service_id):
     service = controller.get_service(service_id)
 
     assert isinstance(service, Service)
 
-    # cleanup(controller, service_id)
+
+def test__create_goss_volume(controller, volume):
+    assert not volume[0].stderr
 
 
-def test__create_goss_volume(controller, goss_volume):
-    try:
-        res = controller.create_volume(goss_volume)
-        assert len(res.stderr) == 0
-    finally:
-        _cleanup_volumes(controller, goss_volume)
-
-
-def test__add_data_to_volume(controller, goss_volume, goss_files):
-    try:
-        res = controller.create_volume(goss_volume)
-        assert len(res.stderr) == 0
-
-        controller.add_data_to_volume(goss_volume, goss_files)
-        res = controller.list_files_on_volume(goss_volume)
-        assert 'goss-linux-amd64' in res.stdout
-        assert 'goss-linux-386' in res.stdout
-    finally:
-        _cleanup_volumes(controller, goss_volume)
+def test__add_data_to_volume(controller, volume, goss_files):
+    name = volume[1]
+    controller.add_data_to_volume(name, goss_files)
+    res = controller.list_files_on_volume(name)
+    assert 'goss-linux-amd64' in res.stdout
+    assert 'goss-linux-386' in res.stdout
 
 
 def test__put_file__pass(controller, container, gossfile):

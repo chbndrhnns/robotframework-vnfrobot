@@ -16,6 +16,12 @@ def service_id(stack_infos):
 def containers(controller, service_id, stack):
     return controller.get_containers_for_service(service_id)
 
+@fixture
+def volume(controller, goss_volume):
+    res = controller.create_volume(goss_volume)
+    yield (res, goss_volume)
+    controller.delete_volume(goss_volume)
+
 
 @fixture
 def gossfile():
@@ -39,8 +45,14 @@ def controller():
 
 
 @fixture
-def container(controller):
-    return controller.run_busybox()
+def container(controller, goss_volume):
+    c = controller.run_busybox()
+    yield c
+    try:
+        c.kill()
+        c.remove()
+    except Exception:
+        pass
 
 
 @fixture

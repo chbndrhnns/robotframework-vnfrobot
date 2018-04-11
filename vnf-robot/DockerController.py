@@ -107,6 +107,9 @@ class DockerController:
     def create_volume(self, name):
         return self._dispatch(['volume', 'create', name])
 
+    def delete_volume(self, name):
+        return self._dispatch(['volume', 'rm', name])
+
     def get_volume(self, name):
         res = self._dispatch(['volume', 'inspect', name])
         if res.stderr:
