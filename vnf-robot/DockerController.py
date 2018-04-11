@@ -25,6 +25,18 @@ class DockerController:
         self._docker_api = docker.APIClient(base_url='unix://var/run/docker.sock')
         self.helper = 'helper'
 
+    def execute(self, container=None, command=None):
+        if not command:
+            raise ValueError('command parameter must not be empty.')
+
+        wait_on_container_status(self._docker, container.id, 'Running')
+
+        try:
+            res = container.exec_run(cmd=command, tty=True)
+            return res
+        except docker.errors.APIError as exc:
+            raise SetupError(exc)
+
     def get_containers_for_service(self, service):
         try:
             wait_on_service_replication(self._docker, service)
@@ -123,13 +135,24 @@ class DockerController:
 
         try:
             result = self._docker.containers.run(image=image, command=command, auto_remove=True, network_mode='host',
-                                                 tty=True)
+                                                          tty=True)
             BuiltIn().log(result, level='DEBUG', console=True)
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
             return Result.FAIL
 
         return Result.PASS
+
+    # def run_busybox(self):
+    #     try:
+    #         name = namesgenerator.get_random_name()
+    #         self._docker.containers.run('busybox', 'true', name=name, detach=True)
+    #         container = self._docker.containers.list(filters={"name": name})[0]
+    #         return self._docker.containers.get(container.id)
+    #     except docker.errors.NotFound as exc:
+    #         raise NotFoundError(exc)
+    #     except docker.errors.APIError as exc:
+    #         raise DeploymentError(exc)
 
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
