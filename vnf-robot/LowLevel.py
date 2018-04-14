@@ -5,8 +5,9 @@ from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 from robot.api.deco import keyword
 
-from exc import SetupError, NotFoundError, DataFormatError
+from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from modules import variable, port
+from modules.port import Port
 from tools import orchestrator
 from modules.context import set_context, SUT
 from robotlibcore import DynamicCore
@@ -140,8 +141,14 @@ class LowLevel(DynamicCore):
         '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
         try:
-            port.validate(self, raw_entity, raw_prop, matcher, raw_val)
-        except DataFormatError as exc:
+            p = Port(self)
+            p.set('context', self.sut)
+            p.set('entity', raw_entity)
+            p.set('property', raw_prop)
+            p.set('matcher', matcher)
+            p.set('value', raw_val)
+            p.run_test()
+        except (DataFormatError, ValidationError) as exc:
             BuiltIn().fail(exc)
 
     @keyword('Deploy ${descriptor:\S+}')

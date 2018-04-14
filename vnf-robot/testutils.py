@@ -42,17 +42,23 @@ def get_truth(inp, relate, val):
     return relate(val, inp)
 
 
-def validate_value(properties, raw_prop, value):
+def validate_matcher(matchers):
+    # TODO: implement this
+    invalid = [m for m in matchers if m not in string_matchers.keys()]
+    if invalid:
+        raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
+
+def validate_value(properties, raw_prop, value):
     validator = properties[raw_prop]
 
-    if isinstance(validator, list):
-        valid = value in properties[raw_prop]
+    if isinstance(validator.get('values'), list):
+        valid = value in properties.get(raw_prop, {}).get('values', {})
         if not valid:
             raise exc.ValidationError(
                 'Value "{}" not allowed for {}. Must be any of {}'.format(value, raw_prop, properties[raw_prop]))
-    elif isinstance(validator(), Validator):
-        v = validator()
+    elif isinstance(validator.get('value')(), Validator):
+        v = validator.get('value')()
         if not v.validate(value):
             raise exc.ValidationError(
                 'Value "{}" not allowed for {}. Must be any of {}'.format(value, raw_prop, v.name))
@@ -61,9 +67,8 @@ def validate_value(properties, raw_prop, value):
 
 
 def validate_property(properties, raw_prop):
-    # Check that the given property and its expected value are valid
-    prop = raw_prop in properties
-    if not properties[raw_prop]:
+    # Check that the given property is valid
+    if not properties.get(raw_prop, None):
         raise exc.ValidationError(
             'Property "{}" not allowed. Must be any of {}'.format(raw_prop, properties.keys()))
 
@@ -91,7 +96,7 @@ def validate_port(raw_entity):
             'Port "{}" not valid. Must be between 1 and 65535'.format(port))
     if len(protocol) > 0 and lower(protocol) not in ['tcp', 'udp']:
         raise exc.ValidationError(
-                'Protocol "{}" not valid. Only udp and tcp are supported'.format(protocol))
+            'Protocol "{}" not valid. Only udp and tcp are supported'.format(protocol))
 
     return port, protocol
 

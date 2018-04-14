@@ -1,9 +1,10 @@
 import os
 import pytest
+import yaml
 
-from exc import TestToolError
-from tests.test_DockerController import _cleanup
-from tools.goss import GossTool
+from exc import TestToolError, TransformationError
+from tools.GossTool import GossTool
+from tools.goss.GossPort import GossPort
 
 
 def test__run__pass(controller, stack, service_id, gossfile, containers):
@@ -11,7 +12,7 @@ def test__run__pass(controller, stack, service_id, gossfile, containers):
 
     controller.put_file(containers[0].id, gossfile)
     g = GossTool(controller, containers[0], gossfile=os.path.basename(gossfile))
-    res = g.run_goss()
+    res = g.run()
 
     assert res['summary']['failed-count'] == 1
 
@@ -21,7 +22,7 @@ def test__run__gossfile_not_found__fail(controller, stack, service_id, container
     g.gossfile = 'bla'
 
     with pytest.raises(TestToolError, match='Gossfile not found'):
-        g.run_goss()
+        g.run()
 
 
 def test__run__goss_not_found__fail(controller, stack, service_id, containers):
@@ -29,7 +30,7 @@ def test__run__goss_not_found__fail(controller, stack, service_id, containers):
     g.command = 'not_existing'
 
     with pytest.raises(TestToolError, match='goss executable was not found'):
-        g.run_goss()
+        g.run()
 
 
 def test__run__syntax_error__fail(controller, stack, service_id, containers):
@@ -37,6 +38,4 @@ def test__run__syntax_error__fail(controller, stack, service_id, containers):
     g.command = '/goss/goss-linux-amd64 /data'
 
     with pytest.raises(TestToolError, match='Syntax error'):
-        g.run_goss()
-
-
+        g.run()

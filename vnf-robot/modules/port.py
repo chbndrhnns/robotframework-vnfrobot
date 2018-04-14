@@ -1,82 +1,112 @@
-from string import Template
+import json
+import tempfile
 
-import yaml
-import jinja2
 from jinja2 import TemplateError
+from robot.libraries.BuiltIn import BuiltIn
 
-from exc import DataFormatError, ValidationError
-from testutils import validate_context, validate_port, validate_property, validate_value, IpAddress
-from tools.goss import GossTool
-
-
-def generate_gossfile(context):
-    try:
-        g = \
-            """
-port:
-  {{protocol }}:{{port}}:
-    listening:{{state}}
-    """
-        rendered =  jinja2.Environment().from_string(g).render(context)
-
-        # validate
-        yaml.load(rendered)
-    except (SyntaxError, TemplateError):
-        raise DataFormatError('Error when generating the gossfile')
-
-    return rendered
+from LowLevelEntity import LowLevelEntity
+from exc import ValidationError
+from testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, validate_matcher
+from tools.GossTool import GossTool
+from tools.goss.GossPort import GossPort
 
 
-def validate(instance, raw_entity, raw_prop, matcher, raw_val):
-    allowed_context = ['service', 'network']
-    properties = {
-        'state': ['open', 'closed'],
-        'listening_address': IpAddress
-    }
-
-    expected_value = unicode(raw_val.strip('"\''))
-
-    # Validations
-    context = validate_context(allowed_context, instance.sut.target_type)
-    port, protocol = validate_port(raw_entity)
-    property = validate_property(properties, raw_prop)
-    value = validate_value(properties, raw_prop, expected_value)
-
-    condition = {'port': None}
-    if 'state' in raw_prop:
-        port_template = Template("$protocol:$port:")
-        condition['port'] = {
-            port_template.safe_substitute(protocol=protocol or 'tcp', port=port):
-                {
-                    'listening': value
-                }
+class Port(LowLevelEntity):
+    def __init__(self, instance=None):
+        super(Port, self).__init__(instance)
+        self.valid_contexts = ['service', 'network']
+        self.properties = {
+            'state': {
+                'matchers': [],
+                'values': ['open', 'closed']
+            },
+            'listening address': {
+                'matchers': [],
+                'value': IpAddress
+            }
         }
+        self.port = None
+        self.protocol = None
+        self.target = None
+        self.transformed_data = None
 
-    # Test
-    # try:
-    #     gossfile = generate_gossfile(condition)
-    #     assert len(gossfile) > 0
-    # except DataFormatError:
-    #     raise
+    def validate(self):
+        self._check_instance()
+        self._check_data()
+        validate_context(self.valid_contexts, self.instance.sut.target_type)
+        (self.port, self.protocol) = validate_port(self.entity)
+        self.property = validate_property(self.properties, self.property)
+        validate_matcher([self.matcher])
+        self.value = validate_value(self.properties, self.property, self.value)
 
-    # gossfile = yaml.dump(condition)
-    gossfile = """port:
-  tcp:12345:
-    listening: false
-    """
+    def transform(self):
+        # create exchange format
+        data = {
+            'ports': [
+                {
+                    'port': self.port,
+                    'protocol': self.protocol,
+                    'state': self.value if 'state' in self.property else True,
+                    'listening address': self.value if 'listening address' in self.property else None
+                }
+            ]
+        }
+        self.transformed_data = GossPort(data).transform()
 
-    containers = instance.docker_controller.get_containers_for_service(instance.sut.service_id)
-    assert len(containers) > 0
+    def run_test(self):
+        self.validate()
+        self.transform()
 
-    c = containers[0]
+        containers = self.instance.docker_controller.get_containers_for_service(self.instance.sut.service_id)
+        assert len(containers) > 0
+        self.target = containers[0]
 
-    instance.docker_controller.put_file(entity=c.id, file_to_transfer='goss.yaml', destination='/', content=gossfile)
-    res = GossTool(controller=instance.docker_controller, target=c, gossfile='/goss.yaml').run_goss()
+        # create gossfile on target container
+        with tempfile.NamedTemporaryFile() as f:
+            try:
+                f.write(self.transformed_data)
+                f.seek(0)
+                self.instance.docker_controller.put_file(entity=self.target.id, file_to_transfer=f.name,
+                                                         filename='goss.yaml')
+                self.test_result = GossTool(
+                    controller=self.instance.docker_controller,
+                    target=self.target,
+                    gossfile='/goss.yaml'
+                ).run()
+            except (TemplateError, TypeError, ValueError) as exc:
+                return ValidationError('Could not transform the test data: {}'.format(exc))
 
-    assert isinstance(res['summary']['failed-count'], int)
+        self.evaluate_results()
 
-    actual_value = res['results'][0]['found']
-    if res['summary']['failed-count'] > 0:
-        raise ValidationError('Port {}: {} {} {}, actual: {}'.format(raw_entity, raw_prop, matcher, expected_value, actual_value))
+    def evaluate_results(self):
+        assert isinstance(self.test_result['summary']['failed-count'], int)
 
-    assert True
+        actual_value = self.test_result['results'][0]['found']
+        if self.test_result['summary']['failed-count'] > 0:
+            BuiltIn().log_to_console(json.dumps(self.test_result, indent=4, sort_keys=True))
+            raise ValidationError(
+                'Port {}: {} {} {}, actual: {}'.format(
+                    self.entity,
+                    self.property,
+                    self.matcher,
+                    self.value,
+                    actual_value)
+            )
+
+        assert True
+
+#
+#
+# class Matcher(Enum):
+#     IS = 'is'
+#     IS_NOT = 'is not'
+#     EXISTS = 'exists'
+#     EXISTS_NOT = 'exists not'
+#     CONTAINS = 'contains'
+#     CONTAINS_NOT = 'contains not'
+#     HAS = 'has'
+#     HAS_NOT = 'has not'
+#     GREATER = 'greater'
+#     GREATER_OR_EQUAL = 'greater or equal'
+#     LESSER = 'lesser'
+#     LESSER_OR_EQUAL = 'lesser or equal'

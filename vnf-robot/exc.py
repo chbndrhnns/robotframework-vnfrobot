@@ -26,6 +26,10 @@ class TestToolError(RuntimeError):
     pass
 
 
+class TransformationError(RuntimeError):
+    pass
+
+
 class ValidationError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = False
 

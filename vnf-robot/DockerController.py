@@ -180,22 +180,14 @@ class DockerController:
             return True
         return False
 
-    def put_file(self, entity, file_to_transfer='', destination='/', content=None):
-        # we have a real file
-        if file_to_transfer and not content:
-            if not os.path.isfile(file_to_transfer):
-                raise NotFoundError('File {} not found'.format(file_to_transfer))
+    def put_file(self, entity, file_to_transfer='', destination='/', filename=None):
+        if not os.path.isfile(file_to_transfer):
+            raise NotFoundError('File {} not found'.format(file_to_transfer))
 
-            filename = os.path.basename(file_to_transfer)
-            with open(file_to_transfer, 'r') as f:
-                content = f.read()
-                self._send_file(content, destination, entity, filename)
-        # we have a string
-        elif content and file_to_transfer:
-            self._send_file(content, destination, entity, file_to_transfer)
-
-        else:
-            raise DeploymentError('Invalid parameter combination.')
+        filename = filename or os.path.basename(file_to_transfer)
+        with open(file_to_transfer, 'r') as f:
+            content = f.read()
+            self._send_file(content, destination, entity, filename)
 
     def _send_file(self, content, destination, entity, filename):
         to_send = Archive('w').add_text_file(filename, content).close()

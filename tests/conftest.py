@@ -6,6 +6,7 @@ from pytest import fixture
 
 import namesgenerator
 from modules.context import SUT
+from modules.port import Port
 from . import path
 
 from DockerController import DockerController
@@ -115,3 +116,29 @@ def instance(lib, builtin, stack_infos, controller):
     lib.docker_controller = controller
     lib.sut = None
     return lib
+
+# Fixtures for LowLevelEntities
+
+@fixture
+def sut():
+    return SUT('service', 'sut', 'bla')
+
+
+@fixture
+def port_data():
+    return {'context': 'service', 'entity': '6370/TCP', 'property': 'state', 'matcher': 'is', 'value': 'open'}
+
+
+@fixture
+def port(port_data):
+    port = Port()
+    for k, v in port_data.iteritems():
+        port.set(k, v)
+    return port
+
+
+@fixture
+@pytest.mark.usefixture('instance')
+def port_with_instance(port_data, port, instance):
+    port.instance = instance
+    return port

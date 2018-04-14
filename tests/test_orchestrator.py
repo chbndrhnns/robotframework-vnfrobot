@@ -17,7 +17,7 @@ def test__run_test_tool__goss__pass(controller, instance, stack_infos, gossfile,
     try:
         deploy(instance, descriptor)
         controller.put_file(c.id, gossfile)
-        res = GossTool(controller=controller, target=c, gossfile='/goss-port.yaml').run_goss()
+        res = GossTool(controller=controller, target=c, gossfile='/goss-port.yaml').run()
 
         assert isinstance(res['summary']['failed-count'], int)
     except Exception as exc:

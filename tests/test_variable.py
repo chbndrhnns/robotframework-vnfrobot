@@ -31,9 +31,9 @@ class VariableTest(TestCase):
             Keyword(name=u'Variable abc: is b'),
             Keyword(name=u'Variable A-B: is b'),
         ]
-        with patch('modules.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
-            run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
-                              expected_message=u'ValidationError: Value')
+        # with patch('modules.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+        run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
+                          expected_message=u'ValidationError: Value')
 
     def test__variable__pass(self):
         self.suite.keywords.append(Keyword(name='Set service context to node_1', type='setup'))
