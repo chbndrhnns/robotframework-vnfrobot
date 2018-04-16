@@ -4,7 +4,7 @@ import mock
 import pytest
 from pytest import fixture
 
-import namesgenerator
+from tools import namesgenerator
 from modules.context import SUT
 from modules.port import Port
 from . import path

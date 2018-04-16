@@ -1,7 +1,7 @@
 import os
 from robot.libraries.BuiltIn import BuiltIn
 
-import namesgenerator
+from tools import namesgenerator
 from exc import SetupError, DeploymentError
 from DockerController import DockerController
 

@@ -6,12 +6,11 @@ from string import lower
 
 import os
 from docker import errors
-from docker.models.containers import Container
 import docker
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
-import namesgenerator
+from tools import namesgenerator
 from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
