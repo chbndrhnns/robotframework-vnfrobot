@@ -8,6 +8,7 @@ from robot.api.deco import keyword
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from modules import variable, port
 from modules.port import Port
+from modules.variable import Variable
 from tools import orchestrator
 from modules.context import set_context, SUT
 from robotlibcore import DynamicCore
@@ -133,6 +134,17 @@ class LowLevel(DynamicCore):
     @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
     def env_variable_kw(self, raw_entity, matcher, raw_val):
         try:
+            entity = Variable(self)
+            entity.set_as_dict({
+                'context': self.sut,
+                'entity': raw_entity,
+                'matcher': matcher,
+                'value': raw_val})
+            entity.run_test()
+        except (DataFormatError, ValidationError) as exc:
+            BuiltIn().fail(exc)
+
+        try:
             variable.validate(self, raw_entity, matcher, raw_val)
         except NotFoundError as exc:
             BuiltIn().fail(exc)
@@ -141,13 +153,14 @@ class LowLevel(DynamicCore):
         '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
         try:
-            p = Port(self)
-            p.set('context', self.sut)
-            p.set('entity', raw_entity)
-            p.set('property', raw_prop)
-            p.set('matcher', matcher)
-            p.set('value', raw_val)
-            p.run_test()
+            entity = Port(self)
+            entity.set_as_dict({
+                'context': self.sut,
+                'entity': raw_entity,
+                'property': raw_prop,
+                'matcher':  matcher,
+                'value': raw_val})
+            entity.run_test()
         except (DataFormatError, ValidationError) as exc:
             BuiltIn().fail(exc)
 

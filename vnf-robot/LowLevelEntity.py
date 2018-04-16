@@ -15,6 +15,7 @@ class LowLevelEntity():
         # context
         self.context = None
         self.valid_contexts = []
+        self.target = None
 
         self.entity = None
         self.property = None
@@ -40,6 +41,16 @@ class LowLevelEntity():
             setattr(self, prop, unicode(value))
         except AttributeError:
             raise
+
+    def set_as_dict(self, data=None):
+        if data is None:
+            data = {}
+
+        for key, val in data.iteritems():
+            try:
+                self.set(key, val)
+            except AttributeError:
+                raise
 
     @abstractmethod
     def validate(self):

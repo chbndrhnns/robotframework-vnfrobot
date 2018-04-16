@@ -27,7 +27,6 @@ class Port(LowLevelEntity):
         }
         self.port = None
         self.protocol = None
-        self.target = None
         self.transformed_data = None
 
     def validate(self):
@@ -92,9 +91,6 @@ class Port(LowLevelEntity):
                     self.value,
                     actual_value)
             )
-
-        assert True
-
 #
 #
 # class Matcher(Enum):
