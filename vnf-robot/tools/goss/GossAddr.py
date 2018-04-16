@@ -1,36 +1,31 @@
 from jinja2 import Environment
 from robot.libraries.BuiltIn import BuiltIn
+
 from tools.goss.GossEntity import GossEntity
 
 
-class GossPort(GossEntity):
+class GossAddr(GossEntity):
     template = \
-        """port:
-            {% for port in ports %}
-              {{ port.protocol or 'tcp' }}:{{ port.port }}:
-                listening: {{ port.listening }}
-                {% if port.ip %}ip: 
-                {% for ip in port.ip %} - {{ ip }} {% endfor %}
-                {% endif %}
-        {% endfor %}"""
+        """addr:
+            {% for addr in addresses %}
+              {{ addr.protocol or 'tcp' }}://{{ addr.address }}:{{ addr.port }}:
+                reachable: {{ addr.reachable }}
+                timeout: 1000
+            {% endfor %}
+        """
     key_mappings = {
-        'state': 'listening',
-        'listening address': 'ip'
-    }
-    type_mappings = {
-        'ip': []
+        'state': 'reachable'
     }
     value_mappings = {
-        'listening': {
-            'open': True,
-            'closed': False
-        },
-        'ip': {}
+        'reachable': {
+            'is reachable': True,
+            'is not reachable': False,
+        }
     }
 
     def __init__(self, data):
         GossEntity.__init__(self, data)
-        self.name = 'ports'
+        self.name = 'addresses'
 
     def transform(self):
         self.apply_mappings()
@@ -45,8 +40,6 @@ class GossPort(GossEntity):
         assert isinstance(entities, list), 'entities is no list'
 
         for entity in entities:
-            self._map(entity, self.key_mappings, self.type_mappings, self.value_mappings)
+            self._map(entity, self.key_mappings, None, self.value_mappings)
 
         return self.mapped
-
-

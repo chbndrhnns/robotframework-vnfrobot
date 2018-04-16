@@ -234,3 +234,6 @@ class IpAddress(Validator):
             return validators.ipv4(val) or (validators.ipv6(val))
         except Exception:
             pass
+
+def str2bool(val):
+    return val.lower() in ("yes", "true", "t", "1")
