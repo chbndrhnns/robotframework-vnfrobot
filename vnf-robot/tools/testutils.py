@@ -2,6 +2,7 @@ import inspect
 import re
 
 import operator
+from abc import abstractmethod, ABCMeta
 from string import lower
 
 import ipaddress
@@ -12,19 +13,23 @@ from robot.libraries.BuiltIn import BuiltIn
 
 import exc
 
-# For contains not, there is no direct operator available. We rely on the implicit knowledge that None means 'contains not'
-string_matchers = {
+# For contains not, there is no direct operator available. We rely on the implicit knowledge that None means
+# 'contains not'
+boolean_matchers = {
     'is': operator.eq,
     'is not': operator.ne,
+}
+
+string_matchers = dict(boolean_matchers, **{
     'has': operator.eq,
     'has not': operator.ne,
     'exists': operator.truth,
     'exists not': operator.not_,
     'contains': operator.contains,
     'contains not': 'contains_not',
-}
+})
 
-number_matchers = string_matchers.copy().update({
+number_matchers = dict(boolean_matchers, **{
     'is greater': operator.gt,
     'is greater equal': operator.ge,
     'is lesser': operator.lt,
@@ -43,26 +48,43 @@ def get_truth(inp, relate, val):
     return relate(val, inp)
 
 
-def validate_matcher(matchers):
-    # TODO: implement this
+def validate_matcher(matchers, limit_to=None):
+    if limit_to is None:
+        limit_to = []
+
     invalid = [m for m in matchers if m not in string_matchers.keys()]
     if invalid:
         raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
+    invalid = [m for m in matchers if m not in limit_to]
+    if invalid:
+        raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
-def validate_value(properties, raw_prop, value):
-    validator = properties[raw_prop]
+
+def validate_entity(entity, validator):
+    try:
+        v = validator()
+        if isinstance(v, Validator):
+            return v.validate(entity)
+        else:
+            raise exc.ValidationError('Value {} not allowed here. Expected: {}'.format(entity, v.name))
+    except Exception:
+        raise
+
+
+def validate_value(properties, property, value):
+    validator = properties[property]
 
     if isinstance(validator.get('values'), list):
-        valid = value in properties.get(raw_prop, {}).get('values', {})
+        valid = value in properties.get(property, {}).get('values', {})
         if not valid:
             raise exc.ValidationError(
-                'Value "{}" not allowed for {}. Must be any of {}'.format(value, raw_prop, properties[raw_prop]))
+                'Value "{}" not allowed for {}. Must be any of {}'.format(value, property, properties[property]))
     elif isinstance(validator.get('value')(), Validator):
         v = validator.get('value')()
         if not v.validate(value):
             raise exc.ValidationError(
-                'Value "{}" not allowed for {}. Must be any of {}'.format(value, raw_prop, v.name))
+                'Value "{}" not allowed for {}. Must be any of {}'.format(value, property, v.name))
 
     return value
 
@@ -166,7 +188,14 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
 
 
 class Validator:
+    __metaclass__ = ABCMeta
+
     def __init__(self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def validate(entity):
         pass
 
 
@@ -180,6 +209,19 @@ class Url(Validator):
         return validators.url(val)
 
 
+class Domain(Validator):
+    def __init__(self):
+        Validator.__init__(self)
+        self.name = 'Domain'
+
+    @staticmethod
+    def validate(val):
+        try:
+            return validators.domain(val)
+        except Exception:
+            pass
+
+
 class IpAddress(Validator):
     def __init__(self):
         Validator.__init__(self)
@@ -188,6 +230,6 @@ class IpAddress(Validator):
     @staticmethod
     def validate(val):
         try:
-            return True if ipaddress.ip_address(val) else False
+            return validators.ipv4(val) or (validators.ipv6(val))
         except Exception:
             pass
