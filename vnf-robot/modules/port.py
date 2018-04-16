@@ -17,7 +17,7 @@ class Port(LowLevelEntity):
         self.valid_contexts = ['service', 'network']
         self.properties = {
             'state': {
-                'matchers': [],
+                'matchers': ['is', 'is not'],
                 'values': ['open', 'closed']
             },
             'listening address': {
@@ -35,7 +35,7 @@ class Port(LowLevelEntity):
         validate_context(self.valid_contexts, self.instance.sut.target_type)
         (self.port, self.protocol) = validate_port(self.entity)
         self.property = validate_property(self.properties, self.property)
-        validate_matcher([self.matcher])
+        validate_matcher([self.matcher], limit_to=self.properties.get('entity', {}).get('matchers', []))
         self.value = validate_value(self.properties, self.property, self.value)
 
     def transform(self):

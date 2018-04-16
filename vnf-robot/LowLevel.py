@@ -5,6 +5,7 @@ from robot.api import logger
 from robot.api.deco import keyword
 
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
+from modules.address import Address
 from modules.port import Port
 from modules.variable import Variable
 from tools import orchestrator
@@ -117,9 +118,18 @@ class LowLevel(DynamicCore):
     def symlink_kw(self):
         pass
 
-    @keyword('Address')
-    def address_kw(self):
-        pass
+    @keyword('Address ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
+    def address_kw(self, raw_entity, matcher, raw_val):
+        try:
+            entity = Address(self)
+            entity.set_as_dict({
+                'context': self.sut,
+                'entity': raw_entity,
+                'matcher': matcher,
+                'value': raw_val})
+            entity.run_test()
+        except (DataFormatError, ValidationError) as exc:
+            BuiltIn().fail(exc)
 
     @keyword('DNS')
     def dns_kw(self):

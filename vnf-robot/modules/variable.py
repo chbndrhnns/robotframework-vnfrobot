@@ -7,16 +7,12 @@ class Variable(LowLevelEntity):
     def __init__(self, instance=None):
         super(Variable, self).__init__(instance)
         self.valid_contexts = ['service']
-        self.properties = {
-            '': {
-                'matchers': [],
-                'values': ['open', 'closed']
-            }
-        }
         self.entity_matcher = '[A-Z][A-Z0-9_]'
         self.value_matcher = '[^\s]'
 
     def validate(self):
+        self.property = self.entity if not self.property else self.property
+
         self._check_instance()
         self._check_data()
         validate_context(self.valid_contexts, self.instance.sut.target_type)
@@ -27,11 +23,14 @@ class Variable(LowLevelEntity):
         pass
 
     def run_test(self):
+        self.validate()
         try:
             env = self.instance.docker_controller.get_env(self.instance.sut.service_id)
             self.test_result = [e.split('=')[1] for e in env if self.entity == e.split('=')[0]]
         except NotFoundError:
             raise
+
+        self.evaluate_results()
 
     def evaluate_results(self):
         if not self.test_result:

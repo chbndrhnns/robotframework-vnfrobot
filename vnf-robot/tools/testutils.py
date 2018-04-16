@@ -20,6 +20,13 @@ boolean_matchers = {
     'is not': operator.ne,
 }
 
+number_matchers = dict(boolean_matchers, **{
+    'is greater': operator.gt,
+    'is greater equal': operator.ge,
+    'is lesser': operator.lt,
+    'is lesser equal': operator.le
+})
+
 string_matchers = dict(boolean_matchers, **{
     'has': operator.eq,
     'has not': operator.ne,
@@ -27,13 +34,6 @@ string_matchers = dict(boolean_matchers, **{
     'exists not': operator.not_,
     'contains': operator.contains,
     'contains not': 'contains_not',
-})
-
-number_matchers = dict(boolean_matchers, **{
-    'is greater': operator.gt,
-    'is greater equal': operator.ge,
-    'is lesser': operator.lt,
-    'is lesser equal': operator.le
 })
 
 
@@ -56,9 +56,10 @@ def validate_matcher(matchers, limit_to=None):
     if invalid:
         raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
-    invalid = [m for m in matchers if m not in limit_to]
-    if invalid:
-        raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
+    if limit_to:
+        invalid = [m for m in matchers if m not in limit_to]
+        if invalid:
+            raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
 
 def validate_entity(entity, validator):
