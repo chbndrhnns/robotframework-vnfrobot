@@ -5,6 +5,7 @@ import operator
 from string import lower
 
 import ipaddress
+import validators
 from pytest import fail
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
@@ -165,16 +166,28 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
 
 
 class Validator:
-    pass
+    def __init__(self):
+        pass
+
+
+class Url(Validator):
+    def __init__(self):
+        Validator.__init__(self)
+        self.name = 'URL'
+
+    @staticmethod
+    def validate(val):
+        return validators.url(val)
 
 
 class IpAddress(Validator):
     def __init__(self):
+        Validator.__init__(self)
         self.name = 'IP address'
 
     @staticmethod
-    def validate(address):
+    def validate(val):
         try:
-            return True if ipaddress.ip_address(address) else False
+            return True if ipaddress.ip_address(val) else False
         except Exception:
             pass

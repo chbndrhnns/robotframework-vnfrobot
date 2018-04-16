@@ -99,6 +99,7 @@ traitlets==4.3.2
 Unidecode==1.0.22
 unittest2==1.1.0
 urllib3==1.22
+validators==0.12.1
 watchdog==0.8.3
 wcwidth==0.1.7
 websocket-client==0.47.0
