@@ -6,5 +6,5 @@ Variables   common.py
 *** Test Cases ***
 Check ports
     Set service context to sut
-    Port 81: state is open
+    Port 80: state is open
 

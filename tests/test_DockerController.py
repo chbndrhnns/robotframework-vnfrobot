@@ -1,12 +1,10 @@
-import os
-
 import pytest
 from docker.models.containers import Container
 from docker.models.services import Service
 
 from DockerController import DockerController
 from exc import DeploymentError, NotFoundError
-from testutils import Result
+from tools.testutils import Result
 from . import path
 
 

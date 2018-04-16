@@ -14,7 +14,7 @@ from tools import namesgenerator
 from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
-from testutils import Result
+from tools.testutils import Result
 
 ProcessResult = namedtuple('ProcessResult', 'stdout stderr')
 

@@ -7,7 +7,7 @@ from robot.api import TestSuite
 from robot.running import Keyword
 
 from DockerController import DockerController
-from testutils import run_keyword_tests, Result
+from tools.testutils import run_keyword_tests, Result
 
 
 class VariableTest(TestCase):

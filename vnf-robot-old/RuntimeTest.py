@@ -7,7 +7,7 @@ from StringIO import StringIO
 from robot.api import TestSuite
 
 from Runtime import Runtime
-from testutils import run_keyword_tests, Result
+from tools.testutils import run_keyword_tests, Result
 
 
 class TestRuntime(TestCase):

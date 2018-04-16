@@ -4,9 +4,9 @@ import tempfile
 from jinja2 import TemplateError
 from robot.libraries.BuiltIn import BuiltIn
 
-from LowLevelEntity import LowLevelEntity
+from modules.LowLevelEntity import LowLevelEntity
 from exc import ValidationError
-from testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, validate_matcher
+from tools.testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, validate_matcher
 from tools.GossTool import GossTool
 from tools.goss.GossPort import GossPort
 

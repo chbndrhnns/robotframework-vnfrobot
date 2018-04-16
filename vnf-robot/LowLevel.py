@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
-import sys
 from robot.libraries.BuiltIn import BuiltIn
 
 from robot.api import logger
 from robot.api.deco import keyword
 
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
-from modules import variable, port
 from modules.port import Port
 from modules.variable import Variable
 from tools import orchestrator
 from modules.context import set_context, SUT
 from robotlibcore import DynamicCore
 from version import VERSION
-from testutils import string_matchers
+from tools.testutils import string_matchers
 
 
 class LowLevel(DynamicCore):
@@ -142,11 +140,6 @@ class LowLevel(DynamicCore):
                 'value': raw_val})
             entity.run_test()
         except (DataFormatError, ValidationError) as exc:
-            BuiltIn().fail(exc)
-
-        try:
-            variable.validate(self, raw_entity, matcher, raw_val)
-        except NotFoundError as exc:
             BuiltIn().fail(exc)
 
     @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(

@@ -2,11 +2,9 @@ import logging
 
 from unittest2 import TestCase
 
-from StringIO import StringIO
 from robot.api import TestSuite
 
-from Network import Network
-from testutils import run_keyword_tests, Result
+from tools.testutils import run_keyword_tests, Result
 
 
 class TestFilesystem(TestCase):

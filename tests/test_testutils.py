@@ -1,4 +1,4 @@
-from testutils import get_truth
+from tools.testutils import get_truth
 import operator
 
 

@@ -1,6 +1,6 @@
-from LowLevelEntity import LowLevelEntity
+from modules.LowLevelEntity import LowLevelEntity
 from exc import NotFoundError, ValidationError
-from testutils import validate_context, validate_against_regex, get_truth, string_matchers
+from tools.testutils import validate_context, validate_against_regex, get_truth, string_matchers
 
 
 class Variable(LowLevelEntity):
