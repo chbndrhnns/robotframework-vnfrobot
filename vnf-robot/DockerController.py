@@ -7,6 +7,9 @@ from string import lower
 import os
 from docker import errors
 import docker
+from docker.models.containers import Container
+from docker.models.networks import Network
+from docker.models.services import Service
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -93,15 +96,41 @@ class DockerController:
     def get_containers(self):
         return self._docker.containers.list()
 
+    def connect_container_to_service(self, service, network):
+        try:
+            n = network if isinstance(network, Network) else self.get_network(network)
+            s = service if isinstance(service, Service) else self.get_service(service)
+        except (docker.errors.NotFound, docker.errors.APIError) as exc:
+            raise DeploymentError('Entity not found: {}'.format(exc))
+
+        try:
+            return s.update(networks=[n.name])
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not connect network to container: {}'.format(exc))
+
     def deploy_stack(self, descriptor, name):
         res = self._dispatch(['stack', 'deploy', '-c', descriptor, name])
         if res.stderr:
             raise DeploymentError(res.stderr)
-
         return True
 
     def undeploy_stack(self, name):
         return self._dispatch(['stack', 'rm', name])
+
+    def get_network(self, name):
+        return self._docker.networks.get(name)
+
+    def create_network(self, name, driver='overlay'):
+        return self._docker.networks.create(
+            name=name,
+            driver=driver,
+            scope='swarm' if driver == 'overlay' else 'local',
+            attachable=True)
+        # self._dispatch(['network', 'create', name, '--attachable', '--scope', 'swarm'])
+        # return self.get_network(name)
+
+    def delete_network(self, name):
+        return self._dispatch(['network', 'rm', name])
 
     def create_volume(self, name):
         return self._dispatch(['volume', 'create', name])
@@ -140,21 +169,32 @@ class DockerController:
 
         return res
 
-    def run_sidecar(self, image=None, goss_config=None, command=None):
+    def run_sidecar(self, image='busybox', command='true', name=None, volumes=None, network=None):
         try:
             self._docker.images.get(image)
         except docker.errors.ImageNotFound:
-            self._docker.images.pull(image)
+            try:
+                self._docker.images.pull(image)
+            except docker.errors.ImageNotFound:
+                raise DeploymentError('Image {} not found.'.format(image))
 
         try:
-            result = self._docker.containers.run(image=image, command=command, auto_remove=True, network_mode='host',
+            result = self._docker.containers.run(name=name if name else None,
+                                                 image=image,
+                                                 command=command,
+                                                 auto_remove=True,
+                                                 volumes=volumes,
+                                                 network=network,
                                                  tty=True)
             BuiltIn().log(result, level='DEBUG', console=True)
+            return result
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
+        except docker.errors.ImageNotFound as exc:
+            raise DeploymentError('Invalid image name: {}'.format(exc))
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
-            return Result.FAIL
-
-        return Result.PASS
+            raise DeploymentError('Error: {}'.format(exc))
 
     def run_busybox(self):
         try:

@@ -4,12 +4,34 @@ import mock
 import pytest
 from pytest import fixture
 
+from modules.address import Address
 from tools import namesgenerator
 from modules.context import SUT
 from modules.port import Port
 from . import path
 
 from DockerController import DockerController
+
+
+@fixture(scope='module')
+def sidecar(controller, volume):
+    return {
+        'name': 'sidecar-{}'.format(namesgenerator.get_random_name()),
+        'controller': controller,
+        'volume': volume
+    }
+
+
+@fixture
+def network(controller, network_name):
+    yield controller.create_network(network_name)
+    # controller.delete_network(network_name)
+
+
+@fixture
+def network_name(stack_infos):
+    name = stack_infos[0]
+    return 'robot_sidecar_{}'.format(name)
 
 
 @fixture(scope='module')
@@ -22,7 +44,7 @@ def containers(controller, service_id, stack):
     return controller.get_containers_for_service(service_id)
 
 
-@fixture
+@fixture(scope='module')
 def volume(controller, goss_volume):
     res = controller.create_volume(goss_volume)
     yield (res, goss_volume)
@@ -39,7 +61,7 @@ def container_name():
     return 'gosstest_' + namesgenerator.get_random_name()
 
 
-@fixture
+@fixture(scope='module')
 def goss_volume():
     return 'gosstest_' + namesgenerator.get_random_name()
 
@@ -68,7 +90,7 @@ def goss_files():
 
 @fixture(scope='module')
 def stack_infos():
-    return 'dc-test', os.path.join(path, 'fixtures', 'dc-test.yml')
+    return namesgenerator.get_random_name(), os.path.join(path, 'fixtures', 'dc-test.yml')
 
 
 @fixture(scope='module')
@@ -117,6 +139,7 @@ def instance(lib, builtin, stack_infos, controller):
     lib.sut = None
     return lib
 
+
 # Fixtures for LowLevelEntities
 
 @fixture
@@ -139,6 +162,26 @@ def port(port_data):
 
 @fixture
 @pytest.mark.usefixture('instance')
-def port_with_instance(port_data, port, instance):
+def port_with_instance(port, instance):
     port.instance = instance
     return port
+
+
+@fixture
+def address_data():
+    return {'context': 'network', 'entity': 'www.google.com', 'property': '', 'matcher': 'is', 'value': 'reachable'}
+
+
+@fixture
+def address(address_data):
+    address = Address()
+    for k, v in address_data.iteritems():
+        address.set(k, v)
+    return address
+
+
+@fixture
+@pytest.mark.usefixture('instance')
+def address_with_instance(address, instance):
+    address.instance = instance
+    return address

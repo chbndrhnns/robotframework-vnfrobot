@@ -51,18 +51,6 @@ def test__create_container__pass(controller, container_name):
     _cleanup(controller, container_name)
 
 
-@pytest.mark.skip
-def test__run_sidecar__pass(controller, container_name):
-    _cleanup(controller, container_name)
-
-    controller._dispatch(['run', '-d', '-p', '12345:80', '--name', container_name, 'nginx'])
-
-    result = controller.run_sidecar(image='subfuzion/netcat', command='-z 127.0.0.1 12345 ; echo $?')
-    _cleanup(controller, container_name)
-
-    assert result == Result.PASS
-
-
 def test__list_containers__pass(controller, containers):
     controller = DockerController(base_dir=path)
 
@@ -154,10 +142,82 @@ def test__execute_in_stack__pass(controller, stack, service_id):
         _cleanup(controller, service_id)
 
 
-@pytest.mark.skip
-def test__inject_goss_data_into_stack_container__pass(controller, stack_infos, goss_file):
-    pytest.fail('not implemented')
+def test__run_sidecar__pass(sidecar):
+    controller = sidecar.get('controller')
+    name = sidecar.get('name')
 
+    res = controller.run_sidecar(name=name, command='ls')
+
+    assert 'bin' in res
+
+
+def test__run_sidecar__invalid_container__fail(sidecar):
+    controller = sidecar.get('controller')
+    name = sidecar.get('name')
+
+    with pytest.raises(DeploymentError, match='Image '):
+        controller.run_sidecar(name=name, command='ls', image='blablubnotexisting')
+
+
+def test__run_sidecar__stderr__fail(sidecar):
+    controller = sidecar.get('controller')
+    name = sidecar.get('name')
+
+    with pytest.raises(DeploymentError, match='returned non-zero exit status'):
+        controller.run_sidecar(name=name, command='uname -xxx')
+
+
+def test__run_sidecar__goss_volume_ok__pass(sidecar, goss_volume):
+    controller = sidecar.get('controller')
+    name = sidecar.get('name')
+
+    volumes = {
+        goss_volume: {
+            'bind': '/goss',
+            'mode': 'ro'
+        }
+    }
+
+    res = controller.run_sidecar(name=name, volumes=volumes, command='ls /goss')
+
+    assert '' in res
+
+
+def test__run_sidecar__invalid_network__fail(sidecar):
+    controller = sidecar.get('controller')
+    name = sidecar.get('name')
+
+    with pytest.raises(DeploymentError, match='Could not attach to network'):
+        controller.run_sidecar(name=name, network='bla', command='ping -W1 -c1 8.8.8.8')
+
+
+def test__run_sidecar__network_ok__pass(sidecar, network):
+    controller = sidecar.get('controller')
+    name = sidecar.get('name')
+    assert 'robot' in network.name
+
+    res = controller.run_sidecar(name=name, network=network.name, command='ping -W1 -c1 8.8.8.8')
+    assert '8.8.8.8' in res
+
+
+def test__run_sidecar__attach_to_deployment_network__pass(sidecar, stack_infos, network, service_id):
+    controller = sidecar.get('controller')
+    sidecar_name = sidecar.get('name')
+    deployment_name = stack_infos[0]
+
+
+    res = controller.run_sidecar(name=name, network='robot', command='ping -W1 -c1 8.8.8.8')
+    assert '8.8.8.8' in res
+
+    ### TODO: Hier geht's weiter.
+
+
+def test__connect_container_to_network__pass(controller, stack, network, service_id):
+    res = controller.connect_container_to_service(service_id, network.name)
+    assert res
+
+
+def test__inject_goss_data_into_stack_container__pass(controller, stack_infos, gossfile):
     name = stack_infos[0]
     path = stack_infos[1]
 
@@ -172,11 +232,6 @@ def test__inject_goss_data_into_stack_container__pass(controller, stack_infos, g
         c = controller.get_containers_for_service(service_id)
         assert len(c) > 0
         container = c[0]
-
-
-
-
-
 
     finally:
         # _cleanup_stack(controller, name)
