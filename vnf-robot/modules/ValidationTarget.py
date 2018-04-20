@@ -4,7 +4,7 @@ from exc import SetupError
 from modules.context import SUT
 
 
-class LowLevelEntity():
+class ValidationTarget():
     __metaclass__ = ABCMeta
 
     def __init__(self, instance=None):
