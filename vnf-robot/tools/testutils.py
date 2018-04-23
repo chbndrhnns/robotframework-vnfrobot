@@ -230,6 +230,9 @@ class IpAddress(Validator):
 
     @staticmethod
     def validate(val):
+        # hack: :: is a valid IPv6 address
+        if val == '::':
+            return True
         try:
             return validators.ipv4(val) or (validators.ipv6(val))
         except Exception:
