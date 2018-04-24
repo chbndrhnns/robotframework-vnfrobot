@@ -19,7 +19,6 @@ class DataFormatError(RuntimeError):
 
 class SetupError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = True
-    pass
 
 
 class TestToolError(RuntimeError):

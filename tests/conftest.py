@@ -1,6 +1,8 @@
 import os
 
+import docker
 import mock
+from docker import errors
 import pytest
 from pytest import fixture
 
@@ -8,30 +10,67 @@ from modules.address import Address
 from tools import namesgenerator
 from modules.context import SUT
 from modules.port import Port
+from tools import orchestrator
 from . import path
 
 from DockerController import DockerController
 
 
 @fixture(scope='module')
-def sidecar(controller, volume):
-    return {
-        'name': 'sidecar-{}'.format(namesgenerator.get_random_name()),
+def base_name():
+    return namesgenerator.get_random_name()
+
+
+def try_remove_container(controller, name):
+    try:
+        controller.get_container(name).remove(force=True)
+    except (docker.errors.NotFound, docker.errors.APIError) as exc:
+        if 'No such container' in exc.explanation:
+            pass
+        else:
+            raise
+
+
+def try_remove_network(controller, name):
+    try:
+        controller.get_network(name).remove()
+    except (docker.errors.NotFound, docker.errors.APIError) as exc:
+        if 'not found' in exc.explanation:
+            pass
+        else:
+            raise
+
+
+@fixture
+def sidecar(base_name, controller, volume):
+    data = {
+        'name': 'robot_sidecar_for_{}'.format(base_name),
         'controller': controller,
-        'volume': volume
+        'volume': volume,
+        'image': 'busybox'
     }
+    try_remove_container(controller, data.get('name'))
+    try_remove_network(controller, data.get('name'))
+    yield data
+    try_remove_container(controller, data.get('name'))
 
 
 @fixture
 def network(controller, network_name):
-    yield controller.create_network(network_name)
-    # controller.delete_network(network_name)
+    n = None
+    try:
+        n = controller.get_network(network_name)
+    except Exception:
+        pass
+    finally:
+        yield n if n else controller.create_network(network_name)
 
 
-@fixture
+@fixture(scope='module')
 def network_name(stack_infos):
     name = stack_infos[0]
-    return 'robot_sidecar_{}'.format(name)
+    # return 'robot_sidecar_for_{0}_{1:04d}'.format(name, random.randint(1111,9999))
+    return 'robot_sidecar_for_{0}'.format(name)
 
 
 @fixture(scope='module')
@@ -45,10 +84,10 @@ def containers(controller, service_id, stack):
 
 
 @fixture(scope='module')
-def volume(controller, goss_volume):
-    res = controller.create_volume(goss_volume)
-    yield (res, goss_volume)
-    controller.delete_volume(goss_volume)
+def volume(controller, goss_volume_name):
+    res = controller.create_volume(goss_volume_name)
+    yield goss_volume_name
+    controller.delete_volume(goss_volume_name)
 
 
 @fixture
@@ -57,13 +96,28 @@ def gossfile():
 
 
 @fixture
-def container_name():
-    return 'gosstest_' + namesgenerator.get_random_name()
+def gossfile_sidecar():
+    return os.path.join(path, 'fixtures', 'goss-addr-google.yaml')
+
+
+@fixture
+def container_name(base_name):
+    return 'gosstest_{}'.format(base_name)
 
 
 @fixture(scope='module')
-def goss_volume():
-    return 'gosstest_' + namesgenerator.get_random_name()
+def goss_volume_name(base_name):
+    return 'gosstest_{}'.format(base_name)
+
+
+@fixture(scope='module')
+def volume_with_goss(controller, goss_volume_name):
+    orchestrator.check_or_create_test_tool_volume(controller, goss_volume_name)
+    yield goss_volume_name
+    try:
+        controller._docker_api.remove_volume(goss_volume_name)
+    except errors.APIError:
+        pass
 
 
 @fixture(scope='session')
@@ -73,14 +127,10 @@ def controller():
 
 
 @fixture
-def container(controller, goss_volume):
+def container(base_name, controller):
     c = controller.run_busybox()
     yield c
-    try:
-        c.kill()
-        c.remove()
-    except Exception:
-        pass
+    controller._kill_and_delete_container(c.name)
 
 
 @fixture
@@ -89,8 +139,8 @@ def goss_files():
 
 
 @fixture(scope='module')
-def stack_infos():
-    return namesgenerator.get_random_name(), os.path.join(path, 'fixtures', 'dc-test.yml')
+def stack_infos(base_name):
+    return base_name, os.path.join(path, 'fixtures', 'dc-test.yml')
 
 
 @fixture(scope='module')
@@ -101,6 +151,8 @@ def stack(controller, stack_infos):
     yield (name, path, controller.deploy_stack(path, name))
 
     controller.undeploy_stack(name)
+    try_remove_network(controller, name)
+    try_remove_network(controller, 'robot_sidecar_for_{}'.format(name))
 
 
 # Fixtures for entity tests
@@ -132,7 +184,7 @@ def network_context():
 @mock.patch('LowLevel.LowLevel', autospec=True)
 def instance(lib, builtin, stack_infos, controller):
     lib.suite_source = 'bla.robot'
-    lib.goss_volume = 'goss-helper'
+    lib.goss_volume_name = 'goss-helper'
     lib.deployment_name = None
     lib.descriptor_file = stack_infos[1]
     lib.docker_controller = controller

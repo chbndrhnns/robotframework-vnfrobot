@@ -1,18 +1,39 @@
 import json
+from abc import ABCMeta, abstractmethod
 
 from exc import DeploymentError, TestToolError
 
 
-class GossTool:
-    def __init__(self, controller, target, gossfile='/goss.yaml'):
+class TestTool:
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        self.command = None
+        self.controller = None
+        self.target = None
+
+    @abstractmethod
+    def run(self):
+        pass
+
+
+class GossTool(TestTool):
+    def __init__(self, controller=None, target=None, gossfile='/goss.yaml'):
+        TestTool.__init__(self)
+
         self.gossfile = gossfile
         self.command = '/goss/goss-linux-amd64 --gossfile /{} validate --format json'.format(self.gossfile)
         self.controller = controller
         self.target = target
+        self.sidecar = None
 
     def run(self):
         res = ''
         try:
+            if not self.target:
+                raise AttributeError('Target is necessary to run goss.')
+            if not self.controller:
+                raise AttributeError('Controller is necessary to run goss.')
             res = self.controller.execute(self.target, self.command).strip()
             return json.loads(res)
         except (json.JSONDecoder, ValueError) as exc:
@@ -26,7 +47,7 @@ class GossTool:
                 raise TestToolError('goss executable was not found on {}: {}'.format(self.target.name, res))
 
             raise TestToolError('Could not parse return value from goss: {}'.format(res))
+        except AttributeError as exc:
+            raise TestToolError('Error: {}'.format(exc))
         except DeploymentError as exc:
             raise
-
-

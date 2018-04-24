@@ -1,9 +1,9 @@
-from modules.LowLevelEntity import LowLevelEntity
+from modules.ValidationTarget import ValidationTarget
 from exc import NotFoundError, ValidationError
 from tools.testutils import validate_context, validate_against_regex, get_truth, string_matchers
 
 
-class Variable(LowLevelEntity):
+class Variable(ValidationTarget):
     def __init__(self, instance=None):
         super(Variable, self).__init__(instance)
         self.valid_contexts = ['service']

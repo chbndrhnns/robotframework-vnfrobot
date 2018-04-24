@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from robot.libraries.BuiltIn import BuiltIn
+from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
 from robot.api import logger
 from robot.api.deco import keyword
@@ -40,11 +40,13 @@ class LowLevel(DynamicCore):
 
         logger.info(u"Importing {}".format(self.__class__))
 
-        if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
-            self.deployment_options['SKIP_UNDEPLOY'] = True
+        try:
+            if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
+                self.deployment_options['SKIP_UNDEPLOY'] = True
 
-        self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}")
-        assert True
+            self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}")
+        except RobotNotRunningError:
+            pass
 
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
@@ -142,13 +144,13 @@ class LowLevel(DynamicCore):
     @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
     def env_variable_kw(self, raw_entity, matcher, raw_val):
         try:
-            entity = Variable(self)
-            entity.set_as_dict({
+            validation_target = Variable(self)
+            validation_target.set_as_dict({
                 'context': self.sut,
                 'entity': raw_entity,
                 'matcher': matcher,
                 'value': raw_val})
-            entity.run_test()
+            validation_target.run_test()
         except (DataFormatError, ValidationError) as exc:
             BuiltIn().fail(exc)
 
@@ -156,14 +158,14 @@ class LowLevel(DynamicCore):
         '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
         try:
-            entity = Port(self)
-            entity.set_as_dict({
+            validation_target = Port(self)
+            validation_target.set_as_dict({
                 'context': self.sut,
                 'entity': raw_entity,
                 'property': raw_prop,
                 'matcher':  matcher,
                 'value': raw_val})
-            entity.run_test()
+            validation_target.run_test()
         except (DataFormatError, ValidationError) as exc:
             BuiltIn().fail(exc)
 
