@@ -5,7 +5,7 @@ from jinja2 import TemplateError
 from robot.libraries.BuiltIn import BuiltIn
 
 from modules.ValidationTarget import ValidationTarget
-from exc import ValidationError
+from exc import ValidationError, DeploymentError
 from tools.testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, validate_matcher
 from tools.GossTool import GossTool
 from tools.goss.GossPort import GossPort
@@ -14,7 +14,7 @@ from tools.goss.GossPort import GossPort
 class Port(ValidationTarget):
     def __init__(self, instance=None):
         super(Port, self).__init__(instance)
-        self.valid_contexts = ['service', 'network']
+        self.valid_contexts = ['service']
         self.properties = {
             'state': {
                 'matchers': ['is', 'is not'],
@@ -28,11 +28,12 @@ class Port(ValidationTarget):
         self.port = None
         self.protocol = 'tcp'
         self.transformed_data = None
+        self.sut = instance.sut
 
     def validate(self):
         self._check_instance()
         self._check_data()
-        validate_context(self.valid_contexts, self.instance.sut.target_type)
+        validate_context(self.valid_contexts, self.sut.target_type)
         (self.port, self.protocol) = validate_port(self.entity)
         self.property = validate_property(self.properties, self.property)
         validate_matcher([self.matcher], limit_to=self.properties.get('entity', {}).get('matchers', []))
@@ -46,7 +47,7 @@ class Port(ValidationTarget):
                     'port': self.port,
                     'protocol': self.protocol,
                     'state': self.value if 'state' in self.property else True,
-                    'listening address': self.value if 'listening address' in self.property else None
+                    'listening address': self.value if 'listening address' in self.property else []
                 }
             ]
         }
@@ -56,16 +57,12 @@ class Port(ValidationTarget):
         self.validate()
         self.transform()
 
-        containers = self.instance.docker_controller.get_containers_for_service(self.instance.sut.service_id)
-        assert len(containers) > 0
-        self.target = containers[0]
-
         # create gossfile on target container
         with tempfile.NamedTemporaryFile() as f:
             try:
                 f.write(self.transformed_data)
                 f.seek(0)
-                self.instance.docker_controller.put_file(entity=self.target.id, file_to_transfer=f.name,
+                self.instance.docker_controller.put_file(entity=self.sut.target, file_to_transfer=f.name,
                                                          filename='goss.yaml')
                 self.test_result = GossTool(
                     controller=self.instance.docker_controller,
@@ -73,7 +70,9 @@ class Port(ValidationTarget):
                     gossfile='/goss.yaml'
                 ).run()
             except (TemplateError, TypeError, ValueError) as exc:
-                return ValidationError('Could not transform the test data: {}'.format(exc))
+                raise ValidationError('Could not transform the test data: {}'.format(exc))
+            except DeploymentError as exc:
+                raise DeploymentError('Could not run test tool on {}'.format(self.instance.sut))
 
         self.evaluate_results()
 

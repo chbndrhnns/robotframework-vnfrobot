@@ -6,6 +6,7 @@ import docker
 from docker.models.containers import Container
 from docker.models.networks import Network
 from docker.models.services import Service
+from docker.models.volumes import Volume
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -64,9 +65,10 @@ class DockerController:
             raise SetupError(exc)
 
     def get_containers_for_service(self, service):
+        if isinstance(service, Service):
+            service = service.name
         try:
             wait_on_service_replication(self._docker, service)
-            # self._docker.services.get(service)
             wait_on_service_container_status(self._docker, service)
             return self._docker.containers.list(all=True,
                                                 filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
@@ -97,11 +99,9 @@ class DockerController:
     def get_service_for_stack(self, service):
         try:
             wait_on_service_replication(self._docker, service)
-            s = self._docker.services.get(service)
+            return self._docker.services.get(service)
         except docker.errors.NotFound as exc:
             raise NotFoundError('Cannot find service {}: {}'.format(service, exc))
-
-        return s
 
     def get_container(self, container):
         return self._docker.containers.get(container)
@@ -125,6 +125,33 @@ class DockerController:
             # wait for the update to take place
             wait_on_service_replication(self._docker, service)
             wait_on_service_container_status(self._docker, service)
+            c = self.get_containers_for_service(service)[0]
+            wait_on_container_status(self._docker, c)
+            return s
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not connect network to container: {}'.format(exc))
+
+    def connect_volume_to_service(self, service, volume):
+        if not volume:
+            raise DeploymentError('You must provide a volume to connect it to a service.')
+        if not service:
+            raise DeploymentError('You must provide a service to connect a volume.')
+
+        try:
+            wait_on_service_replication(self._docker, service)
+            wait_on_service_container_status(self._docker, service)
+
+            v = volume if isinstance(volume, Volume) else self.get_volume(volume)
+            s = service if isinstance(service, Service) else self.get_service_for_stack(service)
+        except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
+            raise DeploymentError('Entity not found: {}'.format(exc))
+
+        try:
+            s.update(mounts=['{}:/goss:ro'.format(v.name)])
+
+            # wait for the update to take place
+            wait_on_service_replication(self._docker, s)
+            wait_on_service_container_status(self._docker, s)
             c = self.get_containers_for_service(service)[0]
             wait_on_container_status(self._docker, c)
             return s
@@ -170,15 +197,29 @@ class DockerController:
         n.remove()
 
     def create_volume(self, name):
-        return self._dispatch(['volume', 'create', name])
+        try:
+            return self._docker.volumes.create(name)
+        except docker.errors.NotFound:
+            raise DeploymentError('Could not create volume {}'.format(name))
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not create volume {}: {}'.format(name, exc))
 
     def delete_volume(self, name):
-        return self._dispatch(['volume', 'rm', name])
+        try:
+            v = self._docker.volumes.get(name)
+            v.remove(force=True)
+        except docker.errors.NotFound:
+            raise DeploymentError('Could not remove volume {}: Not found'.format(name))
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not remove volume {}: {}'.format(name, exc))
 
     def get_volume(self, name):
-        res = self._dispatch(['volume', 'inspect', name])
-        if res.stderr:
-            return SetupError('Could not find volume {}'.format(name))
+        try:
+            return self._docker.volumes.get(name)
+        except docker.errors.NotFound:
+            raise DeploymentError('Could not find volume {}'.format(name))
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not find volume {}: {}'.format(name, exc))
 
     def add_data_to_volume(self, volume, path):
         try:

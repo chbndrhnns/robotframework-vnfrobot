@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from exc import SetupError
-from modules.context import SUT
+from tools.data_structures import SUT
 
 
 class ValidationTarget():
@@ -12,10 +12,9 @@ class ValidationTarget():
         self.properties = {}
         self.test_result = None
 
-        # context
-        self.context = None
+        # sut
         self.valid_contexts = []
-        self.target = None
+        self.sut = None
 
         self.entity = None
         self.property = None

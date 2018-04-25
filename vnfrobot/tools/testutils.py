@@ -127,9 +127,13 @@ def validate_port(raw_entity):
 
 def validate_context(allowed_context, given_context):
     # Check that a context is given for the test
+    if not given_context:
+        raise exc.SetupError(
+            'Context must be set with "Set <context_type> context to <target>"')
+
     if given_context not in allowed_context:
         raise exc.SetupError(
-            'Context type "{}" not allowed. Must be any of {}'.format(given_context, allowed_context))
+            'Context "{}" not allowed. Must be any of {}'.format(given_context, allowed_context))
 
     return given_context
 

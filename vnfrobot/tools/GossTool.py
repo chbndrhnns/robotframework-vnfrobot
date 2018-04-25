@@ -2,9 +2,8 @@ import json
 from abc import ABCMeta, abstractmethod
 
 from DockerController import DockerController
-from exc import DeploymentError, TestToolError
-from modules.context import SUT
-
+from exc import DeploymentError, TestToolError, NotFoundError
+from tools.data_structures import SUT
 
 class TestTool:
     __metaclass__ = ABCMeta
@@ -20,9 +19,6 @@ class TestTool:
     def run(self):
         pass
 
-    def _generate_sidecar_name(self):
-        return 'robot_sidecar_for_{}'.format(self.sut.service_id)
-
 
 class GossTool(TestTool):
     def __init__(self, controller=None, sut=None, gossfile='/goss.yaml', context='service'):
@@ -31,7 +27,6 @@ class GossTool(TestTool):
         self.gossfile = gossfile
         self.command = '/goss/goss-linux-amd64 --gossfile /{} validate --format json'.format(self.gossfile)
         self.sidecar = None
-        self.target = None
 
     def run(self):
         res = ''
@@ -41,8 +36,7 @@ class GossTool(TestTool):
             if not self.controller:
                 raise AttributeError('Controller is necessary to run goss.')
 
-            self._prepare()
-            res = self.controller.execute(self.target, self.command).strip()
+            res = self.controller.execute(self.sut.target, self.command).strip()
             return json.loads(res)
         except (json.JSONDecoder, ValueError) as exc:
             if 'No help topic' in res:
@@ -57,23 +51,5 @@ class GossTool(TestTool):
             raise TestToolError('Could not parse return value from goss: {}'.format(res))
         except AttributeError as exc:
             raise TestToolError('Error: {}'.format(exc))
-        except DeploymentError as exc:
+        except DeploymentError:
             raise
-
-    def _prepare(self):
-            if self.context == 'network':
-                try:
-                    network = self.controller.get_or_create_network(self._generate_sidecar_name())
-
-                    sidecar = self.controller.get_or_create_sidecar(
-                        image='busybox',
-                        command=self.command,
-                        name=self._generate_sidecar_name(),
-                        volumes='',
-                        networks=''
-                    )
-                    self.target = self.sut.target
-                except Exception as exc:
-                    raise
-            elif self.context == 'service':
-                self.target = self.sut.target

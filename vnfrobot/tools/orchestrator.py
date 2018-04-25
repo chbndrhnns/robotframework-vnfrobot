@@ -4,22 +4,27 @@ from robot.libraries.BuiltIn import BuiltIn
 from tools import namesgenerator
 from exc import SetupError, DeploymentError
 from DockerController import DockerController
+from tools.wait_on import wait_on_services_status
 
 from . import path
 
 
 def check_or_create_test_tool_volume(instance, volume):
+    expected = 'goss-linux-amd64'
     try:
         res = instance.list_files_on_volume(volume)
-        if 'goss-linux-amd64' not in res.stdout:
-            raise SetupError
+        if expected not in res.stdout:
+            raise SetupError('Cannot find {} on volume {}'.format(expected, volume))
     except SetupError:
+        BuiltIn().log_to_console('Creating volume {}'.format(volume))
         instance.create_volume(volume)
         instance.add_data_to_volume(volume, os.path.join(path, 'goss'))
         res = instance.list_files_on_volume(volume)
 
         assert 'goss-linux-amd64' in res.stdout
         assert 'goss-linux-386' in res.stdout
+    finally:
+        return volume
 
 
 def _get_controller(source):
@@ -37,7 +42,7 @@ def deploy(instance, descriptor):
         raise exc
 
     # test tool goss: deploy or check the existance
-    check_or_create_test_tool_volume(instance.docker_controller, instance.goss_volume)
+    instance.test_volume = check_or_create_test_tool_volume(instance.docker_controller, 'goss-helper')
 
     instance.descriptor_file = descriptor
 
@@ -53,7 +58,11 @@ def deploy(instance, descriptor):
     instance.deployment_name = namesgenerator.get_random_name()
     try:
         BuiltIn().log('Deploying {}'.format(instance.descriptor_file), level='INFO', console=True)
-        instance.docker_controller.deploy_stack(instance.descriptor_file, instance.deployment_name)
+        res = instance.docker_controller.deploy_stack(instance.descriptor_file, instance.deployment_name)
+        assert res
+        BuiltIn().log('Waiting for deployment...', level='INFO', console=True)
+        instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
+        wait_on_services_status(instance.docker_controller._docker, instance.services)
         return True
     except DeploymentError as exc:
         raise SetupError('Error during deployment: {}'.format(exc))

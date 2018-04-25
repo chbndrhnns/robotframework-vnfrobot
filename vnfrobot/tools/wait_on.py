@@ -6,6 +6,7 @@ from string import lower
 
 import docker
 from docker.models.containers import Container
+from docker.models.services import Service
 from robot.api import logger
 
 
@@ -44,7 +45,7 @@ def kill_service(service):
 
 def wait_on_service_replication(client, service):
     def condition():
-        res = client.services.get(service)
+        res = service if isinstance(service, Service) else client.services.get(service)
         replicas = res.attrs['Spec']['Mode']['Replicated']['Replicas']
         return replicas > 0
 
@@ -65,13 +66,13 @@ def wait_on_container_created(client, container):
     """
 
     def condition():
-        res = client.containers.get(container)
+        res = container if isinstance(container, Container) else client.containers.get(container)
         if res:
             return res.attrs['State']['Status'] == 'created'
         return False
 
     container = container.name if isinstance(container, Container) else container
-    logger.console('Waiting for {}...'.format(container))
+    # logger.console('Waiting for {}...'.format(container))
     assert isinstance(client, docker.DockerClient)
     return wait_on_condition(condition)
 
@@ -90,7 +91,7 @@ def wait_on_container_status(client, container, status='Running'):
     """
 
     def condition():
-        res = client.containers.get(container)
+        res = container if isinstance(container, Container) else client.containers.get(container)
         if res:
             return res.attrs['State'][status] == True
         return False
@@ -115,7 +116,7 @@ def wait_on_service_status(client, service, status='Running'):
     """
 
     def condition():
-        res = client.services.get(service)
+        res = service if isinstance(service, Service) else client.services.get(service)
         if res:
             return res.attrs['State'][status] == True
         return False
@@ -139,7 +140,10 @@ def wait_on_service_container_status(client, service=None, status='Running'):
 
     def condition():
         if service:
-            res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+            if isinstance(service, Service):
+                res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
+            else:
+                res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
             if res:
                 # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
                 return lower(res[0].attrs['State']['Status']) == lower(status)
@@ -167,7 +171,10 @@ def wait_on_services_status(client, services=None, status='Running'):
         if isinstance(services, list) and len(services) > 0:
             state_ok = 0
             for service in services:
-                res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
+                if isinstance(service, Service):
+                    res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
+                else:
+                    res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
                 if res:
                     # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
                     state_ok += 1

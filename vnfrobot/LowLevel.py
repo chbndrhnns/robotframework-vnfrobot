@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import collections
+
 from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
 from robot.api import logger
@@ -9,7 +11,7 @@ from modules.address import Address
 from modules.port import Port
 from modules.variable import Variable
 from tools import orchestrator
-from modules.context import set_context, SUT
+from modules.context import set_context
 from robotlibcore import DynamicCore
 from version import VERSION
 from tools.testutils import string_matchers
@@ -36,7 +38,8 @@ class LowLevel(DynamicCore):
         self.deployment_options = {
             'SKIP_UNDEPLOY': False,
         }
-        self.goss_volume = 'goss-helper'
+        self.test_volume = None
+        self.services = []
 
         logger.info(u"Importing {}".format(self.__class__))
 
@@ -182,3 +185,6 @@ class LowLevel(DynamicCore):
     @keyword('Remove deployment')
     def remove_deployment_kw(self):
         orchestrator.undeploy(self)
+
+
+SUT = collections.namedtuple('sut', 'target_type, target, service_id')
