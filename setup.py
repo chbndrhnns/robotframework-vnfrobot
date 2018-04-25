@@ -23,7 +23,7 @@ with open(path, 'w') as F:
 
 setup(
     # Basic info
-    name='vnf-robot',
+    name='vnfrobot',
     version=version,
     author='Johannes Rueschel',
     author_email='code+robot@rueschel.de',
