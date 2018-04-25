@@ -4,43 +4,47 @@ import tempfile
 from time import sleep
 
 import pytest
-import yaml
 from docker.models.containers import Container
-from pytest import fixture
 
-from exc import TestToolError, TransformationError
+from exc import TestToolError
+from modules.context import SUT
 from tools.GossTool import GossTool
-from tools.goss.GossPort import GossPort
 
 
-def test__run__pass(controller, stack, service_id, gossfile, containers):
-    stack_name = stack[0]
+def test__run__pass(controller, gossfile, goss_sut_service):
+    sut = goss_sut_service
 
-    controller.put_file(containers[0].id, gossfile)
-    g = GossTool(controller, containers[0], gossfile=os.path.basename(gossfile))
+    controller.put_file(sut.target, gossfile)
+    g = GossTool(controller, sut, gossfile=os.path.basename(gossfile))
     res = g.run()
 
     assert res['summary']['failed-count'] == 1
 
 
-def test__run__gossfile_not_found__fail(controller, stack, service_id, containers):
-    g = GossTool(controller, containers[0])
+def test__run__gossfile_not_found__fail(controller, goss_sut_service):
+    sut = goss_sut_service
+
+    g = GossTool(controller, sut)
     g.gossfile = 'bla'
 
     with pytest.raises(TestToolError, match='Gossfile not found'):
         g.run()
 
 
-def test__run__goss_not_found__fail(controller, stack, service_id, containers):
-    g = GossTool(controller, containers[0])
+def test__run__goss_not_found__fail(controller, goss_sut_service):
+    sut = goss_sut_service
+
+    g = GossTool(controller, sut)
     g.command = 'not_existing'
 
     with pytest.raises(TestToolError, match='goss executable was not found'):
         g.run()
 
 
-def test__run__syntax_error__fail(controller, stack, service_id, containers):
-    g = GossTool(controller, containers[0])
+def test__run__syntax_error__fail(controller, goss_sut_service):
+    sut = goss_sut_service
+
+    g = GossTool(controller, sut)
     g.command = '/goss/goss-linux-amd64 /data'
 
     with pytest.raises(TestToolError, match='Syntax error'):
@@ -60,10 +64,10 @@ def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_
 
     g = GossTool(controller, None, gossfile=os.path.basename(gossfile_sidecar))
 
-    sidecar = controller.create_or_get_sidecar(
+    sidecar = controller.get_or_create_sidecar(
         image=sidecar.get('image'),
         command=g.command,
-        network=network.name,
+        networks=network.name,
         volumes=volumes,
         name=sidecar_name
     )
@@ -95,10 +99,10 @@ def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_go
 
     g = GossTool(controller, None)
 
-    sidecar = controller.create_or_get_sidecar(
+    sidecar = controller.get_or_create_sidecar(
         image=sidecar.get('image'),
         command=g.command,
-        network=network.name,
+        networks=network.name,
         volumes=volumes,
         name=sidecar_name
     )

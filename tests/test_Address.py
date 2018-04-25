@@ -1,5 +1,6 @@
 import pytest
 from exc import ValidationError, SetupError
+from modules.context import SUT
 
 
 def test__context__invalid__fail(address_with_instance):
@@ -38,7 +39,7 @@ def test__validate__wrong_entity__fail(address_with_instance, sut):
             'property': test[0],
             'matcher': test[1],
             'value': test[2]})
-        e.validate()
+        assert not e.validate()
 
 
 def test__validate__fail(address_with_instance, sut):
@@ -46,16 +47,31 @@ def test__validate__fail(address_with_instance, sut):
     e.instance.sut = sut
 
     tests = [
-        ['66000', 'state', 'is', 'open'],
-        ['6379/ABC', 'state', 'is', 'open'],
-        ['6379', 'listeningaddress', 'is', '127.0.0.1'],
-        ['6379', 'listening_address', 'is', 'open']
+        ['www.google.de', 'isnotoris', 'reachable'],
+        ['www.google.de', 'is', 'notorisreachable'],
+        ['www.google.de', 'canisnot', 'notorisreachable'],
     ]
 
     for test in tests:
         with pytest.raises(ValidationError):
             e.set('entity', test[0])
-            e.set('property', test[1])
-            e.set('matcher', test[2])
-            e.set('value', test[3])
+            e.set('property', test[0])
+            e.set('matcher', test[1])
+            e.set('value', test[2])
             e.validate()
+
+
+def test__run__pass(address_with_instance, stack):
+    e = address_with_instance
+
+    name, path, success = stack
+    e.instance.sut = SUT('network', 'sut', name + '_sut')
+
+    test_data = ['www.google.com', 'is', 'reachable']
+
+    e.set('entity', test_data[0])
+    e.set('property', test_data[0])
+    e.set('matcher', test_data[1])
+    e.set('value', test_data[2])
+
+    e.run_test()

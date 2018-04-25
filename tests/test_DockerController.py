@@ -3,7 +3,7 @@ from docker.models.containers import Container
 from docker.models.services import Service
 
 from DockerController import DockerController
-from exc import DeploymentError, NotFoundError
+from exc import DeploymentError, NotFoundError, SetupError
 from . import path
 
 
@@ -110,14 +110,7 @@ def test__get_file__not_found__fail(container, controller):
         f = controller.get_file(container.id, '/etc/', 'hostsbla')
 
 
-def test__execute__invalid_container_object__fail(controller):
-    c = Container()
-    with pytest.raises(ValueError):
-        controller.execute(c, '/bin/bash')
-
-
-def test__execute__no_command__fail(controller):
-    container = Container()
+def test__execute__no_command__fail(controller, container):
     with pytest.raises(ValueError):
         controller.execute(container, '/bin/bash')
 

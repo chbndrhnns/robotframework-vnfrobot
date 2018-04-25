@@ -43,16 +43,29 @@ class DockerController:
         except docker.errors.APIError as exc:
             raise DeploymentError(exc)
 
-    def execute(self, container=None, command=None):
+    def execute(self, entity=None, command=None):
+        target = entity if isinstance(entity, Container) else None
+
+        if not target:
+            try:
+                target = self.get_container(entity)
+            except (docker.errors.NotFound, TypeError):
+                try:
+                    target = self.get_containers_for_service(entity)[0]
+                except (docker.errors.NotFound, TypeError):
+                    raise NotFoundError('Could not find entity (service or container) for the provided value of "entity"')
+
+        return self._run_in_container(container=target, command=command)
+
+    def _run_in_container(self, container=None, command=None):
         if not command:
             raise ValueError('command parameter must not be empty.')
 
-        wait_on_container_status(self._docker, container.id, 'Running')
-
         try:
+            wait_on_container_status(self._docker, container.name, 'Running')
             res = container.exec_run(cmd=command, tty=True)
             return res
-        except docker.errors.APIError as exc:
+        except (docker.errors.APIError, AttributeError) as exc:
             raise SetupError(exc)
 
     def get_containers_for_service(self, service):
@@ -138,7 +151,7 @@ class DockerController:
         except docker.errors.NotFound:
             raise
 
-    def create_network(self, name, driver='overlay'):
+    def get_or_create_network(self, name, driver='overlay'):
         try:
             return self._docker.networks.create(
                 name=name,
@@ -200,16 +213,8 @@ class DockerController:
 
         return res
 
-    def create_or_get_sidecar(self, image, command, name, volumes=None, network=None):
-        # retrieve image
-        try:
-            self._docker.images.get(image)
-        except docker.errors.ImageNotFound:
-            try:
-                self._docker.images.pull(image)
-            except docker.errors.ImageNotFound:
-                raise DeploymentError('Image {} not found.'.format(image))
-
+    def get_or_create_sidecar(self, image, command, name, volumes=None, networks=None):
+        # try to get an existing sidecar
         try:
             c = self._docker.containers.get(name)
             if isinstance(c, Container):
@@ -218,14 +223,26 @@ class DockerController:
         except docker.errors.NotFound:
             pass
 
+        # retrieve image
         try:
-            logger.console('Found container {}. Re-using it as sidecar.'.format(name))
+            self._docker.images.get(image)
+        except docker.errors.ImageNotFound:
+            try:
+                logger.console(
+                    'Fetching sidecar image...')
+                self._docker.images.pull(image)
+            except docker.errors.ImageNotFound as exc:
+                raise DeploymentError('Image {} not found: {}'.format(image, exc))
+
+        try:
+            logger.console('Creating sidecar container: name={}, image={}, command={}, volumes={}, networks={}'.format(
+                name, image, command, volumes, networks))
             return self._docker.containers.create(name=name if name else None,
                                                   image=image,
                                                   command=command,
                                                   auto_remove=False,
                                                   volumes=volumes,
-                                                  network=network,
+                                                  network=networks,
                                                   tty=True)
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
@@ -239,7 +256,7 @@ class DockerController:
         stdout, stderr = '', ''
         try:
             if not sidecar:
-                sidecar = self.create_or_get_sidecar(image, command, name, volumes, network)
+                sidecar = self.get_or_create_sidecar(image, command, name, volumes, network)
             wait_on_container_created(self._docker, sidecar)
             sidecar.start()
             sidecar.wait()

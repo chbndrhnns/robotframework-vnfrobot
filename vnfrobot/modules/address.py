@@ -1,5 +1,6 @@
 from modules.ValidationTarget import ValidationTarget
-from exc import NotFoundError, ValidationError
+from exc import NotFoundError, ValidationError, SetupError
+from tools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
 from tools.testutils import Url, validate_context, validate_matcher, validate_value, get_truth, boolean_matchers, \
     validate_entity, Domain
@@ -23,12 +24,15 @@ class Address(ValidationTarget):
     def validate(self):
         self.property = self.entity if not self.property else self.property
 
-        self._check_instance()
-        self._check_data()
-        validate_context(self.valid_contexts, self.instance.sut.target_type)
-        validate_entity(self.entity, self.entity_matcher)
-        validate_matcher([self.matcher], limit_to=self.properties.get('entity', {}).get('matchers', []))
-        validate_value(self.properties, 'entity', self.value)
+        try:
+            self._check_instance()
+            self._check_data()
+            validate_context(self.valid_contexts, self.instance.sut.target_type)
+            validate_entity(self.entity, self.entity_matcher)
+            validate_matcher([self.matcher], limit_to=self.properties.get('entity', {}).get('matchers', []))
+            validate_value(self.properties, 'entity', self.value)
+        except (SetupError, ValidationError) as exc:
+            raise
 
         split_entity = self.entity.split(':')
         self.address = split_entity[0]
@@ -56,6 +60,11 @@ class Address(ValidationTarget):
     def run_test(self):
         self.validate()
         self.transform()
+
+        try:
+            g = GossTool(self.instance.docker_controller, self.instance.sut)
+        except Exception as exc:
+            raise
 
         try:
             env = self.instance.docker_controller.get_env(self.instance.sut.service_id)

@@ -69,7 +69,7 @@ class Port(ValidationTarget):
                                                          filename='goss.yaml')
                 self.test_result = GossTool(
                     controller=self.instance.docker_controller,
-                    target=self.target,
+                    sut=self.instance.sut,
                     gossfile='/goss.yaml'
                 ).run()
             except (TemplateError, TypeError, ValueError) as exc:

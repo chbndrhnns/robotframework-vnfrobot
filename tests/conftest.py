@@ -8,7 +8,6 @@ from pytest import fixture
 
 from tools import namesgenerator
 from modules.context import SUT
-from modules.port import Port
 from tools import orchestrator
 from . import path
 
@@ -16,7 +15,10 @@ from DockerController import DockerController
 
 # import fixtures as local test plugins
 pytest_plugins = [
+   "tests.fixtures.context",
    "tests.fixtures.address",
+   "tests.fixtures.port",
+   "tests.fixtures.goss",
 ]
 
 @fixture(scope='module')
@@ -60,13 +62,7 @@ def sidecar(base_name, controller, volume):
 
 @fixture
 def network(controller, network_name):
-    n = None
-    try:
-        n = controller.get_network(network_name)
-    except Exception:
-        pass
-    finally:
-        yield n if n else controller.create_network(network_name)
+    yield controller.get_or_create_network(network_name)
 
 
 @fixture(scope='module')
@@ -159,27 +155,6 @@ def stack(controller, stack_infos):
 
 
 # Fixtures for entity tests
-
-@fixture
-def application_context():
-    return 'application'
-
-
-@fixture
-def service_context():
-    return 'service'
-
-
-@fixture
-def node_context():
-    return 'node'
-
-
-@fixture
-def network_context():
-    return 'network'
-
-
 @fixture
 @pytest.mark.usefixtures('stack_infos')
 @pytest.mark.usefixtures('controller')
@@ -195,29 +170,6 @@ def instance(lib, builtin, stack_infos, controller):
     return lib
 
 
-# Fixtures for LowLevelEntities
-
 @fixture
 def sut():
     return SUT('service', 'sut', 'bla')
-
-
-@fixture
-def port_data():
-    return {'context': 'service', 'entity': '6370/TCP', 'property': 'state', 'matcher': 'is', 'value': 'open'}
-
-
-@fixture
-def port(port_data):
-    port = Port()
-    for k, v in port_data.iteritems():
-        port.set(k, v)
-    return port
-
-
-@fixture
-@pytest.mark.usefixture('instance')
-def port_with_instance(port, instance):
-    port.instance = instance
-    return port
-
