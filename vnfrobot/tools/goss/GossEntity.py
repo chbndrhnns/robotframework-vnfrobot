@@ -83,7 +83,7 @@ class GossEntity():
                         entity[new_key] = value_mappings.get(new_key, {}).get(old_val)
                 # use old value
                 else:
-                    if isinstance(entity[new_key], list):
+                    if isinstance(entity[new_key], list) and len(entity[old_key]) > 0:
                         entity[new_key].append(entity.get(old_key))
                     else:
                         entity[new_key] = entity.get(new_key)

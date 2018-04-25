@@ -10,6 +10,38 @@ ports_test_data = [
             'data': {
                 'ports': [
                     {
+                        'port': 80,
+                        'protocol': 'tcp',
+                        'state': 'open',
+                        'listening address': []
+                    }
+                ],
+            },
+        },
+        {
+            'with_mappings': {
+                'ports': [
+                    {
+                        'port': 80,
+                        'protocol': 'tcp',
+                        'listening': True,
+                        'ip': [ ]
+                    }
+                ],
+            },
+        },
+        {
+            'expected_yaml': """port:
+                  tcp:80:
+                    listening: true
+                """
+        }
+    ),
+    (
+        {
+            'data': {
+                'ports': [
+                    {
                         'port': 12345,
                         'protocol': 'udp',
                         'state': 'open',
