@@ -5,14 +5,8 @@ services:
     image: nginx:1.13.12
     ports:
     - 80
-    networks:
-    - robot
     volumes:
     - ./goss:/goss
-
-networks:
-  robot:
-    external: true
 
 volumes:
   goss:

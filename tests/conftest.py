@@ -6,7 +6,6 @@ from docker import errors
 import pytest
 from pytest import fixture
 
-from modules.address import Address
 from tools import namesgenerator
 from modules.context import SUT
 from modules.port import Port
@@ -15,6 +14,10 @@ from . import path
 
 from DockerController import DockerController
 
+# import fixtures as local test plugins
+pytest_plugins = [
+   "tests.fixtures.address",
+]
 
 @fixture(scope='module')
 def base_name():
@@ -218,22 +221,3 @@ def port_with_instance(port, instance):
     port.instance = instance
     return port
 
-
-@fixture
-def address_data():
-    return {'context': 'network', 'entity': 'www.google.com', 'property': '', 'matcher': 'is', 'value': 'reachable'}
-
-
-@fixture
-def address(address_data):
-    address = Address()
-    for k, v in address_data.iteritems():
-        address.set(k, v)
-    return address
-
-
-@fixture
-@pytest.mark.usefixture('instance')
-def address_with_instance(address, instance):
-    address.instance = instance
-    return address
