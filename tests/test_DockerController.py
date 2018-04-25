@@ -62,7 +62,7 @@ def test__get_env__service(controller, stack, service_id):
 
 
 def test__find_service__pass(controller, stack, service_id):
-    service = controller.get_service(service_id)
+    service = controller.get_service_for_stack(service_id)
 
     assert isinstance(service, Service)
 
@@ -112,7 +112,7 @@ def test__get_file__not_found__fail(container, controller):
 
 def test__execute__no_command__fail(controller, container):
     with pytest.raises(ValueError):
-        controller.execute(container, '/bin/bash')
+        controller.execute(container, '')
 
 
 def test__execute_in_stack__pass(controller, stack, service_id):

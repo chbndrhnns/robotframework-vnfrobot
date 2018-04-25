@@ -76,4 +76,4 @@ class GossTool(TestTool):
                 except Exception as exc:
                     raise
             elif self.context == 'service':
-                self.target = self.sut.service_id
+                self.target = self.sut.target

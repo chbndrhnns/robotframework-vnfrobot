@@ -7,7 +7,6 @@ import pytest
 from docker.models.containers import Container
 
 from exc import TestToolError
-from modules.context import SUT
 from tools.GossTool import GossTool
 
 

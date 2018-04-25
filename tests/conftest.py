@@ -9,6 +9,7 @@ from pytest import fixture
 from tools import namesgenerator
 from modules.context import SUT
 from tools import orchestrator
+from tools.wait_on import wait_on_services_status
 from . import path
 
 from DockerController import DockerController
@@ -147,7 +148,11 @@ def stack(controller, stack_infos):
     name = stack_infos[0]
     path = stack_infos[1]
 
-    yield (name, path, controller.deploy_stack(path, name))
+    res = controller.deploy_stack(path, name)
+    services = controller.get_services(name)
+    wait_on_services_status(controller._docker, services)
+
+    yield (name, path, res)
 
     controller.undeploy_stack(name)
     try_remove_network(controller, name)

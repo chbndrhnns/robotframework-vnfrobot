@@ -1,7 +1,3 @@
-import subprocess
-from collections import namedtuple
-
-import time
 from string import lower
 
 import os
@@ -17,9 +13,8 @@ from tools import namesgenerator
 from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
-from tools.testutils import Result
-
-ProcessResult = namedtuple('ProcessResult', 'stdout stderr')
+from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status, \
+    start_process, wait_on_process, ProcessResult, wait_on_container_created
 
 
 class DockerController:
@@ -99,7 +94,7 @@ class DockerController:
 
         return c.attrs['Config']['Env']
 
-    def get_service(self, service):
+    def get_service_for_stack(self, service):
         try:
             wait_on_service_replication(self._docker, service)
             s = self._docker.services.get(service)
@@ -120,7 +115,7 @@ class DockerController:
             wait_on_service_container_status(self._docker, service)
 
             n = network if isinstance(network, Network) else self.get_network(network)
-            s = service if isinstance(service, Service) else self.get_service(service)
+            s = service if isinstance(service, Service) else self.get_service_for_stack(service)
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
@@ -326,6 +321,12 @@ class DockerController:
 
         return Archive('r', strm.read()).get_text_file(filename)
 
+    def get_services(self, stack):
+        try:
+            return self._docker.services.list(filters={'name': '{}_'.format(stack)})
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not get services for {}: {}'.format(stack, exc))
+
     def _kill_and_delete_container(self, name):
         try:
             c = self._docker.containers.get(name) if isinstance(name, basestring) else name
@@ -339,146 +340,3 @@ class DockerController:
                 pass
             else:
                 raise
-
-
-# helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py
-
-def start_process(base_dir, options):
-    proc = subprocess.Popen(
-        ['docker'] + options,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=base_dir)
-    logger.debug("Running process: %s" % proc.pid)
-    return proc
-
-
-def wait_on_process(proc, returncode=0):
-    stdout, stderr = proc.communicate()
-    if proc.returncode != returncode:
-        logger.debug("Stderr: {}".format(stderr))
-        logger.debug("Stdout: {}".format(stdout))
-        # assert proc.returncode == returncode
-    return ProcessResult(stdout.decode('utf-8'), stderr.decode('utf-8'))
-
-
-def wait_on_condition(condition, delay=0.1, timeout=40):
-    start_time = time.time()
-    while not condition():
-        if time.time() - start_time > timeout:
-            raise AssertionError("Timeout: %s" % condition)
-        time.sleep(delay)
-
-
-def kill_service(service):
-    for container in service.containers():
-        if container.is_running:
-            container.kill()
-
-
-def wait_on_service_replication(client, service):
-    def condition():
-        res = client.services.get(service)
-        replicas = res.attrs['Spec']['Mode']['Replicated']['Replicas']
-        return replicas > 0
-
-    # logger.console('Waiting for service {}...'.format(service))
-    return wait_on_condition(condition)
-
-
-def wait_on_container_created(client, container):
-    """
-    Wait until a container is in the created state.
-
-    Args:
-        client: Docker client
-        container: container name to search for
-
-    Returns:
-
-    """
-
-    def condition():
-        res = client.containers.get(container)
-        if res:
-            return res.attrs['State']['Status'] == 'created'
-        return False
-
-    container = container.name if isinstance(container, Container) else container
-    logger.console('Waiting for {}...'.format(container))
-    assert isinstance(client, docker.DockerClient)
-    return wait_on_condition(condition)
-
-
-def wait_on_container_status(client, container, status='Running'):
-    """
-    Wait until a container is in the desired state.
-
-    Args:
-        client: Docker client
-        container: container name to search for
-        status: desired status, default: Running
-
-    Returns:
-
-    """
-
-    def condition():
-        res = client.containers.get(container)
-        if res:
-            return res.attrs['State'][status] == True
-        return False
-
-    container = container.name if isinstance(container, Container) else container
-    logger.console('Waiting for {}...'.format(container))
-    assert isinstance(client, docker.DockerClient)
-    return wait_on_condition(condition)
-
-
-def wait_on_service_status(client, service, status='Running'):
-    """
-    Wait until a service is in the desired state.
-
-    Args:
-        client: Docker client
-        service: service name to search for
-        status: desired status, default: Running
-
-    Returns:
-
-    """
-
-    def condition():
-        res = client.services.get(service)
-        if res:
-            return res.attrs['State'][status] == True
-        return False
-
-    assert isinstance(client, docker.DockerClient)
-    return wait_on_condition(condition)
-
-
-def wait_on_service_container_status(client, service=None, status='Running'):
-    """
-    Wait until a first container that belongs to a service is in the desired state.
-
-    Args:
-        client: Docker client
-        service: service name to search for
-        status: desired status, default: Running
-
-    Returns:
-
-    """
-
-    def condition():
-        if service:
-            res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
-            if res:
-                # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
-                return lower(res[0].attrs['State']['Status']) == lower(status)
-        # logger.console('Found no container belonging to service {}...'.format(service))
-        return False
-
-    assert isinstance(client, docker.DockerClient)
-    return wait_on_condition(condition)

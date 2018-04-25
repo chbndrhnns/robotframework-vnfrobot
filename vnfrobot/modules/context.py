@@ -16,7 +16,7 @@ def set_context(instance, context_type=None, context=None):
 
     # Check that service exists
     try:
-        instance.docker_controller.get_service(service_id)
+        instance.docker_controller.get_service_for_stack(service_id)
     except NotFoundError as exc:
         raise
 
