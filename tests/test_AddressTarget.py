@@ -61,6 +61,13 @@ def test__validate__fail(address_with_instance, sut):
             e.validate()
 
 
+def test__evaluate__pass(address_with_instance, sut):
+    e = address_with_instance
+    e.instance.sut = sut
+
+    e.evaluate()
+
+
 def test__run__network_context__pass(address_with_instance, stack, network, volume_with_goss):
     e = address_with_instance
 
