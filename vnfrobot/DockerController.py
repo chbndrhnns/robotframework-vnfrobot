@@ -1,3 +1,4 @@
+import json
 from string import lower
 
 import os
@@ -300,15 +301,17 @@ class DockerController:
         return res
 
     def get_or_create_sidecar(self, image='busybox', command='true', name='', volumes=None, network=None):
-        # try to get an existing sidecar
-        if name:
-            try:
-                c = self._docker.containers.get(name)
-                if isinstance(c, Container):
-                    logger.console('Found container {}. Re-using it as sidecar.'.format(name))
-                    return c
-            except docker.errors.NotFound:
-                pass
+        # TODO Do not reuse for the moment being as we are reading stdout and the stdout history is not reset between
+        # different goss runs. We end up with multiple json objects we cannot easily decode for now
+        # # try to get an existing sidecar
+        # if name:
+        #     try:
+        #         c = self._docker.containers.get(name)
+        #         if isinstance(c, Container):
+        #             logger.console('Found container {}. Re-using it as sidecar.'.format(name))
+        #             return c
+        #     except docker.errors.NotFound:
+        #         pass
 
         try:
             self.get_or_pull_image(image)
@@ -353,10 +356,11 @@ class DockerController:
             stdout = sidecar.logs(stdout=True, stderr=False)
             stderr = sidecar.logs(stdout=False, stderr=True)
 
-            BuiltIn().log(stdout, level='DEBUG', console=True)
+            # BuiltIn().log(stdout, level='DEBUG', console=True)
 
             if stderr:
                 raise DeploymentError('Found stderr: {}'.format(stderr))
+            return stdout
         except docker.errors.NotFound as exc:
             raise DeploymentError('Sidecar {} not found.'.format(sidecar if sidecar else 'None'))
         except docker.errors.APIError as exc:
@@ -369,8 +373,6 @@ class DockerController:
             raise DeploymentError('Error: {}'.format(exc))
         finally:
             self._kill_and_delete_container(sidecar)
-
-        return ProcessResult(stdout, stderr)
 
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
@@ -426,7 +428,7 @@ class DockerController:
             c = self._docker.containers.get(name) if isinstance(name, basestring) else name
             if hasattr(c, 'status') and lower(c.status) == 'running':
                 c.kill()
-                c.remove()
+            c.remove()
         except docker.errors.APIError as exc:
             if 'No such container' in exc.explanation:
                 pass
