@@ -51,6 +51,7 @@ def deploy(instance, descriptor):
         try:
             instance.docker_controller.find_stack(instance.deployment_name)
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO', console=True)
+            return
         except DeploymentError:
             raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
 
@@ -65,7 +66,7 @@ def deploy(instance, descriptor):
         wait_on_services_status(instance.docker_controller._docker, instance.services)
         return True
     except DeploymentError as exc:
-        raise SetupError('Error during deployment: {}'.format(exc))
+        raise SetupError('Error during deployment of {}: {}'.format(instance.deployment_name, exc))
 
 
 def undeploy(instance):

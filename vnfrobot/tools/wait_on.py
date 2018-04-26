@@ -97,7 +97,7 @@ def wait_on_container_status(client, container, status='Running'):
         return False
 
     container = container.name if isinstance(container, Container) else container
-    logger.console('Waiting for {}...'.format(container))
+    # logger.console('Waiting for {}...'.format(container))
     assert isinstance(client, docker.DockerClient)
     return wait_on_condition(condition)
 
