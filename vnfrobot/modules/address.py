@@ -1,14 +1,15 @@
+import json
 import tempfile
 
 from docker.models.containers import Container
 from jinja2 import TemplateError
+from robot.libraries.BuiltIn import BuiltIn
 
 from modules.ValidationTarget import ValidationTarget
-from exc import NotFoundError, ValidationError, SetupError, DeploymentError
+from exc import ValidationError, SetupError, DeploymentError
 from tools.GossTool import GossTool
-from tools.data_structures import SUT
 from tools.goss.GossAddr import GossAddr
-from tools.testutils import Url, validate_context, validate_matcher, validate_value, get_truth, boolean_matchers, \
+from tools.testutils import validate_context, validate_matcher, validate_value, get_truth, boolean_matchers, \
     validate_entity, Domain
 
 
@@ -91,7 +92,8 @@ class Address(ValidationTarget):
                 self.instance.docker_controller.put_file(entity=sidecar, file_to_transfer=f.name,
                                                          filename='goss.yaml')
 
-                self.test_result = self.instance.docker_controller.run_sidecar(sidecar=sidecar)
+                res = self.instance.docker_controller.run_sidecar(sidecar=sidecar)
+                self.test_result = json.loads(res)
             except (TypeError, ValueError) as exc:
                 raise ValidationError('ValidationError: {}'.format(exc))
             except DeploymentError as exc:
@@ -100,16 +102,16 @@ class Address(ValidationTarget):
         self.evaluate_results()
 
     def evaluate_results(self):
-        return False
+        assert isinstance(self.test_result['summary']['failed-count'], int)
 
-        # if not self.test_result:
-        #     raise ValidationError('No variable {} found.'.format(self.entity))
-        #
-        # if not get_truth(self.test_result[0], boolean_matchers[self.matcher], self.value):
-        #     raise ValidationError(
-        #         'Variable {}: {} {}, actual: {}'.format(
-        #             self.entity,
-        #             self.matcher,
-        #             self.value,
-        #             self.test_result[0])
-        #     )
+        actual_value = self.test_result['results'][0]['found']
+        if self.test_result['summary']['failed-count'] > 0:
+            BuiltIn().log_to_console(json.dumps(self.test_result, indent=4, sort_keys=True))
+            raise ValidationError(
+                'Port {}: {} {} {}, actual: {}'.format(
+                    self.entity,
+                    self.property,
+                    self.matcher,
+                    self.value,
+                    actual_value)
+            )

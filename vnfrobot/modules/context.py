@@ -21,8 +21,8 @@ def set_context(instance, context_type=None, context=None):
         raise SetupError('No context given.')
 
     try:
-        service = controller.get_service(service_id)
-    except NotFoundError as exc:
+        controller.get_service(service_id)
+    except NotFoundError:
         raise SetupError('Service {} not found in deployment {}'.format(context, instance.deployment_name))
 
     if context_type == 'network':
