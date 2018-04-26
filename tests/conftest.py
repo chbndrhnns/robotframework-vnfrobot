@@ -148,7 +148,7 @@ def stack(controller, stack_infos):
     name = stack_infos[0]
     path = stack_infos[1]
 
-    res = controller.deplooy_stack(path, name)
+    res = controller.deploy_stack(path, name)
     services = controller.get_services(name)
     wait_on_services_status(controller._docker, services)
 

@@ -274,6 +274,7 @@ class DockerController:
         except docker.errors.NotFound:
             pass
 
+        BuiltIn().log('Copying {} to {}...'.format(path, volume), level='DEBUG', console=True)
         try:
             res = self._dispatch(['run', '-v', '{}:/data'.format(volume), '--name', self.helper, 'busybox', 'true'])
             assert len(res.stderr) == 0
@@ -288,7 +289,7 @@ class DockerController:
     def list_files_on_volume(self, volume):
         try:
             self.get_volume(volume)
-        except SetupError as exc:
+        except DeploymentError as exc:
             raise exc
 
         res = self._dispatch(['run', '--rm', '-v', '{}:/data'.format(volume), 'busybox', 'ls', '/data'])
