@@ -161,8 +161,18 @@ class DockerController:
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
+        BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
+
         try:
-            BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
+            attrs = getattr(s, 'attrs')
+            mounts = attrs.get('Spec', {}).get('TaskTemplate', {}).get('ContainerSpec', {}).get('Mounts', [])
+            for mount in mounts:
+                if v.name in mount.get('Source', {}):
+                    return s
+        except AttributeError, ValueError:
+            pass
+
+        try:
             current_instances = frozenset(self.get_containers_for_service(service))
 
             s.update(mounts=['{}:/goss:ro'.format(v.name)])

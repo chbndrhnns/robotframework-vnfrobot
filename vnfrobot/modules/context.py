@@ -14,7 +14,6 @@ def set_context(instance, context_type=None, context=None):
     context_types = ['application', 'service', 'node', 'network']
 
     service_id = '{}_{}'.format(instance.deployment_name, context)
-    BuiltIn().log('\nContext: Using service_id {}'.format(service_id), level='INFO', console=True)
 
     if context_type not in context_types:
         raise SetupError('Invalid context given. Must be {}'.format(context_types))
@@ -40,6 +39,7 @@ def set_context(instance, context_type=None, context=None):
     if not context:
         raise SetupError('Context target is empty. This indicates a bug.')
 
+    BuiltIn().log('\nContext: type={}, service={}, target={}'.format(context_type, service_id, context), level='INFO', console=True)
     return SUT(context_type, context, service_id)
 
 
