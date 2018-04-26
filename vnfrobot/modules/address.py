@@ -108,9 +108,8 @@ class Address(ValidationTarget):
         if self.test_result['summary']['failed-count'] > 0:
             BuiltIn().log_to_console(json.dumps(self.test_result, indent=4, sort_keys=True))
             raise ValidationError(
-                'Port {}: {} {} {}, actual: {}'.format(
+                'Address {}: {} {}, actual: {}'.format(
                     self.entity,
-                    self.property,
                     self.matcher,
                     self.value,
                     actual_value)
