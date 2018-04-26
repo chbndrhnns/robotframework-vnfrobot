@@ -59,7 +59,7 @@ class DockerController:
             raise ValueError('command parameter must not be empty.')
 
         try:
-            wait_on_container_status(self._docker, container.name, 'Running')
+            wait_on_container_status(self._docker, container.name)
             res = container.exec_run(cmd=command, tty=True)
             return res
         except (docker.errors.APIError, AttributeError) as exc:
@@ -127,17 +127,45 @@ class DockerController:
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
+        BuiltIn().log('Connecting network {} to service {}...'.format(n.name, s.name), level='DEBUG', console=True)
         try:
-            BuiltIn().log('Connecting network {} to service {}...'.format(n.name, s.name), level='DEBUG', console=True)
-            current_instances = frozenset(self.get_containers_for_service(service))
-
-            s.update(networks=[n.name])
-            self._wait_on_service_update(s, current_instances)
-            return s
+            return self.update_service(s, networks=[n.name])
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
 
+    def update_service(self, service, **kwargs):
+        """
+        Update a service using the map of configuration values.
+
+        Args:
+            service: Service instance
+            **kwargs: any parameters available for updating a service
+
+        Returns:
+            Container: Instance of Container
+
+        """
+        assert isinstance(service, Service)
+        try:
+            current_instances = frozenset(self.get_containers_for_service(service))
+            service.update(**kwargs)
+            return self._wait_on_service_update(service, current_instances)
+        except docker.errors.APIError as exc:
+            raise DeploymentError('Could not update service {}: {}'.format(service.name, exc))
+
     def _wait_on_service_update(self, service, current_instances):
+        """
+        After a service is updated, we wait for at least one new container instance with the updated configuration to be
+        available.
+
+        Args:
+            service: service instance
+            current_instances: list of containers belonging to the service currently
+
+        Returns:
+            Container: Container instance with the updated configuration
+
+        """
         BuiltIn().log('Waiting for service to update {}...'.format(service.name), level='DEBUG', console=True)
 
         # wait for the update to take place
@@ -145,6 +173,7 @@ class DockerController:
         wait_on_service_container_status(self._docker, service, current_instances)
         c = self.get_containers_for_service(service)[0]
         wait_on_container_status(self._docker, c)
+        return c
 
     def connect_volume_to_service(self, service, volume):
         if not volume:
@@ -162,24 +191,17 @@ class DockerController:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
         BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
-
         try:
             attrs = getattr(s, 'attrs')
             mounts = attrs.get('Spec', {}).get('TaskTemplate', {}).get('ContainerSpec', {}).get('Mounts', [])
             for mount in mounts:
                 if v.name in mount.get('Source', {}):
-                    return s
+                    return self.get_containers_for_service(s)[0]
         except AttributeError, ValueError:
             pass
 
         try:
-            current_instances = frozenset(self.get_containers_for_service(service))
-
-            s.update(mounts=['{}:/goss:ro'.format(v.name)])
-
-            self._wait_on_service_update(s, current_instances)
-
-            return s
+            return self.update_service(s, mounts=['{}:/goss:ro'.format(v.name)])
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
 
@@ -363,8 +385,8 @@ class DockerController:
 
         if isinstance(entity, Container):
             entity = entity.name
-
         filename = filename or os.path.basename(file_to_transfer)
+        BuiltIn().log('Putting file {} on {}'.format(filename, entity), level='DEBUG', console=True)
         with open(file_to_transfer, 'r') as f:
             content = f.read()
             self._send_file(content, destination, entity, filename)

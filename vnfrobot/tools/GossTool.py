@@ -38,6 +38,8 @@ class GossTool(TestTool):
 
             res = self.controller.execute(self.sut.target, self.command).strip()
             return json.loads(res)
+        except NotFoundError as exc:
+            raise
         except (json.JSONDecoder, ValueError) as exc:
             if 'No help topic' in res:
                 raise TestToolError('Syntax error while calling goss on {}: {}'.format(self.sut.target, res))

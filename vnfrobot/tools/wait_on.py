@@ -146,13 +146,14 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
             'label': 'com.docker.swarm.service.name={}'.format(service),
             'status': lower(status)
         })
+        # logger.console([c.name for c in res])
 
         if not current_instances:
             return True if res else False
         else:
+            if not res: return False
             new_instances = frozenset(res)
-            # logger.console('current_instances {}'.format(current_instances))
-            # logger.console('new_instances {}'.format(new_instances))
+            # logger.console('current_instances {}, new_instances: {}'.format(current_instances, new_instances))
             return new_instances.isdisjoint(current_instances)
 
     service = service.name if isinstance(service, Service) else service

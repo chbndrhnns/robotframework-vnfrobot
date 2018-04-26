@@ -39,16 +39,12 @@ def set_context(instance, context_type=None, context=None):
     if not context:
         raise SetupError('Context target is empty. This indicates a bug.')
 
-    BuiltIn().log('\nContext: type={}, service={}, target={}'.format(context_type, service_id, context), level='INFO', console=True)
-    return SUT(context_type, context, service_id)
+    instance.update_sut(target_type=context_type, target=context, service_id=service_id)
 
 
 def _prepare_service_context(controller, instance, service_id):
     ctl = instance.docker_controller._docker
     wait_on_service_container_status(ctl, service_id)
-
-    # attach the goss volume to the service
-    controller.connect_volume_to_service(service_id, instance.test_volume)
 
     containers = instance.docker_controller.get_containers_for_service(service_id)
 

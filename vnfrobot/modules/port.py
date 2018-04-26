@@ -1,6 +1,7 @@
 import json
 import tempfile
 
+from docker.models.containers import Container
 from jinja2 import TemplateError
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -28,12 +29,11 @@ class Port(ValidationTarget):
         self.port = None
         self.protocol = 'tcp'
         self.transformed_data = None
-        self.sut = instance.sut
 
     def validate(self):
         self._check_instance()
         self._check_data()
-        validate_context(self.valid_contexts, self.sut.target_type)
+        validate_context(self.valid_contexts, self.instance.sut.target_type)
         (self.port, self.protocol) = validate_port(self.entity)
         self.property = validate_property(self.properties, self.property)
         validate_matcher([self.matcher], limit_to=self.properties.get('entity', {}).get('matchers', []))
@@ -62,8 +62,15 @@ class Port(ValidationTarget):
             try:
                 f.write(self.transformed_data)
                 f.seek(0)
-                self.instance.docker_controller.put_file(entity=self.sut.target, file_to_transfer=f.name,
+
+                # attach the goss volume to the service and update the SUT object
+                container = self.instance.docker_controller.connect_volume_to_service(self.instance.sut.service_id, self.instance.test_volume)
+                assert isinstance(container, Container)
+                self.instance.update_sut(target=container.name)
+
+                self.instance.docker_controller.put_file(entity=self.instance.sut.target, file_to_transfer=f.name,
                                                          filename='goss.yaml')
+
                 self.test_result = GossTool(
                     controller=self.instance.docker_controller,
                     sut=self.instance.sut,

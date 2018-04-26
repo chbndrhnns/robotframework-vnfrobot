@@ -13,6 +13,7 @@ from modules.variable import Variable
 from tools import orchestrator
 from modules.context import set_context
 from robotlibcore import DynamicCore
+from tools.data_structures import SUT
 from version import VERSION
 from tools.testutils import string_matchers
 
@@ -68,6 +69,14 @@ class LowLevel(DynamicCore):
         else:
             logger.console('Skipping: remove deployment')
 
+    def update_sut(self, **kwargs):
+        self.sut = self.sut._replace(**kwargs)
+        BuiltIn().log('\nUpdating context: type={}, service={}, target={}'.format(
+            self.sut.target_type,
+            self.sut.service_id,
+            self.sut.target),
+            level='INFO', console=True)
+
     def run_keyword(self, name, args, kwargs):
         """
         Mandatory method for using robot dynamic libraries
@@ -83,7 +92,7 @@ class LowLevel(DynamicCore):
     @keyword('Set ${context_type:\S+} context to ${context:\S+}')
     def set_context_kw(self, context_type=None, context=None):
         try:
-            self.sut = set_context(self, context_type, context)
+            set_context(self, context_type, context)
         except NotFoundError as exc:
             BuiltIn().fatal_error(exc)
 
@@ -166,7 +175,7 @@ class LowLevel(DynamicCore):
                 'context': self.sut,
                 'entity': raw_entity,
                 'property': raw_prop,
-                'matcher':  matcher,
+                'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
         except (DataFormatError, ValidationError) as exc:
@@ -185,6 +194,3 @@ class LowLevel(DynamicCore):
     @keyword('Remove deployment')
     def remove_deployment_kw(self):
         orchestrator.undeploy(self)
-
-
-SUT = collections.namedtuple('sut', 'target_type, target, service_id')
