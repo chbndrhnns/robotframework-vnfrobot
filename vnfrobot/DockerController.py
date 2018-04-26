@@ -117,7 +117,7 @@ class DockerController:
     def get_containers(self):
         return self._docker.containers.list()
 
-    def connect_service_to_network(self, service, network):
+    def connect_network_to_service(self, service, network):
         try:
             wait_on_service_replication(self._docker, service)
             wait_on_service_container_status(self._docker, service)

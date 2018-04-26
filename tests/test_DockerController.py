@@ -188,7 +188,7 @@ def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, s
     sidecar_name = sidecar.get('name')
     assert 'robot' in network.name
 
-    res = controller.connect_service_to_network(service_id, network.name)
+    res = controller.connect_network_to_service(service_id, network.name)
     assert res
 
     containers = controller.get_containers_for_service(service_id)
@@ -201,7 +201,7 @@ def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, s
 
 
 def test__connect_container_to_network__pass(controller, stack, network, service_id):
-    res = controller.connect_service_to_network(service_id, network.name)
+    res = controller.connect_network_to_service(service_id, network.name)
     assert res
 
 

@@ -94,7 +94,7 @@ def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_go
         }
     }
 
-    controller.connect_service_to_network(service_id, network.name)
+    controller.connect_network_to_service(service_id, network.name)
 
     g = GossTool(controller, None)
 
