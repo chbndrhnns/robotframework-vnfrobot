@@ -11,6 +11,7 @@ from . import path
 
 def check_or_create_test_tool_volume(instance, volume):
     expected = 'goss-linux-amd64'
+    BuiltIn().log('Preparing volume for test tool...', level='INFO', console=True)
     try:
         res = instance.list_files_on_volume(volume)
         if expected not in res.stdout:
