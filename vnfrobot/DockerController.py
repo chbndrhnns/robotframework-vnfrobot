@@ -328,9 +328,8 @@ class DockerController:
     def find_stack(self, deployment_name):
         res = self._dispatch(['stack', 'ps', deployment_name, '--format', '" {{ .Name }}"'])
 
-        if deployment_name in res.stdout.strip('\n\r'):
-            return True
-        return False
+        if deployment_name not in res.stdout.strip('\n\r'):
+            raise DeploymentError('Stack {} not found.'.format(deployment_name))
 
     def put_file(self, entity, file_to_transfer='', destination='/', filename=None):
         if not os.path.isfile(file_to_transfer):
