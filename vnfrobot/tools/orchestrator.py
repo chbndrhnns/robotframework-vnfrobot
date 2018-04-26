@@ -51,7 +51,7 @@ def deploy(instance, descriptor):
         try:
             instance.docker_controller.find_stack(instance.deployment_name)
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO', console=True)
-        except SetupError:
+        except DeploymentError:
             raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
 
     # create new deployment
