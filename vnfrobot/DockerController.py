@@ -347,7 +347,7 @@ class DockerController:
         try:
             if not sidecar:
                 sidecar = self.get_or_create_sidecar(image, command, name, volumes, network)
-            wait_on_container_status(self._docker, sidecar, 'Created')
+            wait_on_container_status(self._docker, sidecar, ['Created', 'Exited'])
             sidecar.start()
             sidecar.wait()
             stdout = sidecar.logs(stdout=True, stderr=False)

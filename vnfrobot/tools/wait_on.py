@@ -60,7 +60,7 @@ def wait_on_container_status(client, container, status='Running'):
     Args:
         client: Docker client
         container: container name to search for
-        status: desired status, default: Running
+        status: str,list desired status, can also be a list of states, default: Running
 
     Returns:
 
@@ -68,11 +68,22 @@ def wait_on_container_status(client, container, status='Running'):
 
     def condition():
         res = container if isinstance(container, Container) else client.containers.get(container)
-        if res:
+        if res and isinstance(status, basestring):
             if 'Running' in status:
                 return res.attrs['State'][status]
             if 'Created' in status:
                 return res.attrs['State']['Status'] == 'created'
+        if res and isinstance(status, list) and len(status) > 0:
+            found = False
+            for s in status:
+                if 'Running' in s:
+                    found = res.attrs['State'][status]
+                elif 'Created' in s:
+                    found = res.attrs['State']['Status'] == 'created'
+                elif 'Exited' in s:
+                    found = res.attrs['State']['Status'] == 'exited'
+                if found:
+                    return found
         return False
 
     container = container.name if isinstance(container, Container) else container

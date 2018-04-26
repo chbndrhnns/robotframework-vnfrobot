@@ -1,6 +1,6 @@
 from pytest import fixture
 
-from LowLevel import SUT
+from tools.data_structures import SUT
 
 
 @fixture
