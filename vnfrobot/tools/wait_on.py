@@ -125,11 +125,13 @@ def wait_on_service_status(client, service, status='Running'):
     return wait_on_condition(condition)
 
 
-def wait_on_service_container_status(client, service=None, status='Running'):
+def wait_on_service_container_status(client, service=None, current_instances=None, status='running'):
     """
     Wait until a first container that belongs to a service is in the desired state.
+    If current_instances is given, the wait routine on returns when there is a disjoint set of old and new instances.
 
     Args:
+        current_instances: list of containers
         client: Docker client
         service: service name to search for
         status: desired status, default: Running
@@ -139,18 +141,23 @@ def wait_on_service_container_status(client, service=None, status='Running'):
     """
 
     def condition():
-        if service:
-            if isinstance(service, Service):
-                res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
-            else:
-                res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
-            if res:
-                # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
-                return lower(res[0].attrs['State']['Status']) == lower(status)
-        # logger.console('Found no container belonging to service {}...'.format(service))
-        return False
+        # logger.console('waiting for {} to have a container in state {}'.format(service, status))
+        res = client.containers.list(filters={
+            'label': 'com.docker.swarm.service.name={}'.format(service),
+            'status': lower(status)
+        })
 
+        if not current_instances:
+            return True if res else False
+        else:
+            new_instances = frozenset(res)
+            # logger.console('current_instances {}'.format(current_instances))
+            # logger.console('new_instances {}'.format(new_instances))
+            return new_instances.isdisjoint(current_instances)
+
+    service = service.name if isinstance(service, Service) else service
     assert isinstance(client, docker.DockerClient)
+    assert isinstance(service, basestring)
     return wait_on_condition(condition)
 
 

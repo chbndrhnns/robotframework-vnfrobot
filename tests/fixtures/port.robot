@@ -4,7 +4,7 @@ Variables   common.py
 
 
 *** Test Cases ***
-Check ports
-    Set service context to sut
-    Port 80: state is open
+Check port 6379
+    set service context to redis
+    Port 6379: state is open
 

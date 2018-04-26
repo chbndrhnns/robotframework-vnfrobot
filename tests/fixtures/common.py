@@ -1,3 +1,3 @@
-# USE_DEPLOYMENT = 'nervous_kilby'
+# USE_DEPLOYMENT = 'test-2svc'
 # SKIP_UNDEPLOY = True
-DESCRIPTOR = 'dc-test.yml'
+DESCRIPTOR = 'dc-test-2svc.yml'

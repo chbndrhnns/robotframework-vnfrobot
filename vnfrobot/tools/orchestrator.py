@@ -58,10 +58,10 @@ def deploy(instance, descriptor):
     # create new deployment
     instance.deployment_name = namesgenerator.get_random_name()
     try:
-        BuiltIn().log('Deploying {}'.format(instance.descriptor_file), level='INFO', console=True)
+        BuiltIn().log('Deploying {} as {}'.format(instance.descriptor_file, instance.deployment_name), level='INFO', console=True)
         res = instance.docker_controller.deploy_stack(instance.descriptor_file, instance.deployment_name)
         assert res
-        BuiltIn().log('Waiting for deployment...', level='INFO', console=True)
+        BuiltIn().log('Waiting for deployment {}...'.format(instance.deployment_name), level='INFO', console=True)
         instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
         wait_on_services_status(instance.docker_controller._docker, instance.services)
         return True
@@ -70,6 +70,7 @@ def deploy(instance, descriptor):
 
 
 def undeploy(instance):
+    BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO', console=True)
     res = instance.docker_controller.undeploy_stack(instance.deployment_name)
     assert len(res.stderr) == 0
     instance.docker_controller = None

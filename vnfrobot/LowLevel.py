@@ -175,7 +175,7 @@ class LowLevel(DynamicCore):
     @keyword('Deploy ${descriptor:\S+}')
     def deploy_kw(self, descriptor):
         if self.descriptor_file is None:
-            BuiltIn().log('No descriptor file specified. Assuming fake deployment...')
+            BuiltIn().log('No descriptor file specified. Assuming fake deployment...', level='INFO', console=True)
             return
         try:
             orchestrator.deploy(self, descriptor)

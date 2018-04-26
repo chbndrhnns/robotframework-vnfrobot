@@ -27,7 +27,7 @@ class DockerController:
 
         if not self.base_dir:
             self.base_dir = os.getcwd()
-            BuiltIn().log('base_dir not specified. Assuming current working dir: {}')
+            BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG', console=True)
 
     def run_busybox(self):
         try:
@@ -49,7 +49,8 @@ class DockerController:
                 try:
                     target = self.get_containers_for_service(entity)[0]
                 except (docker.errors.NotFound, TypeError):
-                    raise NotFoundError('Could not find entity (service or container) for the provided value of "entity"')
+                    raise NotFoundError(
+                        'Could not find entity (service or container) for the provided value of "entity"')
 
         return self._run_in_container(container=target, command=command)
 
@@ -64,14 +65,21 @@ class DockerController:
         except (docker.errors.APIError, AttributeError) as exc:
             raise SetupError(exc)
 
-    def get_containers_for_service(self, service):
-        if isinstance(service, Service):
-            service = service.name
+    def get_containers_for_service(self, service, state='running'):
+        service = service.name if isinstance(service, Service) else service
+        assert isinstance(service, basestring)
+
         try:
             wait_on_service_replication(self._docker, service)
             wait_on_service_container_status(self._docker, service)
-            return self._docker.containers.list(all=True,
-                                                filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+            res = self._docker.containers.list(all=True,
+                                               filters={
+                                                   'label': 'com.docker.swarm.service.name={}'.format(service),
+                                                   'status': lower(state)
+                                               })
+            # BuiltIn().log('Get containers for services {}: {}'.format(
+            #     service, [c.name for c in res ] if res else 'None'), level='DEBUG', console=True)
+            return res
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
 
@@ -96,7 +104,7 @@ class DockerController:
 
         return c.attrs['Config']['Env']
 
-    def get_service_for_stack(self, service):
+    def get_service(self, service):
         try:
             wait_on_service_replication(self._docker, service)
             return self._docker.services.get(service)
@@ -115,21 +123,28 @@ class DockerController:
             wait_on_service_container_status(self._docker, service)
 
             n = network if isinstance(network, Network) else self.get_network(network)
-            s = service if isinstance(service, Service) else self.get_service_for_stack(service)
+            s = service if isinstance(service, Service) else self.get_service(service)
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
         try:
-            s.update(networks=[n.name])
+            BuiltIn().log('Connecting network {} to service {}...'.format(n.name, s.name), level='DEBUG', console=True)
+            current_instances = frozenset(self.get_containers_for_service(service))
 
-            # wait for the update to take place
-            wait_on_service_replication(self._docker, service)
-            wait_on_service_container_status(self._docker, service)
-            c = self.get_containers_for_service(service)[0]
-            wait_on_container_status(self._docker, c)
+            s.update(networks=[n.name])
+            self._wait_on_service_update(s, current_instances)
             return s
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
+
+    def _wait_on_service_update(self, service, current_instances):
+        BuiltIn().log('Waiting for service to update {}...'.format(service.name), level='DEBUG', console=True)
+
+        # wait for the update to take place
+        wait_on_service_replication(self._docker, service)
+        wait_on_service_container_status(self._docker, service, current_instances)
+        c = self.get_containers_for_service(service)[0]
+        wait_on_container_status(self._docker, c)
 
     def connect_volume_to_service(self, service, volume):
         if not volume:
@@ -142,18 +157,18 @@ class DockerController:
             wait_on_service_container_status(self._docker, service)
 
             v = volume if isinstance(volume, Volume) else self.get_volume(volume)
-            s = service if isinstance(service, Service) else self.get_service_for_stack(service)
+            s = service if isinstance(service, Service) else self.get_service(service)
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
         try:
+            BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
+            current_instances = frozenset(self.get_containers_for_service(service))
+
             s.update(mounts=['{}:/goss:ro'.format(v.name)])
 
-            # wait for the update to take place
-            wait_on_service_replication(self._docker, s)
-            wait_on_service_container_status(self._docker, s)
-            c = self.get_containers_for_service(service)[0]
-            wait_on_container_status(self._docker, c)
+            self._wait_on_service_update(s, current_instances)
+
             return s
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
@@ -322,7 +337,7 @@ class DockerController:
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
         o = project_options + options
-        BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG')
+        BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
 
