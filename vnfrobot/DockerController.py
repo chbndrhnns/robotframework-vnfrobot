@@ -386,6 +386,7 @@ class DockerController:
 
         if deployment_name not in res.stdout.strip('\n\r'):
             raise DeploymentError('Stack {} not found.'.format(deployment_name))
+        return True
 
     def put_file(self, entity, file_to_transfer='', destination='/', filename=None):
         if not os.path.isfile(file_to_transfer):
@@ -428,7 +429,8 @@ class DockerController:
             c = self._docker.containers.get(name) if isinstance(name, basestring) else name
             if hasattr(c, 'status') and lower(c.status) == 'running':
                 c.kill()
-            c.remove()
+            if isinstance(c, Container):
+                c.remove()
         except docker.errors.APIError as exc:
             if 'No such container' in exc.explanation:
                 pass

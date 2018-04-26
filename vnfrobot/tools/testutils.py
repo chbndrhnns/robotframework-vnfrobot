@@ -5,11 +5,7 @@ import operator
 from abc import abstractmethod, ABCMeta
 from string import lower
 
-import ipaddress
 import validators
-from pytest import fail
-from robot.api import logger
-from robot.libraries.BuiltIn import BuiltIn
 
 import exc
 

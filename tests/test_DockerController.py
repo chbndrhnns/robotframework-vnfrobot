@@ -31,9 +31,8 @@ def _cleanup(d, containers):
 
 
 def test__get_stack__fail(controller, stack_infos):
-    res = controller.find_stack(stack_infos[0])
-
-    assert not res
+    with pytest.raises(DeploymentError):
+        res = controller.find_stack(stack_infos[0])
 
 
 def test__get_stack__pass(controller, stack):
@@ -130,8 +129,7 @@ def test__run_sidecar__pass(sidecar):
     name = sidecar.get('name')
 
     res = controller.run_sidecar(name=name, command='ls')
-
-    assert 'bin' in res.stdout
+    assert 'bin' in res
 
 
 def test__run_sidecar__invalid_container__fail(sidecar):
@@ -163,7 +161,7 @@ def test__run_sidecar__goss_volume_ok__pass(sidecar, goss_volume_name):
 
     res = controller.run_sidecar(name=name, volumes=volumes, command='ls /goss')
 
-    assert '' in res.stderr
+    assert '' in res
 
 
 def test__run_sidecar__invalid_network__fail(sidecar):
@@ -180,7 +178,7 @@ def test__run_sidecar__network_ok__pass(sidecar, network):
     assert 'robot' in network.name
 
     res = controller.run_sidecar(name=name, network=network.name, command='ping -W1 -c1 127.0.0.1')
-    assert '0% packet loss' in res.stdout
+    assert '0% packet loss' in res
 
 
 def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, stack, stack_infos, network, service_id):

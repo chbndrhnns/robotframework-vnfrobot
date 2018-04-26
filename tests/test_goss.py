@@ -73,7 +73,7 @@ def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_
     assert isinstance(sidecar, Container)
     controller.put_file(sidecar, gossfile_sidecar)
     res = controller.run_sidecar(sidecar=sidecar)
-    j = json.loads(res.stdout)
+    j = json.loads(res)
     assert j['summary']['failed-count'] == 0
 
 
@@ -115,8 +115,8 @@ def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_go
         sleep(10)
         res = controller.run_sidecar(sidecar=sidecar)
 
-    assert len(res.stdout) > 0
-    j = json.loads(res.stdout)
+    assert len(res) > 0
+    j = json.loads(res)
     assert j['summary']['failed-count'] == 0
 
 
