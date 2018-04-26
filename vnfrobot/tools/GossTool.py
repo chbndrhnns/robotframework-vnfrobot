@@ -1,9 +1,12 @@
 import json
 from abc import ABCMeta, abstractmethod
 
+from docker.models.containers import Container
+
 from DockerController import DockerController
 from exc import DeploymentError, TestToolError, NotFoundError
 from tools.data_structures import SUT
+
 
 class TestTool:
     __metaclass__ = ABCMeta
@@ -11,7 +14,7 @@ class TestTool:
     def __init__(self, controller, context, sut):
         self.command = None
         self.controller = controller if isinstance(controller, DockerController) else None
-        self.sut = sut if isinstance(sut, SUT) else None
+        self.sut = sut
         self.context = context if context else 'service'
         self.created_entities = []
 
@@ -21,11 +24,13 @@ class TestTool:
 
 
 class GossTool(TestTool):
+    # TODO remove context from signature
     def __init__(self, controller=None, sut=None, gossfile='/goss.yaml', context='service'):
         TestTool.__init__(self, controller, context, sut)
 
         self.gossfile = gossfile
-        self.command = '/goss/goss-linux-amd64 --gossfile /{} validate --format json'.format(self.gossfile)
+        self.command = '/goss/goss-linux-amd64 --gossfile {} validate --format json'.format(self.gossfile)
+        # TODO remove sidecar here
         self.sidecar = None
 
     def run(self):

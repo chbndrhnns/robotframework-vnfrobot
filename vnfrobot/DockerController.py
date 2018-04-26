@@ -1,6 +1,8 @@
 from string import lower
 
 import os
+from time import sleep
+
 from docker import errors
 import docker
 from docker.models.containers import Container
@@ -15,7 +17,7 @@ from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
 from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status, \
-    start_process, wait_on_process, ProcessResult, wait_on_container_created
+    start_process, wait_on_process, ProcessResult
 
 
 class DockerController:
@@ -51,7 +53,7 @@ class DockerController:
                 except (docker.errors.NotFound, TypeError):
                     raise NotFoundError(
                         'Could not find entity (service or container) for the provided value of "entity"')
-
+        BuiltIn().log('Running command {} in container {}'.format(command, entity), level='DEBUG', console=True)
         return self._run_in_container(container=target, command=command)
 
     def _run_in_container(self, container=None, command=None):
@@ -297,26 +299,27 @@ class DockerController:
 
         return res
 
-    def get_or_create_sidecar(self, image, command, name, volumes=None, networks=None):
+    def get_or_create_sidecar(self, image='busybox', command='true', name='', volumes=None, network=None):
         # try to get an existing sidecar
-        try:
-            c = self._docker.containers.get(name)
-            if isinstance(c, Container):
-                logger.console('Found container {}. Re-using it as sidecar.'.format(name))
-                return c
-        except docker.errors.NotFound:
-            pass
+        if name:
+            try:
+                c = self._docker.containers.get(name)
+                if isinstance(c, Container):
+                    logger.console('Found container {}. Re-using it as sidecar.'.format(name))
+                    return c
+            except docker.errors.NotFound:
+                pass
 
         try:
             self.get_or_pull_image(image)
             logger.console('Creating sidecar container: name={}, image={}, command={}, volumes={}, networks={}'.format(
-                name, image, command, volumes, networks))
+                name, image, command, volumes, network))
             return self._docker.containers.create(name=name if name else None,
                                                   image=image,
                                                   command=command,
                                                   auto_remove=False,
                                                   volumes=volumes,
-                                                  network=networks,
+                                                  network=network,
                                                   tty=True)
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
@@ -325,6 +328,8 @@ class DockerController:
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
             raise DeploymentError('Error: {}'.format(exc))
+        except Exception as exc:
+            raise exc
 
     def get_or_pull_image(self, image):
         try:
@@ -342,7 +347,7 @@ class DockerController:
         try:
             if not sidecar:
                 sidecar = self.get_or_create_sidecar(image, command, name, volumes, network)
-            wait_on_container_created(self._docker, sidecar)
+            wait_on_container_status(self._docker, sidecar, 'Created')
             sidecar.start()
             sidecar.wait()
             stdout = sidecar.logs(stdout=True, stderr=False)
@@ -352,13 +357,13 @@ class DockerController:
 
             if stderr:
                 raise DeploymentError('Found stderr: {}'.format(stderr))
+        except docker.errors.NotFound as exc:
+            raise DeploymentError('Sidecar {} not found.'.format(sidecar if sidecar else 'None'))
         except docker.errors.APIError as exc:
             if 'executable file not found' in exc.explanation:
                 raise DeploymentError('Could not run command: {}'.format(exc))
             else:
                 raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
-        except docker.errors.ImageNotFound as exc:
-            raise DeploymentError('Invalid image name: {}'.format(exc))
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
             raise DeploymentError('Error: {}'.format(exc))

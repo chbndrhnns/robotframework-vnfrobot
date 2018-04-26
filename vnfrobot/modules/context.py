@@ -58,7 +58,7 @@ def _prepare_network_context( controller, service_id):
         command='',
         name=_generate_sidecar_name(service_id),
         volumes='',
-        networks=''
+        network=''
     )
 
     return network.name

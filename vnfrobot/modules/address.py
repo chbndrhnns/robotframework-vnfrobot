@@ -1,6 +1,12 @@
+import tempfile
+
+from docker.models.containers import Container
+from jinja2 import TemplateError
+
 from modules.ValidationTarget import ValidationTarget
-from exc import NotFoundError, ValidationError, SetupError
+from exc import NotFoundError, ValidationError, SetupError, DeploymentError
 from tools.GossTool import GossTool
+from tools.data_structures import SUT
 from tools.goss.GossAddr import GossAddr
 from tools.testutils import Url, validate_context, validate_matcher, validate_value, get_truth, boolean_matchers, \
     validate_entity, Domain
@@ -61,28 +67,49 @@ class Address(ValidationTarget):
         self.validate()
         self.transform()
 
-        try:
-            g = GossTool(self.instance.docker_controller, self.instance.sut)
-        except Exception as exc:
-            raise
+        # create gossfile on target container
+        with tempfile.NamedTemporaryFile() as f:
+            try:
+                f.write(self.transformed_data)
+                f.seek(0)
 
-        try:
-            env = self.instance.docker_controller.get_env(self.instance.sut.service_id)
-            self.test_result = [e.split('=')[1] for e in env if self.entity == e.split('=')[0]]
-        except NotFoundError:
-            raise
+                # create sidecar
+                network_name = self.instance.sut.target
+                volumes = {
+                    self.instance.test_volume: {
+                        'bind': '/goss',
+                        'mode': 'ro'
+                    }
+                }
+                sidecar = self.instance.docker_controller.get_or_create_sidecar(
+                    name='robot_sidecar_for_{}'.format(self.instance.deployment_name),
+                    command=GossTool(controller=self.instance.docker_controller).command,
+                    network=network_name,
+                    volumes=volumes)
+                assert network_name in sidecar.attrs['NetworkSettings']['Networks'].keys()
+
+                self.instance.docker_controller.put_file(entity=sidecar, file_to_transfer=f.name,
+                                                         filename='goss.yaml')
+
+                self.test_result = self.instance.docker_controller.run_sidecar(sidecar=sidecar)
+            except (TypeError, ValueError) as exc:
+                raise ValidationError('ValidationError: {}'.format(exc))
+            except DeploymentError as exc:
+                raise DeploymentError('Could not run test tool on {}'.format(self.instance.sut))
 
         self.evaluate_results()
 
     def evaluate_results(self):
-        if not self.test_result:
-            raise ValidationError('No variable {} found.'.format(self.entity))
+        return False
 
-        if not get_truth(self.test_result[0], boolean_matchers[self.matcher], self.value):
-            raise ValidationError(
-                'Variable {}: {} {}, actual: {}'.format(
-                    self.entity,
-                    self.matcher,
-                    self.value,
-                    self.test_result[0])
-            )
+        # if not self.test_result:
+        #     raise ValidationError('No variable {} found.'.format(self.entity))
+        #
+        # if not get_truth(self.test_result[0], boolean_matchers[self.matcher], self.value):
+        #     raise ValidationError(
+        #         'Variable {}: {} {}, actual: {}'.format(
+        #             self.entity,
+        #             self.matcher,
+        #             self.value,
+        #             self.test_result[0])
+        #     )

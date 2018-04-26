@@ -66,7 +66,7 @@ def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_
     sidecar = controller.get_or_create_sidecar(
         image=sidecar.get('image'),
         command=g.command,
-        networks=network.name,
+        network=network.name,
         volumes=volumes,
         name=sidecar_name
     )
@@ -101,7 +101,7 @@ def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_go
     sidecar = controller.get_or_create_sidecar(
         image=sidecar.get('image'),
         command=g.command,
-        networks=network.name,
+        network=network.name,
         volumes=volumes,
         name=sidecar_name
     )

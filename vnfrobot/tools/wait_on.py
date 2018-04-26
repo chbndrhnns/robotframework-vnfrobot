@@ -53,30 +53,6 @@ def wait_on_service_replication(client, service):
     return wait_on_condition(condition)
 
 
-def wait_on_container_created(client, container):
-    """
-    Wait until a container is in the created state.
-
-    Args:
-        client: Docker client
-        container: container name to search for
-
-    Returns:
-
-    """
-
-    def condition():
-        res = container if isinstance(container, Container) else client.containers.get(container)
-        if res:
-            return res.attrs['State']['Status'] == 'created'
-        return False
-
-    container = container.name if isinstance(container, Container) else container
-    # logger.console('Waiting for {}...'.format(container))
-    assert isinstance(client, docker.DockerClient)
-    return wait_on_condition(condition)
-
-
 def wait_on_container_status(client, container, status='Running'):
     """
     Wait until a container is in the desired state.
@@ -93,11 +69,14 @@ def wait_on_container_status(client, container, status='Running'):
     def condition():
         res = container if isinstance(container, Container) else client.containers.get(container)
         if res:
-            return res.attrs['State'][status] == True
+            if 'Running' in status:
+                return res.attrs['State'][status]
+            if 'Created' in status:
+                return res.attrs['State']['Status'] == 'created'
         return False
 
     container = container.name if isinstance(container, Container) else container
-    # logger.console('Waiting for {}...'.format(container))
+    # logger.console('Waiting for {} to be {}...'.format(container, status))
     assert isinstance(client, docker.DockerClient)
     return wait_on_condition(condition)
 
