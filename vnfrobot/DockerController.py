@@ -259,18 +259,8 @@ class DockerController:
         except docker.errors.NotFound:
             pass
 
-        # retrieve image
         try:
-            self._docker.images.get(image)
-        except docker.errors.ImageNotFound:
-            try:
-                logger.console(
-                    'Fetching sidecar image...')
-                self._docker.images.pull(image)
-            except docker.errors.ImageNotFound as exc:
-                raise DeploymentError('Image {} not found: {}'.format(image, exc))
-
-        try:
+            self.get_or_pull_image(image)
             logger.console('Creating sidecar container: name={}, image={}, command={}, volumes={}, networks={}'.format(
                 name, image, command, volumes, networks))
             return self._docker.containers.create(name=name if name else None,
@@ -282,11 +272,22 @@ class DockerController:
                                                   tty=True)
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
-        except docker.errors.ImageNotFound as exc:
-            raise DeploymentError('Invalid image name: {}'.format(exc))
+        except NotFoundError as exc:
+            raise DeploymentError('Image {} not found: {}'.format(image if image else '', exc))
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
             raise DeploymentError('Error: {}'.format(exc))
+
+    def get_or_pull_image(self, image):
+        try:
+            self._docker.images.get(image)
+        except docker.errors.ImageNotFound:
+            try:
+                logger.console(
+                    'Fetching sidecar image...')
+                self._docker.images.pull(image)
+            except docker.errors.ImageNotFound as exc:
+                raise NotFoundError('Image {} not found: {}'.format(image, exc))
 
     def run_sidecar(self, name='', sidecar=None, image='busybox', command='true', volumes=None, network=None):
         stdout, stderr = '', ''
