@@ -1,6 +1,9 @@
+import json
+
 import pytest
 from exc import ValidationError, SetupError
 from LowLevel import SUT
+from fixtures.test_data_GossAddress import goss_results
 
 
 def test__context__invalid__fail(address_with_instance):
@@ -61,11 +64,13 @@ def test__validate__fail(address_with_instance, sut):
             e.validate()
 
 
-def test__evaluate__pass(address_with_instance, sut):
+@pytest.mark.parametrize('data, goss_json', goss_results)
+def test__evaluate__pass(address_with_instance, sut, data, goss_json):
     e = address_with_instance
     e.instance.sut = sut
+    e.test_result = json.loads(goss_json)
 
-    e.evaluate()
+    e.evaluate_results()
 
 
 def test__run__network_context__pass(address_with_instance, stack, network, volume_with_goss):

@@ -1,11 +1,12 @@
 import logging
-from mock import patch
+from mock import patch, Mock, MagicMock
 
 from unittest2 import TestCase
 
 from robot.api import TestSuite
 from robot.running import Keyword
 
+from DockerController import DockerController
 from tools.testutils import run_keyword_tests, Result
 
 
@@ -30,7 +31,9 @@ class LowLevelTest(TestCase):
             Keyword(name=u'Set service context to node_1'),
         ]
 
-        run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
+        with patch('LowLevel.docker_controller') as mock_controller:
+            mock_controller = MagicMock(DockerController)
+            run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
 
     def test__set_context__wrong_context_type__fail(self):
         test = self.suite.tests.create(name=u'Test context')

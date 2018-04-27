@@ -80,12 +80,10 @@ addresses_test_data = [
 # Structure
 # (
 # {<data that can be given to the GossEntity>},
-# {<data that comes back from the GossEntity>},
-# {<gossfile that is used to validate>},
 # {<return value from goss>}
 # )
 ###
-addresses_test_data_fail = [
+goss_results = [
     (
         {
             'data': {
@@ -99,26 +97,7 @@ addresses_test_data_fail = [
                 ],
             },
         },
-        {
-            'with_mappings': {
-                'addresses': [
-                    {
-                        'port': 80,
-                        'protocol': 'tcp',
-                        'address': 'www.google.com',
-                        'reachable': True
-                    }
-                ],
-            },
-        },
-        {
-            'expected_yaml': """addr:
-                  tcp://www.google.com:80:
-                    reachable: true
-                    timeout: 1000 
-                """
-        },
-        """{
+        r"""{
             "results": [
                 {
                     "duration": 26609600,
@@ -127,23 +106,23 @@ addresses_test_data_fail = [
                         "true"
                     ],
                     "found": [
-                        "false"
+                        "true"
                     ],
-                    "human": "Expected\n    <bool>: false\nto equal\n    <bool>: true",
+                    
                     "meta": null,
                     "property": "reachable",
-                    "resource-id": "tcp://www.google.cdom:80",
+                    "resource-id": "tcp://www.google.com:80",
                     "resource-type": "Addr",
-                    "result": 1,
-                    "successful": false,
-                    "summary-line": "Addr: tcp://www.google.cdom:80: reachable:\nExpected\n    <bool>: false\nto equal\n    <bool>: true",
+                    "result": 0,
+                    "successful": true,
+                    "summary-line": "Addr: tcp://www.google.cdom:80: reachable:\nExpected\n    <bool>: true\nto equal\n    <bool>: true",
                     "test-type": 0,
                     "title": ""
                 }
             ],
             "summary": {
-                "failed-count": 1,
-                "summary-line": "Count: 1, Failed: 1, Duration: 0.027s",
+                "failed-count": 0,
+                "summary-line": "Count: 1, Failed: 0, Duration: 0.027s",
                 "test-count": 1,
                 "total-duration": 27076200
             }

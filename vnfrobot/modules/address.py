@@ -1,8 +1,6 @@
 import json
 import tempfile
 
-from docker.models.containers import Container
-from jinja2 import TemplateError
 from robot.libraries.BuiltIn import BuiltIn
 
 from modules.ValidationTarget import ValidationTarget
