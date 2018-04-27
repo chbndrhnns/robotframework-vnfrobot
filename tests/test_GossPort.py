@@ -5,8 +5,8 @@ from fixtures.test_data_GossPort import ports_test_data
 from tools.goss.GossPort import GossPort
 
 
-@pytest.mark.parametrize('data, mapped, out', ports_test_data)
-def test__GossPort__transform__pass(data, mapped, out):
+@pytest.mark.parametrize('inp, data, mapped, out', ports_test_data)
+def test__GossPort__transform__pass(inp, data, mapped, out):
     g = GossPort(data.get('data'))
 
     g.transform()
@@ -17,8 +17,8 @@ def test__GossPort__transform__pass(data, mapped, out):
     assert actual == expected
 
 
-@pytest.mark.parametrize('data, expected, yaml', ports_test_data)
-def test__GossPort__apply_mappings__pass(data, expected, yaml):
+@pytest.mark.parametrize('inp, data, expected, yaml', ports_test_data)
+def test__GossPort__apply_mappings__pass(inp, data, expected, yaml):
     g = GossPort(data.get('data'))
 
     g.apply_mappings()

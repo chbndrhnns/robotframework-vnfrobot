@@ -1,5 +1,7 @@
 from jinja2 import Environment
 from robot.libraries.BuiltIn import BuiltIn
+
+from exc import TransformationError
 from tools.goss.GossEntity import GossEntity
 
 
@@ -27,6 +29,13 @@ class GossPort(GossEntity):
         },
         'ip': {}
     }
+    matcher_mappings = {
+        'listening': {
+            'is': None,
+            'is not': None
+        },
+        'ip': {}
+    }
 
     def __init__(self, data):
         GossEntity.__init__(self, data)
@@ -45,7 +54,10 @@ class GossPort(GossEntity):
         assert isinstance(entities, list), 'entities is no list'
 
         for entity in entities:
-            self._map(entity, self.key_mappings, self.type_mappings, self.value_mappings)
+            try:
+                self._map(entity, self.key_mappings, self.type_mappings, self.value_mappings, self.matcher_mappings)
+            except (AttributeError, TypeError, ValueError) as exc:
+                raise TransformationError('apply_mappings: {}'.format(exc))
 
         return self.mapped
 

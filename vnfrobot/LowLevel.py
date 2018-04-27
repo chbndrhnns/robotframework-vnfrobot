@@ -166,7 +166,8 @@ class LowLevel(DynamicCore):
         except (DataFormatError, ValidationError) as exc:
             BuiltIn().fail(exc)
 
-    @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:\S+}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
+    @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
+        '|'.join(Port.properties.keys()),
         '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
         try:

@@ -1,13 +1,28 @@
+
+###
+# Structure
+# (
+# {<data that comes from the robot test file>},
+# {<data that can be given to the GossEntity>},
+# {<data that comes back from the GossEntity>},
+# {<gossfile that is used to validate>}
+# )
+###
 ports_test_data = [
     (
+        {
+            'input': ['80', 'state', 'is', 'open']
+        },
         {
             'data': {
                 'ports': [
                     {
                         'port': 80,
                         'protocol': 'tcp',
-                        'state': 'open',
-                        'listening address': []
+                        'state': {
+                            'matcher': 'is',
+                            'value': 'open',
+                        }
                     }
                 ],
             },
@@ -19,7 +34,6 @@ ports_test_data = [
                         'port': 80,
                         'protocol': 'tcp',
                         'listening': True,
-                        'ip': [ ]
                     }
                 ],
             },
@@ -33,13 +47,22 @@ ports_test_data = [
     ),
     (
         {
+            'input': ['1234/udp', 'listening address', 'is', '127.0.0.1']
+        },
+        {
             'data': {
                 'ports': [
                     {
                         'port': 12345,
                         'protocol': 'udp',
-                        'state': 'open',
-                        'listening address': '127.0.0.1'
+                        'state': {
+                            'matcher': 'is',
+                            'value': 'open',
+                        },
+                        'listening address': {
+                            'matcher': 'is',
+                            'value': '127.0.0.1',
+                        }
                     }
                 ],
             },
@@ -51,7 +74,7 @@ ports_test_data = [
                         'port': 12345,
                         'protocol': 'udp',
                         'listening': True,
-                        'ip': ['127.0.0.1']
+                        'ip': [ '127.0.0.1']
                     }
                 ],
             },
@@ -65,38 +88,54 @@ ports_test_data = [
                 """
         }
     ),
-    ({
-         'data': {
-             'ports': [
-                 {
-                     'port': 8080,
-                     'state': 'open',
-                     'listening address': '127.0.0.1'
-                 }
-             ],
-         },
-     },
-     {
-         'with_mappings': {
-             'ports': [
-                 {
-                     'port': 8080,
-                     'listening': True,
-                     'ip': ['127.0.0.1']
-                 }
-             ],
-         },
-     }, {
-         'expected_yaml': u'port:\n\n  tcp:8080:\n    listening: True\n    ip: \n    - 127.0.0.1\n    \n'
-     }
+    (
+        {
+            'input': ['8080/tcp', 'listening address', 'contains', '127.0.0.1']
+        },
+        {
+            'data': {
+                'ports': [
+                    {
+                        'port': 8080,
+                        'state': {
+                            'matcher': 'is',
+                            'value': 'open'
+                        },
+                        'listening address': {
+                            'matcher': 'is',
+                            'value': '127.0.0.1'
+                        }
+                    }
+                ],
+            },
+        },
+        {
+            'with_mappings': {
+                'ports': [
+                    {
+                        'port': 8080,
+                        'listening': True,
+                        'ip': ['127.0.0.1']
+                    }
+                ],
+            },
+        }, {
+            'expected_yaml': u'port:\n\n  tcp:8080:\n    listening: True\n    ip: \n    - 127.0.0.1\n    \n'
+        }
     ),
     (
+        {
+            'input': ['8081', 'state', 'is', 'closed']
+        },
         {
             'data': {
                 'ports': [
                     {
                         'port': 8081,
-                        'state': 'closed',
+                        'state': {
+                            'matcher': 'is',
+                            'value': 'closed'
+                        },
                     }
                 ],
             },
