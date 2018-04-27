@@ -9,7 +9,7 @@ Check port 6379 is open
     Port 6379: state is open
 
 Check port 6379 is listening on localhost
-    Port 6379: listening address is 127.0.0.1
+    Port 6379: listening address is 0.0.0.0
 
 Check port 6381 is closed
     Port 6380: state is closed

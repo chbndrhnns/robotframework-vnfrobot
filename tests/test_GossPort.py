@@ -1,7 +1,7 @@
 import pytest
 from ruamel import yaml
 
-from fixtures.test_data_GossPort import ports_test_data
+from fixtures.test_data_Port import ports_test_data
 from tools.goss.GossPort import GossPort
 
 
@@ -9,7 +9,7 @@ from tools.goss.GossPort import GossPort
 def test__GossPort__transform__pass(inp, data, mapped, out):
     g = GossPort(data.get('data'))
 
-    g.transform()
+    g.transform(g)
 
     expected = yaml.safe_load(out.get('expected_yaml'))
     actual = yaml.safe_load(g.out)
@@ -21,7 +21,7 @@ def test__GossPort__transform__pass(inp, data, mapped, out):
 def test__GossPort__apply_mappings__pass(inp, data, expected, yaml):
     g = GossPort(data.get('data'))
 
-    g.apply_mappings()
+    g.apply_mappings(g)
 
     expected = expected.get('with_mappings')
     actual = g.mapped

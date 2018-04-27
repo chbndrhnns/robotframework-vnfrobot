@@ -156,7 +156,7 @@ class DockerController:
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not update service {}: {}'.format(service.name, exc))
 
-    def _wait_on_service_update(self, service, current_instances):
+    def _wait_on_service_update(self, service, current_instances=None):
         """
         After a service is updated, we wait for at least one new container instance with the updated configuration to be
         available.
@@ -169,7 +169,8 @@ class DockerController:
             Container: Container instance with the updated configuration
 
         """
-        BuiltIn().log('Waiting for service to update {}...'.format(service.name), level='DEBUG', console=True)
+        service = service if isinstance(service, Service) else self.get_service(service)
+        BuiltIn().log('Waiting for service to update {}...'.format(service.name if isinstance(service, Service) else ''), level='DEBUG', console=True)
 
         # wait for the update to take place
         wait_on_service_replication(self._docker, service)
@@ -231,7 +232,7 @@ class DockerController:
                 scope='swarm' if driver == 'overlay' else 'local',
                 attachable=True)
         except docker.errors.APIError as exc:
-            if 'already exists' in exc:
+            if 'already exists' in exc.explanation:
                 return self._docker.networks.get(name)
             else:
                 raise

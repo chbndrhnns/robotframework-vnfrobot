@@ -9,7 +9,7 @@ from pytest import fixture
 from tools import namesgenerator
 from tools.data_structures import SUT
 from tools import orchestrator
-from tools.wait_on import wait_on_services_status
+from tools.wait_on import wait_on_services_status, wait_on_service_replication
 from . import path
 
 from DockerController import DockerController

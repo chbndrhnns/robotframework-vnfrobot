@@ -1,4 +1,3 @@
-
 ###
 # Structure
 # (
@@ -10,13 +9,19 @@
 addresses_test_data = [
     (
         {
+            'test': ["www.google.com", "is", "reachable"]
+        },
+        {
             'data': {
                 'addresses': [
                     {
                         'port': 80,
                         'protocol': 'tcp',
                         'address': 'www.google.com',
-                        'state': 'is reachable'
+                        'state': {
+                            'matcher': 'is',
+                            'value': 'reachable'
+                        }
                     }
                 ],
             },
@@ -37,19 +42,25 @@ addresses_test_data = [
             'expected_yaml': """addr:
                   tcp://www.google.com:80:
                     reachable: true
-                    timeout: 1000 
+                    timeout: 1000
                 """
         }
     ),
     (
         {
+            'test': ["www.google.co.uk:8081", "is not", "reachable"],
+        },
+        {
             'data': {
                 'addresses': [
                     {
                         'port': 8081,
-                        'protocol': 'udp',
+                        'protocol': 'tcp',
                         'address': 'www.google.co.uk',
-                        'state': 'is not reachable'
+                        'state': {
+                            'matcher': 'is not',
+                            'value': 'is not reachable'
+                        }
                     }
                 ],
             },
@@ -59,7 +70,7 @@ addresses_test_data = [
                 'addresses': [
                     {
                         'port': 8081,
-                        'protocol': 'udp',
+                        'protocol': 'tcp',
                         'address': 'www.google.co.uk',
                         'reachable': False
                     }
@@ -68,9 +79,9 @@ addresses_test_data = [
         },
         {
             'expected_yaml': """addr:
-                  udp://www.google.co.uk:8081:
+                  tcp://www.google.co.uk:8081:
                     reachable: false
-                    timeout: 1000 
+                    timeout: 1000
                 """
         }
     ),
@@ -85,19 +96,8 @@ addresses_test_data = [
 ###
 goss_results = [
     (
-        {
-            'data': {
-                'addresses': [
-                    {
-                        'port': 80,
-                        'protocol': 'tcp',
-                        'address': 'www.google.com',
-                        'state': 'is reachable'
-                    }
-                ],
-            },
-        },
-        r"""{
+       ["www.google.com", "is", "reachable"],
+       r"""{
             "results": [
                 {
                     "duration": 26609600,

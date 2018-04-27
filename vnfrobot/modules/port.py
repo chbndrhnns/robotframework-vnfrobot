@@ -1,12 +1,11 @@
-import json
 import tempfile
 
 from docker.models.containers import Container
 from jinja2 import TemplateError
-from robot.libraries.BuiltIn import BuiltIn
 
 from modules.ValidationTarget import ValidationTarget
 from exc import ValidationError, DeploymentError
+from tools import testutils
 from tools.testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, \
     validate_matcher
 from tools.GossTool import GossTool
@@ -60,8 +59,8 @@ class Port(ValidationTarget):
                     'matcher': 'is',
                     'value': 'open',
                 }})
-
-        self.transformed_data = GossPort(self.data).transform()
+        g = GossPort(self.data)
+        self.transformed_data = g.transform(g)
 
     def run_test(self):
         self.validate()
@@ -92,22 +91,7 @@ class Port(ValidationTarget):
             except DeploymentError as exc:
                 raise DeploymentError('Could not run test tool on {}'.format(self.instance.sut))
 
-        self.evaluate_results()
-
-    def evaluate_results(self):
-        assert isinstance(self.test_result['summary']['failed-count'], int)
-
-        actual_value = self.test_result['results'][0]['found']
-        if self.test_result['summary']['failed-count'] > 0:
-            BuiltIn().log_to_console(json.dumps(self.test_result, indent=4, sort_keys=True))
-            raise ValidationError(
-                'Port {}: {} {} {}, actual: {}'.format(
-                    self.entity,
-                    self.property,
-                    self.matcher,
-                    self.value,
-                    actual_value)
-            )
+        testutils.evaluate_results(self)
 #
 #
 # class Matcher(Enum):

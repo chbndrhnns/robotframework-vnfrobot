@@ -1,50 +1,59 @@
 import copy
 from abc import ABCMeta, abstractmethod
 
+from jinja2 import Environment
+from robot.libraries.BuiltIn import BuiltIn
+
 from exc import TransformationError
 
 
-class GossEntity():
-    """
-        contract:
-
-        data = { 'ports': [
-                            {
-                            'port': 12345,
-                            'state': 'open',
-                            'listening address': '127.0.0.1'
-                            }
-                        ]
-                }
-    """
+class GossEntity:
     __metaclass__ = ABCMeta
+
+    template = "__not_for_use__"
+    key_mappings = {}
+    type_mappings = {}
+    value_mappings = {}
+    matcher_mappings = {}
 
     def __init__(self, data):
         self.inp = data
         self.mapped = copy.deepcopy(data)
         self.out = None
 
-    @abstractmethod
-    def transform(self):
+    def transform(self, entity):
         """
-        transform the test data into the yaml format that is understood by goss.
+        Transform the test data into the yaml format that is understood by goss.
 
         Returns: dict - with mappings applied
 
         """
-        pass
+        self.apply_mappings(entity)
 
-    @abstractmethod
-    def apply_mappings(self):
+        self.out = Environment().from_string(entity.template).render(self.mapped)
+        BuiltIn().log_to_console('\n{}'.format(self.out))
+
+        return self.out
+
+    def apply_mappings(self, goss_entity):
         """
-        apply_mappings applies test-tool specific changes to the input data by iterating over
+        Apply test-tool specific changes to the input data by iterating over
         properties and values to replace matches.
 
         Returns: dict - with mappings applied
 
         """
+        entities = self.mapped.get(goss_entity.name)
+        assert isinstance(entities, list), 'entities is no list'
 
-        pass
+        for entity in entities:
+            try:
+                self._map(entity, goss_entity.key_mappings, goss_entity.type_mappings, goss_entity.value_mappings,
+                          goss_entity.matcher_mappings)
+            except (AttributeError, TypeError, ValueError) as exc:
+                raise TransformationError('apply_mappings: {}'.format(exc))
+
+        return self.mapped
 
     def _map(self, entity, key_mappings=None, type_mappings=None, value_mappings=None, matcher_mappings=None):
         key_mappings = key_mappings if key_mappings else {}
@@ -85,19 +94,20 @@ class GossEntity():
 
     @staticmethod
     def _create_new_values(entity, matcher_mappings, new_key, old_key, value_mappings):
-        # get matcher mapping
         matcher_mapping = matcher_mappings.get(new_key, {})
         old_matcher = entity.get(old_key, {}).get('matcher', None)
         new_matcher = matcher_mapping.get(old_matcher, None)
-        # replace old value with new value
+        # replace old value with new value if a mapping exists
         if value_mappings.get(new_key, {}):
             if isinstance(entity[new_key], list):
                 entity[new_key].append(value_mappings.get(new_key, {}).get(entity, None))
             else:
                 old_val = entity.get(new_key, {}).get('value', None)
 
-                if not new_matcher:
+                if new_matcher is None:
                     entity[new_key] = value_mappings.get(new_key, {}).get(old_val)
+                elif isinstance(new_matcher, bool):
+                    entity[new_key] = new_matcher
         # use old value
         else:
             if isinstance(entity[new_key], list) and len(entity[old_key]) > 0:

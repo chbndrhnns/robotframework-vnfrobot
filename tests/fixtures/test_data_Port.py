@@ -1,4 +1,3 @@
-
 ###
 # Structure
 # (
@@ -8,10 +7,28 @@
 # {<gossfile that is used to validate>}
 # )
 ###
+
+port_target_test_data_pass = [
+    (['6379/TCP', 'state', 'is', 'open']),
+    (['6379/udp', 'state', 'is', 'open']),
+    (['8080', 'state', 'is', 'open']),
+    (['8080', 'listening address', 'is', '::']),
+    (['8080', 'listening address', 'is', '127.0.0.1']),
+]
+
+port_target_test_data_fail = [
+
+    (['66000', 'state', 'is', 'open']),
+    (['6379/ABC', 'state', 'is', 'open']),
+    (['6379', 'listeningaddress', 'is', '127.0.0.1']),
+    (['6379', 'listening_address', 'is', 'open']),
+
+]
+
 ports_test_data = [
     (
         {
-            'input': ['80', 'state', 'is', 'open']
+            'test': ['80', 'state', 'is', 'open']
         },
         {
             'data': {
@@ -47,7 +64,7 @@ ports_test_data = [
     ),
     (
         {
-            'input': ['1234/udp', 'listening address', 'is', '127.0.0.1']
+            'test': ['12345/udp', 'listening address', 'is', '127.0.0.1']
         },
         {
             'data': {
@@ -74,7 +91,7 @@ ports_test_data = [
                         'port': 12345,
                         'protocol': 'udp',
                         'listening': True,
-                        'ip': [ '127.0.0.1']
+                        'ip': ['127.0.0.1']
                     }
                 ],
             },
@@ -90,7 +107,7 @@ ports_test_data = [
     ),
     (
         {
-            'input': ['8080/tcp', 'listening address', 'contains', '127.0.0.1']
+            'test': ['8080/tcp', 'listening address', 'contains', '127.0.0.1']
         },
         {
             'data': {
@@ -125,7 +142,7 @@ ports_test_data = [
     ),
     (
         {
-            'input': ['8081', 'state', 'is', 'closed']
+            'test': ['8081', 'state', 'is', 'closed']
         },
         {
             'data': {

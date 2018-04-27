@@ -5,26 +5,29 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from modules.ValidationTarget import ValidationTarget
 from exc import ValidationError, SetupError, DeploymentError
+from tools import testutils
 from tools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
-from tools.testutils import validate_context, validate_matcher, validate_value, get_truth, boolean_matchers, \
-    validate_entity, Domain
+from tools.testutils import validate_context, validate_matcher, validate_value, validate_entity, Domain
 
 
 class Address(ValidationTarget):
-    def __init__(self, instance=None):
-        super(Address, self).__init__(instance)
-        self.valid_contexts = ['service', 'network']
-        self.properties = {
-            'entity': {
-                'matchers': ['is', 'is not'],
-                'values': ['reachable']
-            }
+    properties = {
+        'entity': {
+            'matchers': ['is', 'is not'],
+            'values': ['reachable']
         }
+    }
+
+    def __init__(self, instance=None):
+        super(Address, self).__init__()
+        self.valid_contexts = ['service', 'network']
+
         self.entity_matcher = Domain
         self.transformed_data = {}
         self.port = None
         self.address = None
+        self.instance = instance
 
     def validate(self):
         self.property = self.entity if not self.property else self.property
@@ -34,8 +37,8 @@ class Address(ValidationTarget):
             self._check_data()
             validate_context(self.valid_contexts, self.instance.sut.target_type)
             validate_entity(self.entity, self.entity_matcher)
-            validate_matcher([self.matcher], limit_to=self.properties.get('entity', {}).get('matchers', []))
-            validate_value(self.properties, 'entity', self.value)
+            validate_matcher([self.matcher], limit_to=Address.properties.get('entity', {}).get('matchers', []))
+            validate_value(Address.properties, 'entity', self.value)
         except (SetupError, ValidationError) as exc:
             raise
 
@@ -56,11 +59,15 @@ class Address(ValidationTarget):
                     'port': self.port,
                     'protocol': 'tcp',
                     'address': self.address,
-                    'state': '{} {}'.format(self.matcher, self.value),
+                    'state': {
+                        'matcher': self.matcher,
+                        'value': self.value
+                    },
                 }
             ]
         }
-        self.transformed_data = GossAddr(data).transform()
+        entity = GossAddr(data)
+        self.transformed_data = entity.transform(entity)
 
     def run_test(self):
         self.validate()
@@ -97,18 +104,4 @@ class Address(ValidationTarget):
             except DeploymentError as exc:
                 raise DeploymentError('Could not run test tool on {}'.format(self.instance.sut))
 
-        self.evaluate_results()
-
-    def evaluate_results(self):
-        assert isinstance(self.test_result['summary']['failed-count'], int)
-
-        actual_value = self.test_result['results'][0]['found']
-        if self.test_result['summary']['failed-count'] > 0:
-            BuiltIn().log_to_console(json.dumps(self.test_result, indent=4, sort_keys=True))
-            raise ValidationError(
-                'Address {}: {} {}, actual: {}'.format(
-                    self.entity,
-                    self.matcher,
-                    self.value,
-                    actual_value)
-            )
+        testutils.evaluate_results(self)

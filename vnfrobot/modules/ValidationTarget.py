@@ -63,10 +63,6 @@ class ValidationTarget():
     def run_test(self):
         pass
 
-    @abstractmethod
-    def evaluate_results(self):
-        pass
-
     def _check_instance(self):
         if not self.instance:
             raise SetupError('No robot instance found.')

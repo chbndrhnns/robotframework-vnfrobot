@@ -1,4 +1,6 @@
 import logging
+
+import pytest
 from mock import patch, Mock, MagicMock
 
 from unittest2 import TestCase
@@ -10,6 +12,7 @@ from DockerController import DockerController
 from tools.testutils import run_keyword_tests, Result
 
 
+@pytest.mark.skip(reason="Legacy")
 class LowLevelTest(TestCase):
 
     @classmethod
@@ -31,7 +34,7 @@ class LowLevelTest(TestCase):
             Keyword(name=u'Set service context to node_1'),
         ]
 
-        with patch('LowLevel.docker_controller') as mock_controller:
+        with patch('DockerController.DockerController') as mock_controller:
             mock_controller = MagicMock(DockerController)
             run_keyword_tests(test_instance=self, tests=tests, expected_result=Result.PASS)
 
