@@ -8,9 +8,14 @@ wp-app
 app-data/
 .coverage
 .env
-vnf-robot-old/utils/gitlab/requirements.txt
 logs/
 .robot/
+
+.pytest_cache/
+apps/
+node_modules/
+package-lock.json
+vnf-robot-old/
 
 # Cached builds
 __pycache__/
@@ -21,11 +26,8 @@ __pycache__/
 *.dll
 *.egg
 *.egg-info/
-.DS_Store
 
 # Build directories
-vnf-robot-old/docs/_build/
-build/
 dist/
 
 # Python-boilerplate auto generated files
