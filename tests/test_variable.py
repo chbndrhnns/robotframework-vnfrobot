@@ -1,4 +1,6 @@
 import logging
+
+import pytest
 from mock import patch, MagicMock
 
 from unittest2 import TestCase
@@ -10,6 +12,7 @@ from DockerController import DockerController
 from tools.testutils import run_keyword_tests, Result
 
 
+@pytest.mark.skip(reason='Legacy')
 class VariableTest(TestCase):
 
     @classmethod
