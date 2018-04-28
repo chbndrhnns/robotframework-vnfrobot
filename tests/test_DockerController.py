@@ -30,16 +30,19 @@ def _cleanup(d, containers):
         d._dispatch(['rm', '-f', container])
 
 
+@pytest.mark.integration
 def test__get_stack__fail(controller, stack_infos):
     with pytest.raises(DeploymentError):
         res = controller.find_stack(stack_infos[0])
 
 
+@pytest.mark.integration
 def test__get_stack__pass(controller, stack):
     res = controller.find_stack(stack[0])
     assert res
 
 
+@pytest.mark.integration
 def test__list_containers__pass(controller, containers):
     controller = DockerController(base_dir=path)
 
@@ -47,12 +50,14 @@ def test__list_containers__pass(controller, containers):
     assert len(containers) > 0
 
 
+@pytest.mark.integration
 def test__get_env__container(controller, container):
     env = controller.get_env(container.name)
     assert isinstance(env, list)
     assert [e for e in env if 'PATH' in e]
 
 
+@pytest.mark.integration
 def test__get_env__service(controller, stack, service_id):
     env = controller.get_env(service_id)
 
@@ -60,16 +65,19 @@ def test__get_env__service(controller, stack, service_id):
     assert [e for e in env if 'PATH' in e]
 
 
+@pytest.mark.integration
 def test__find_service__pass(controller, stack, service_id):
     service = controller.get_service(service_id)
 
     assert isinstance(service, Service)
 
 
+@pytest.mark.integration
 def test__create_goss_volume(controller, volume):
     assert 'gosstest' in volume
 
 
+@pytest.mark.integration
 def test__add_data_to_volume(controller, volume, goss_files):
     name = volume
     controller.add_data_to_volume(name, goss_files)
@@ -78,6 +86,7 @@ def test__add_data_to_volume(controller, volume, goss_files):
     assert 'goss-linux-386' in res.stdout
 
 
+@pytest.mark.integration
 def test__put_file__pass(controller, container, gossfile):
     try:
         controller.put_file(container.id, gossfile)
@@ -85,16 +94,19 @@ def test__put_file__pass(controller, container, gossfile):
         pytest.fail(exc)
 
 
+@pytest.mark.integration
 def test__put_file__file_not_found__fail(controller, container, gossfile):
     with pytest.raises(NotFoundError):
         controller.put_file(container.id, 'goss.yaml')
 
 
+@pytest.mark.integration
 def test__put_file__destination_does_not_exist__fail(controller, container, gossfile):
     with pytest.raises(DeploymentError):
         controller.put_file(container.id, gossfile, '/goss/goss.yaml')
 
 
+@pytest.mark.integration
 def test__get_file__pass(controller, container):
     try:
         f = controller.get_file(container.id, '/etc/', 'hosts')
@@ -104,16 +116,19 @@ def test__get_file__pass(controller, container):
         pytest.fail(exc)
 
 
+@pytest.mark.integration
 def test__get_file__not_found__fail(container, controller):
     with pytest.raises(DeploymentError):
         f = controller.get_file(container.id, '/etc/', 'hostsbla')
 
 
+@pytest.mark.integration
 def test__execute__no_command__fail(controller, container):
     with pytest.raises(ValueError):
         controller.execute(container, '')
 
 
+@pytest.mark.integration
 def test__execute_in_stack__pass(controller, stack, service_id):
     string = 'hello'
     try:
@@ -124,6 +139,7 @@ def test__execute_in_stack__pass(controller, stack, service_id):
         _cleanup(controller, service_id)
 
 
+@pytest.mark.integration
 def test__run_sidecar__pass(sidecar):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -132,6 +148,7 @@ def test__run_sidecar__pass(sidecar):
     assert 'bin' in res
 
 
+@pytest.mark.integration
 def test__run_sidecar__invalid_container__fail(sidecar):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -140,6 +157,7 @@ def test__run_sidecar__invalid_container__fail(sidecar):
         controller.run_sidecar(name=name, command='ls', image='blablubnotexisting')
 
 
+@pytest.mark.integration
 def test__run_sidecar__stderr__fail(sidecar):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -148,6 +166,7 @@ def test__run_sidecar__stderr__fail(sidecar):
         controller.run_sidecar(name=name, command='abc_not_exists')
 
 
+@pytest.mark.integration
 def test__run_sidecar__goss_volume_ok__pass(sidecar, goss_volume_name):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -164,6 +183,7 @@ def test__run_sidecar__goss_volume_ok__pass(sidecar, goss_volume_name):
     assert '' in res
 
 
+@pytest.mark.integration
 def test__run_sidecar__invalid_network__fail(sidecar):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -172,6 +192,7 @@ def test__run_sidecar__invalid_network__fail(sidecar):
         controller.run_sidecar(name=name, network='bla', command='ping -W1 -c1 127.0.0.1')
 
 
+@pytest.mark.integration
 def test__run_sidecar__network_ok__pass(sidecar, network):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -181,6 +202,8 @@ def test__run_sidecar__network_ok__pass(sidecar, network):
     assert '0% packet loss' in res
 
 
+@pytest.mark.integration
+@pytest.mark.flaky
 def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, stack, stack_infos, network, service_id):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
@@ -198,11 +221,14 @@ def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, s
     assert '0% packet loss' in res.stdout
 
 
+@pytest.mark.integration
+@pytest.mark.flaky
 def test__connect_container_to_network__pass(controller, stack, network, service_id):
     res = controller.connect_network_to_service(service_id, network.name)
     assert res
 
 
+@pytest.mark.integration
 def test__inject_goss_data_into_stack_container__pass(controller, stack_infos, gossfile):
     name = stack_infos[0]
     path = stack_infos[1]

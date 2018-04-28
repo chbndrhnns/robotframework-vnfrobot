@@ -45,6 +45,7 @@ def test__transform__pass(port_with_instance, sut, test, data, mapped, out):
     assert yaml.safe_load(e.transformed_data) == yaml.safe_load(out.get('expected_yaml'))
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize('test, data, mapped, out', ports_test_data)
 def test__run__service_context__pass(port_with_instance, stack, volume_with_goss, test, data, mapped, out):
     e = port_with_instance

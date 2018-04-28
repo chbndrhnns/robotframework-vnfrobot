@@ -7,6 +7,8 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
+@pytest.mark.integration
+@pytest.mark.keyword
 def test__address__pass():
 
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/address.robot'))

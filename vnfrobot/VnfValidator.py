@@ -13,7 +13,7 @@ from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
 from version import VERSION
-from tools.testutils import string_matchers
+from tools.matchers import string_matchers
 
 
 class VnfValidator(DynamicCore):

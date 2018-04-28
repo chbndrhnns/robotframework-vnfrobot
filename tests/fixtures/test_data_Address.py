@@ -9,7 +9,7 @@
 addresses_test_data = [
     (
         {
-            'test': ["www.google.com", "is", "reachable"]
+            'test': ["www.google.com", "www.google.com", "is", "reachable"]
         },
         {
             'data': {
@@ -48,7 +48,7 @@ addresses_test_data = [
     ),
     (
         {
-            'test': ["www.google.co.uk:8081", "is not", "reachable"],
+            'test': ["www.google.co.uk:8081", "www.google.co.uk:8081", "is not", "reachable"],
         },
         {
             'data': {
@@ -96,7 +96,7 @@ addresses_test_data = [
 ###
 goss_results = [
     (
-       ["www.google.com", "is", "reachable"],
+       ["www.google.com", "www.google.com", "is", "reachable"],
        r"""{
             "results": [
                 {

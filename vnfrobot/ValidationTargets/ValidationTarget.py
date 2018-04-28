@@ -9,11 +9,9 @@ class ValidationTarget():
 
     def __init__(self, instance=None):
         self.instance = instance
-        self.properties = {}
         self.test_result = None
 
         # sut
-        self.valid_contexts = []
         self.sut = None
 
         self.entity = None
@@ -63,13 +61,13 @@ class ValidationTarget():
     def run_test(self):
         pass
 
-    def _check_instance(self):
+    def _find_robot_instance(self):
         if not self.instance:
             raise SetupError('No robot instance found.')
         if not isinstance(self.instance.sut, SUT):
             raise SetupError('No SUT declared.')
 
-    def _check_data(self):
+    def _check_test_data(self):
         missing = [key for key, value in self.get_as_dict().iteritems() if not value]
         if missing:
             raise ValueError('No value for {}'.format(missing))

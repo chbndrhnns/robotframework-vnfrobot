@@ -1,40 +1,63 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import NotFoundError, ValidationError
-from tools.testutils import validate_context, validate_against_regex, get_truth, string_matchers
+from tools import validators
+from tools.testutils import get_truth, call_validator
+from tools.matchers import string_matchers
+from tools.validators import Service
 
 
 class Placement(ValidationTarget):
     """
-    Set deployment context
+    Set service context
 
-    Ideas:
-    - has networks
-    - placement of sut: node.id is
-    - placement of sut: node.hostname is
-    - placement of sut: node.role is
-    - placement of sut: node.labels contain
+    # Ideas:
+    - placement: node.id is
+    - placement: node.hostname is
+    - placement: node.role is
+    - placement: node.labels contain
 
     """
+
+    properties = {
+        'node.id': {
+            'matchers': ['is', 'is not'],
+            'value': '\S+'
+        },
+        'node.role': {
+            'matchers': ['contains', 'contains not', 'is', 'is not'],
+            'value': '\S+'
+        },
+        'node.hostname': {
+            'matchers': ['contains', 'contains not', 'is', 'is not'],
+            'value': '\S+'
+        },
+        'node.labels': {
+            'matchers': ['contains', 'contains not', 'is', 'is not'],
+            'value': '\S+'
+        }
+    }
+    allowed_contexts = ['service']
+
     def __init__(self, instance=None):
         super(Placement, self).__init__(instance)
-        self.valid_contexts = ['deployment']
-        self.entity_matcher = '[a-zA-Z0-9_-]'
-        self.value_matcher = '[^\s]'
 
     def validate(self):
-        self.property = self.entity if not self.property else self.property
+        self._find_robot_instance()
+        self._check_test_data()
 
-        self._check_instance()
-        self._check_data()
-        validate_context(self.valid_contexts, self.instance.sut.target_type)
-        validate_against_regex('variable', self.entity, self.entity_matcher)
-        validate_against_regex('value', self.value, self.value_matcher)
+        call_validator(self.instance.sut.target_type, validators.Context, Placement.allowed_contexts)
+        call_validator(self.property, validators.Property, Placement.properties)
+        call_validator(self.matcher, validators.InList, Placement.properties.get(self.property, {}).get('matchers', []))
+        call_validator(self.value, validators.Regex, Placement.properties.get(self.property, {}).get('value', ''))
 
     def transform(self):
         pass
 
     def run_test(self):
-        self.validate()
+        try:
+            self.validate()
+        except ValidationError as exc:
+            raise
         try:
             env = self.instance.docker_controller.get_env(self.instance.sut.service_id)
             self.test_result = [e.split('=')[1] for e in env if self.entity == e.split('=')[0]]
@@ -49,9 +72,16 @@ class Placement(ValidationTarget):
 
         if not get_truth(self.test_result[0], string_matchers[self.matcher], self.value):
             raise ValidationError(
-                'Variable {}: {} {}, actual: {}'.format(
-                    self.entity,
+                'Placement: {} {}, actual: {}'.format(
                     self.matcher,
                     self.value,
                     self.test_result[0])
             )
+
+    def get_as_dict(self):
+        return {
+            'context': getattr(self, 'context', None),
+            'property': getattr(self, 'property', None),
+            'matcher': getattr(self, 'matcher', None),
+            'value': getattr(self, 'value', None)
+        }

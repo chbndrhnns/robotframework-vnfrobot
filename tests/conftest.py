@@ -20,6 +20,7 @@ pytest_plugins = [
    "tests.fixtures.address",
    "tests.fixtures.port",
    "tests.fixtures.goss",
+   "tests.fixtures.placement",
 ]
 
 @fixture(scope='module')
@@ -176,5 +177,10 @@ def instance(lib, builtin, stack_infos, controller):
 
 
 @fixture
-def sut():
-    return SUT('service', 'sut', 'bla')
+def sut(context='service'):
+    return SUT(context, 'sut', 'bla')
+
+
+@fixture
+def sut_deployment():
+    return sut(context='deployment')

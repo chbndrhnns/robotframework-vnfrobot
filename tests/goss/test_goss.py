@@ -10,6 +10,7 @@ from exc import TestToolError
 from tools.GossTool import GossTool
 
 
+@pytest.mark.integration
 def test__run__pass(controller, gossfile, goss_sut_service):
     sut = goss_sut_service
 
@@ -20,6 +21,7 @@ def test__run__pass(controller, gossfile, goss_sut_service):
     assert res['summary']['failed-count'] == 1
 
 
+@pytest.mark.integration
 def test__run__gossfile_not_found__fail(controller, goss_sut_service):
     sut = goss_sut_service
 
@@ -30,6 +32,7 @@ def test__run__gossfile_not_found__fail(controller, goss_sut_service):
         g.run()
 
 
+@pytest.mark.integration
 def test__run__goss_not_found__fail(controller, goss_sut_service):
     sut = goss_sut_service
 
@@ -40,6 +43,7 @@ def test__run__goss_not_found__fail(controller, goss_sut_service):
         g.run()
 
 
+@pytest.mark.integration
 def test__run__syntax_error__fail(controller, goss_sut_service):
     sut = goss_sut_service
 
@@ -50,6 +54,7 @@ def test__run__syntax_error__fail(controller, goss_sut_service):
         g.run()
 
 
+@pytest.mark.integration
 def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_goss):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
@@ -77,6 +82,7 @@ def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_
     assert j['summary']['failed-count'] == 0
 
 
+@pytest.mark.integration
 def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_goss, stack, service_id):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
@@ -111,13 +117,10 @@ def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_go
         f.write(gossfile)
         f.seek(0)
         controller.put_file(entity=sidecar, file_to_transfer=f.name,
-                                                 filename='goss.yaml')
+                            filename='goss.yaml')
         sleep(10)
         res = controller.run_sidecar(sidecar=sidecar)
 
     assert len(res) > 0
     j = json.loads(res)
     assert j['summary']['failed-count'] == 0
-
-
-# TODO: irgendwie muss auf ein ergebnis gewartet werden....

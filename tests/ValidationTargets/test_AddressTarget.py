@@ -20,7 +20,7 @@ def test__validate__pass(address_with_instance, sut):
     e.instance.sut = sut
 
     tests = [
-        ['www.google.com', 'is', 'reachable']
+        ['www.google.com', 'www.google.com', 'is', 'reachable']
     ]
 
     for test in tests:
@@ -33,12 +33,13 @@ def test__validate__wrong_entity__fail(address_with_instance, sut):
     e.instance.sut = sut
 
     tests = [
-        ['www.google.d', 'is', 'reachable']
+        ['www.google.d', 'www.google.d', 'is', 'reachable']
     ]
 
     for test in tests:
         set_test_data(e, test)
-        assert not e.validate()
+        with pytest.raises(ValidationError):
+            assert not e.validate()
 
 
 def test__validate__fail(address_with_instance, sut):
@@ -46,9 +47,9 @@ def test__validate__fail(address_with_instance, sut):
     e.instance.sut = sut
 
     tests = [
-        ['www.google.de', 'isnotoris', 'reachable'],
-        ['www.google.de', 'is', 'notorisreachable'],
-        ['www.google.de', 'canisnot', 'notorisreachable'],
+        ['www.google.de', 'www.google.de', 'isnotoris', 'reachable'],
+        ['www.google.de', 'www.google.de', 'is', 'notorisreachable'],
+        ['www.google.de', 'www.google.de', 'canisnot', 'notorisreachable'],
     ]
 
     for test in tests:
@@ -78,6 +79,7 @@ def test__transform__pass(address_with_instance, sut, test, data, mapped, out):
     assert yaml.safe_load(e.transformed_data) == yaml.safe_load(out.get('expected_yaml'))
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize('test, data, mapped, out', addresses_test_data)
 def test__run__network_context__pass(address_with_instance, stack, network, volume_with_goss, test, data, mapped, out):
     e = address_with_instance

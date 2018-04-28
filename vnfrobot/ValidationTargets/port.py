@@ -5,9 +5,9 @@ from jinja2 import TemplateError
 
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, DeploymentError
-from tools import testutils
-from tools.testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, \
-    validate_matcher
+from tools import testutils, validators
+from tools.testutils import validate_port, validate_property, validate_value, validate_matcher, call_validator
+from tools.validators import IpAddress
 from tools.GossTool import GossTool
 from tools.goss.GossPort import GossPort
 
@@ -27,16 +27,17 @@ class Port(ValidationTarget):
     def __init__(self, instance=None):
         super(Port, self).__init__(instance)
         self.data = None
-        self.valid_contexts = ['service']
+        self.context_validator = validators.Service
+        self.allowed_contexts = ['service']
 
         self.port = None
         self.protocol = 'tcp'
         self.transformed_data = None
 
     def validate(self):
-        self._check_instance()
-        self._check_data()
-        validate_context(self.valid_contexts, self.instance.sut.target_type)
+        self._find_robot_instance()
+        self._check_test_data()
+        call_validator(self.instance.sut.target_type, self.context_validator, self.allowed_contexts)
         (self.port, self.protocol) = validate_port(self.entity)
         self.property = validate_property(Port.properties, self.property)
         validate_matcher([self.matcher], limit_to=Port.properties.get('entity', {}).get('matchers', []))
@@ -94,7 +95,7 @@ class Port(ValidationTarget):
         testutils.evaluate_results(self)
 #
 #
-# class Matcher(Enum):
+# class InList(Enum):
 #     IS = 'is'
 #     IS_NOT = 'is not'
 #     EXISTS = 'exists'

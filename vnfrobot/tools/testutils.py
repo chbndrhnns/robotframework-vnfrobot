@@ -2,37 +2,13 @@ import inspect
 import json
 import re
 
-import operator
-from abc import abstractmethod, ABCMeta
 from string import lower
 
-import validators
 from robot.libraries.BuiltIn import BuiltIn
 
 import exc
-
-# For contains not, there is no direct operator available. We rely on the implicit knowledge that None means
-# 'contains not'
-boolean_matchers = {
-    'is': operator.eq,
-    'is not': operator.ne,
-}
-
-number_matchers = dict(boolean_matchers, **{
-    'is greater': operator.gt,
-    'is greater equal': operator.ge,
-    'is lesser': operator.lt,
-    'is lesser equal': operator.le
-})
-
-string_matchers = dict(boolean_matchers, **{
-    'has': operator.eq,
-    'has not': operator.ne,
-    'exists': operator.truth,
-    'exists not': operator.not_,
-    'contains': operator.contains,
-    'contains not': 'contains_not',
-})
+from tools.matchers import string_matchers
+from tools.validators import Validator
 
 
 def get_truth(inp, relate, val):
@@ -60,15 +36,19 @@ def validate_matcher(matchers, limit_to=None):
             raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
 
-def validate_entity(entity, validator):
-    try:
+def call_validator(entity, validator, context=None):
+    if context is not None:
+        v = validator(context)
+    else:
         v = validator()
-        if isinstance(v, Validator):
-            return v.validate(entity)
+    if isinstance(v, Validator):
+        res = v.validate(entity)
+        if res:
+            return True
         else:
-            raise exc.ValidationError('Value {} not allowed here. Expected: {}'.format(entity, v.name))
-    except Exception:
-        raise
+            raise exc.ValidationError('validators.{}: "{}" not valid'.format(v.name, entity))
+    else:
+        raise TypeError('call_validator must be called with validator callable. Got: {}'.format(entity))
 
 
 def validate_value(properties, property, value):
@@ -121,19 +101,6 @@ def validate_port(raw_entity):
             'Protocol "{}" not valid. Only udp and tcp are supported'.format(protocol))
 
     return port, protocol
-
-
-def validate_context(allowed_context, given_context):
-    # Check that a context is given for the test
-    if not given_context:
-        raise exc.SetupError(
-            'Context must be set with "Set <context_type> context to <target>"')
-
-    if given_context not in allowed_context:
-        raise exc.SetupError(
-            'Context "{}" not allowed. Must be any of {}'.format(given_context, allowed_context))
-
-    return given_context
 
 
 class Result:
@@ -204,57 +171,6 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
     if expected_message:
         for result in result.suite.tests:
             test_instance.assertIn(expected_message, result.message)
-
-
-class Validator:
-    __metaclass__ = ABCMeta
-
-    def __init__(self):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def validate(entity):
-        pass
-
-
-class Url(Validator):
-    def __init__(self):
-        Validator.__init__(self)
-        self.name = 'URL'
-
-    @staticmethod
-    def validate(val):
-        return validators.url(val)
-
-
-class Domain(Validator):
-    def __init__(self):
-        Validator.__init__(self)
-        self.name = 'Domain'
-
-    @staticmethod
-    def validate(val):
-        try:
-            return validators.domain(val)
-        except Exception:
-            pass
-
-
-class IpAddress(Validator):
-    def __init__(self):
-        Validator.__init__(self)
-        self.name = 'IP address'
-
-    @staticmethod
-    def validate(val):
-        # hack: :: is a valid IPv6 address
-        if val == '::':
-            return True
-        try:
-            return validators.ipv4(val) or (validators.ipv6(val))
-        except Exception:
-            pass
 
 
 def str2bool(val):

@@ -3,10 +3,11 @@ import tempfile
 
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, SetupError, DeploymentError
-from tools import testutils
+from tools import testutils, validators
 from tools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
-from tools.testutils import validate_context, validate_matcher, validate_value, validate_entity, Domain
+from tools.testutils import validate_matcher, validate_value, call_validator
+from tools.validators import Domain
 
 
 class Address(ValidationTarget):
@@ -19,9 +20,8 @@ class Address(ValidationTarget):
 
     def __init__(self, instance=None):
         super(Address, self).__init__()
-        self.valid_contexts = ['service', 'network']
-
-        self.entity_matcher = Domain
+        self.context_validator = validators.Context
+        self.allowed_contexts = ['service', 'network']
         self.transformed_data = {}
         self.port = None
         self.address = None
@@ -31,18 +31,25 @@ class Address(ValidationTarget):
         self.property = self.entity if not self.property else self.property
 
         try:
-            self._check_instance()
-            self._check_data()
-            validate_context(self.valid_contexts, self.instance.sut.target_type)
-            validate_entity(self.entity, self.entity_matcher)
-            validate_matcher([self.matcher], limit_to=Address.properties.get('entity', {}).get('matchers', []))
-            validate_value(Address.properties, 'entity', self.value)
+            self._find_robot_instance()
+            self._check_test_data()
+            call_validator(self.instance.sut.target_type, self.context_validator, self.allowed_contexts)
+
+            call_validator(self.matcher, validators.InList, Address.properties.get('entity', {}).get('matchers', []))
+            call_validator(self.value, validators.InList, Address.properties.get('entity', {}).get('values', []))
+
+            # split address in case a port is given
+            split_entity = self.entity.split(':')
+            if len(split_entity) > 2:
+                raise ValidationError('Value "{}" is invalid.'.format(self.entity))
+            self.address = split_entity[0]
+            self.port = split_entity[1] if len(split_entity) == 2 else '80'
+            call_validator(self.address, validators.Domain)
+            call_validator(self.port, validators.Port)
         except (SetupError, ValidationError) as exc:
             raise
 
-        split_entity = self.entity.split(':')
-        self.address = split_entity[0]
-        self.port = split_entity[1] if len(split_entity) == 2 else '80'
+
 
     def transform(self):
         # tcp: // ip - address - or -domain - name:80:
