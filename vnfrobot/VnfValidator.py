@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import collections
-
 from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
 from robot.api import logger
@@ -18,8 +16,8 @@ from version import VERSION
 from tools.testutils import string_matchers
 
 
-class LowLevel(DynamicCore):
-    """The LowLevel module contains low-level keywords for the VNF Robot."""
+class VnfValidator(DynamicCore):
+    """The VnfValidator module contains low-level keywords for the VNF Robot."""
 
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
     ROBOT_LISTENER_API_VERSION = 2

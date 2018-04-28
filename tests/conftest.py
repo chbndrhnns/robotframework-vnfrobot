@@ -163,8 +163,8 @@ def stack(controller, stack_infos):
 @fixture
 @pytest.mark.usefixtures('stack_infos')
 @pytest.mark.usefixtures('controller')
-@mock.patch('LowLevel.BuiltIn', autospec=True)
-@mock.patch('LowLevel.LowLevel', autospec=True)
+@mock.patch('VnfValidator.BuiltIn', autospec=True)
+@mock.patch('VnfValidator.VnfValidator', autospec=True)
 def instance(lib, builtin, stack_infos, controller):
     lib.suite_source = 'bla.robot'
     lib.goss_volume_name = 'goss-helper'

@@ -4,7 +4,7 @@ import pytest
 from ruamel import yaml
 
 from exc import ValidationError, SetupError
-from LowLevel import SUT
+from VnfValidator import SUT
 from fixtures.test_data_Address import goss_results, addresses_test_data
 from tools import testutils
 

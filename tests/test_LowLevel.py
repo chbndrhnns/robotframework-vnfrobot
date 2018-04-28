@@ -21,7 +21,7 @@ class LowLevelTest(TestCase):
 
     def setUp(self):
         self.suite = TestSuite('Test low level keywords')
-        self.suite.resource.imports.library('LowLevel')
+        self.suite.resource.imports.library('VnfValidator')
 
     def tearDown(self):
         pass
