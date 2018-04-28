@@ -194,7 +194,6 @@ class DockerController:
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
-        BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
         try:
             attrs = getattr(s, 'attrs')
             mounts = attrs.get('Spec', {}).get('TaskTemplate', {}).get('ContainerSpec', {}).get('Mounts', [])
@@ -204,6 +203,7 @@ class DockerController:
         except AttributeError, ValueError:
             pass
 
+        BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
         try:
             return self.update_service(s, mounts=['{}:/goss:ro'.format(v.name)])
         except docker.errors.APIError as exc:
@@ -267,10 +267,8 @@ class DockerController:
     def get_volume(self, name):
         try:
             return self._docker.volumes.get(name)
-        except docker.errors.NotFound:
-            raise DeploymentError('Could not find volume {}'.format(name))
-        except docker.errors.APIError as exc:
-            raise DeploymentError('Could not find volume {}: {}'.format(name, exc))
+        except (docker.errors.NotFound, docker.errors.APIError) as exc:
+            raise DeploymentError('Could not find volume {}: {}'.format(name, exc if exc else ''))
 
     def add_data_to_volume(self, volume, path):
         try:
@@ -378,7 +376,7 @@ class DockerController:
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
         o = project_options + options
-        BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
+        # BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
 

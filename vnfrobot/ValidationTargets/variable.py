@@ -1,6 +1,6 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
-from exc import NotFoundError, ValidationError
-from tools import validators, matchers
+from exc import NotFoundError, ValidationError, DeploymentError
+from tools import validators, matchers, orchestrator
 from tools.testutils import validate_against_regex, get_truth, call_validator
 from tools.matchers import string_matchers
 
@@ -35,14 +35,14 @@ class Variable(ValidationTarget):
     def run_test(self):
         try:
             self.validate()
+            orchestrator.get_or_create_deployment(self.instance)
             env = self.instance.docker_controller.get_env(self.instance.sut.service_id)
             self.test_result = [e.split('=')[1] for e in env if self.entity == e.split('=')[0]]
-        except (NotFoundError, ValidationError):
-            raise
 
-        self.evaluate_results()
+            self.evaluate_results()
+        except (NotFoundError, ValidationError, DeploymentError) as exc:
+            raise exc
 
-    def evaluate_results(self):
         if not self.test_result:
             raise ValidationError('No variable {} found.'.format(self.entity))
 

@@ -1,4 +1,6 @@
 import os
+
+from docker.errors import NotFound
 from robot.libraries.BuiltIn import BuiltIn
 
 from tools import namesgenerator
@@ -7,6 +9,14 @@ from DockerController import DockerController
 from tools.wait_on import wait_on_services_status
 
 from . import path
+
+
+def get_or_create_test_tool_volume(instance, volume):
+    try:
+        return instance.get_volume(volume).name
+    except (DeploymentError, AttributeError) as exc:
+        if 'not find' in exc:
+            return check_or_create_test_tool_volume(instance, volume)
 
 
 def check_or_create_test_tool_volume(instance, volume):
@@ -32,45 +42,63 @@ def _get_controller(source):
     return DockerController(base_dir=os.path.dirname(source))
 
 
-def deploy(instance, descriptor):
+def get_deployment(instance, descriptor):
     if instance.suite_source is None:
         raise SetupError('Cannot determine directory of robot file.')
 
+    instance.descriptor_file = descriptor
     try:
         if not instance.docker_controller:
             instance.docker_controller = _get_controller(instance.suite_source)
     except SetupError as exc:
         raise exc
 
-    # test tool goss: deploy or check the existance
-    instance.test_volume = check_or_create_test_tool_volume(instance.docker_controller, 'goss-helper')
-
-    instance.descriptor_file = descriptor
-
-    # try to get an existing deployment
     if instance.deployment_name:
         try:
             instance.docker_controller.find_stack(instance.deployment_name)
-            BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO', console=True)
-            return
+            if not instance.services:
+                BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
+                              console=True)
         except DeploymentError:
             raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
+    else:
+        instance.deployment_name = namesgenerator.get_random_name()
+        BuiltIn().log('Name for the deployment: {}'.format(instance.deployment_name), level='DEBUG', console=True)
+    return True
 
-    # create new deployment
-    instance.deployment_name = namesgenerator.get_random_name()
+
+def get_or_create_deployment(instance):
     try:
-        BuiltIn().log('Deploying {} as {}'.format(instance.descriptor_file, instance.deployment_name), level='INFO', console=True)
-        res = instance.docker_controller.deploy_stack(instance.descriptor_file, instance.deployment_name)
+        if len(instance.services) is 0:
+            create_deployment(instance)
+        else:
+            get_deployment(instance, instance.descriptor_file)
+    except (DeploymentError, SetupError) as exc:
+        raise exc
+
+
+def create_deployment(instance):
+    descriptor = instance.descriptor_file
+    deployment = instance.deployment_name
+    ctl = instance.docker_controller
+    assert deployment
+    assert descriptor
+    assert ctl
+
+    try:
+        BuiltIn().log('Deploying {} as {}'.format(descriptor, deployment), level='INFO',
+                      console=True)
+        res = instance.docker_controller.deploy_stack(descriptor, deployment)
         assert res
-        BuiltIn().log('Waiting for deployment {}...'.format(instance.deployment_name), level='INFO', console=True)
-        instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
-        wait_on_services_status(instance.docker_controller._docker, instance.services)
+        BuiltIn().log('Waiting for deployment {}...'.format(deployment), level='INFO', console=True)
+        instance.services.extend(ctl.get_services(deployment))
+        wait_on_services_status(ctl._docker, instance.services)
         return True
     except DeploymentError as exc:
-        raise SetupError('Error during deployment of {}: {}'.format(instance.deployment_name, exc))
+        raise SetupError('Error during deployment of {}: {}'.format(deployment, exc))
 
 
-def undeploy(instance):
+def remove_deployment(instance):
     BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO', console=True)
     res = instance.docker_controller.undeploy_stack(instance.deployment_name)
     assert len(res.stderr) == 0

@@ -5,7 +5,8 @@ from jinja2 import TemplateError
 
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, DeploymentError
-from tools import testutils, validators
+from settings import Settings
+from tools import testutils, validators, orchestrator
 from tools.testutils import validate_port, validate_property, validate_value, validate_matcher, call_validator
 from tools.validators import IpAddress
 from tools.GossTool import GossTool
@@ -23,12 +24,11 @@ class Port(ValidationTarget):
             'value': IpAddress
         }
     }
+    allowed_contexts = ['service']
 
     def __init__(self, instance=None):
         super(Port, self).__init__(instance)
         self.data = None
-        self.context_validator = validators.Service
-        self.allowed_contexts = ['service']
 
         self.port = None
         self.protocol = 'tcp'
@@ -37,7 +37,7 @@ class Port(ValidationTarget):
     def validate(self):
         self._find_robot_instance()
         self._check_test_data()
-        call_validator(self.instance.sut.target_type, self.context_validator, self.allowed_contexts)
+        call_validator(self.instance.sut.target_type, validators.Service, Port.allowed_contexts)
         (self.port, self.protocol) = validate_port(self.entity)
         self.property = validate_property(Port.properties, self.property)
         validate_matcher([self.matcher], limit_to=Port.properties.get('entity', {}).get('matchers', []))
@@ -64,8 +64,20 @@ class Port(ValidationTarget):
         self.transformed_data = g.transform(g)
 
     def run_test(self):
-        self.validate()
-        self.transform()
+        try:
+            self.validate()
+            self.transform()
+        except ValidationError as exc:
+            raise exc
+
+        try:
+            orchestrator.get_or_create_deployment(self.instance)
+            self.instance.test_volume = orchestrator.check_or_create_test_tool_volume(
+                self.instance.docker_controller,
+                Settings.goss_helper_volume
+            )
+        except DeploymentError as exc:
+            raise exc
 
         # create gossfile on target container
         with tempfile.NamedTemporaryFile() as f:

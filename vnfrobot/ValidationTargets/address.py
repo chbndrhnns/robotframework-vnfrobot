@@ -3,7 +3,8 @@ import tempfile
 
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, SetupError, DeploymentError
-from tools import testutils, validators
+from settings import Settings
+from tools import testutils, validators, orchestrator
 from tools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
 from tools.testutils import validate_matcher, validate_value, call_validator
@@ -75,8 +76,17 @@ class Address(ValidationTarget):
         self.transformed_data = entity.transform(entity)
 
     def run_test(self):
-        self.validate()
-        self.transform()
+        try:
+            self.validate()
+            self.transform()
+
+            orchestrator.get_or_create_deployment(self.instance)
+            self.instance.test_volume = orchestrator.get_or_create_test_tool_volume(
+                self.instance.docker_controller,
+                Settings.goss_helper_volume
+            )
+        except (ValidationError, DeploymentError) as exc:
+            raise exc
 
         # create gossfile on target container
         with tempfile.NamedTemporaryFile() as f:
@@ -107,6 +117,6 @@ class Address(ValidationTarget):
             except (TypeError, ValueError) as exc:
                 raise ValidationError('ValidationError: {}'.format(exc))
             except DeploymentError as exc:
-                raise DeploymentError('Could not run test tool on {}'.format(self.instance.sut))
+                raise DeploymentError('Could not run test tool on {}: {}'.format(self.instance.sut, exc))
 
         testutils.evaluate_results(self)

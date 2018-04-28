@@ -68,11 +68,17 @@ class VnfValidator(DynamicCore):
             logger.console('Skipping: remove deployment')
 
     def update_sut(self, **kwargs):
-        self.sut = self.sut._replace(**kwargs)
+        # create a new namedtuple and use the old values if no new value is available
+        self.sut = self.sut._replace(
+            target_type=kwargs.get('target_type', self.sut.target_type),
+            target=kwargs.get('target', self.sut.target),
+            service_id=kwargs.get('service_id', self.sut.service_id),
+        )
+
         BuiltIn().log('\nUpdating context: type={}, service={}, target={}'.format(
-            self.sut.target_type,
-            self.sut.service_id,
-            self.sut.target),
+            self.sut.target_type if self.sut.target_type else 'Not set',
+            self.sut.service_id if self.sut.service_id else 'Not set',
+            self.sut.target if self.sut.target else 'Not set'),
             level='INFO', console=True)
 
     def run_keyword(self, name, args, kwargs):
@@ -186,10 +192,10 @@ class VnfValidator(DynamicCore):
             BuiltIn().log('No descriptor file specified. Assuming fake deployment...', level='INFO', console=True)
             return
         try:
-            orchestrator.deploy(self, descriptor)
+            orchestrator.get_deployment(self, descriptor)
         except SetupError as exc:
             BuiltIn().fatal_error(exc)
 
     @keyword('Remove deployment')
     def remove_deployment_kw(self):
-        orchestrator.undeploy(self)
+        orchestrator.remove_deployment(self)

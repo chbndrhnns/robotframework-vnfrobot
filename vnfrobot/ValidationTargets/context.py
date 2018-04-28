@@ -10,20 +10,30 @@ def _generate_sidecar_name(service_id):
 
 
 def set_context(instance, context_type=None, context=None):
-    controller = instance.docker_controller
     context_types = ['application', 'service', 'node', 'network']
-
-    service_id = '{}_{}'.format(instance.deployment_name, context)
 
     if context_type not in context_types:
         raise SetupError('Invalid context given. Must be {}'.format(context_types))
     if not context:
         raise SetupError('No context given. Context must be set with "Set <context_type> context to <target>"')
 
+    instance.update_sut(
+        target_type=context_type,
+        target=context,
+        service_id='{}_{}'.format(instance.deployment_name, context)
+    )
+
+
+def prepare_context(instance, context_type=None, context=None):
+    controller = instance.docker_controller
+    service_id = instance.sut.service_id
+
     try:
         controller.get_service(service_id)
     except NotFoundError:
         raise SetupError('Service {} not found in deployment {}'.format(context, instance.deployment_name))
+
+    BuiltIn().log('\nPreparing for context "{}"'.format(context_type), level='DEBUG', console=True)
 
     if context_type == 'network':
         try:
@@ -51,7 +61,9 @@ def _prepare_service_context(controller, instance, service_id):
     return containers[0].name
 
 
-def _prepare_network_context( controller, service_id):
+def _prepare_network_context(controller, service_id):
+    BuiltIn().log('Creating helper network...', level='DEBUG', console=True)
+
     network = controller.get_or_create_network(_generate_sidecar_name(service_id))
     sidecar = controller.get_or_create_sidecar(
         image='busybox',

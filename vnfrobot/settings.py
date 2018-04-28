@@ -1,31 +1,25 @@
 import os
-from string import lower
-
 from dotenv import load_dotenv, find_dotenv
 
 
 class Settings:
     def __init__(self):
-        load_dotenv(find_dotenv())
-        self.tools = {'goss': {}}
+        pass
 
-        self.log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
+    load_dotenv(find_dotenv())
+    tools = {'goss': {}}
 
-        # Docker orchestrator
-        self.docker = {'DOCKER_HOST': (os.environ.get('DOCKER_HOST') or 'unix://var/run/docker.sock'),
-                       # 'DOCKER_CERT_PATH': (os.environ.get('DOCKER_CERT_PATH') or ''),
-                       'DOCKER_TIMEOUT': (os.environ.get('DOCKER_TIMEOUT') or '2.0')
+    log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
 
-                       }
-        # Library: HTTP
-        self.http_get_timeout = (os.environ.get('HTTP_GET_TIMEOUT') or '0.5')
-        self.http_max_retries = (os.environ.get('HTTP_MAX_RETRIES') or '2')
+    # Docker orchestrator
+    docker = {
+        'DOCKER_HOST': (os.environ.get('DOCKER_HOST') or 'unix://var/run/docker.sock'),
+        # 'DOCKER_CERT_PATH': (os.environ.get('DOCKER_CERT_PATH') or ''),
+        'DOCKER_TIMEOUT': (os.environ.get('DOCKER_TIMEOUT') or '2.0')
+    }
 
-        # Library: SuiteSetup
-        self.orchestrator = lower((os.environ.get('ORCHESTRATOR')) or 'docker-compose')
+    goss_helper_volume = 'goss-helper'
 
-        # Library: Socket
-        self.socket_timeout = (os.environ.get('SOCKET_TIMEOUT') or '1.0')
-
-        # Tool: Goss
-        self.tools['goss']['path'] = (os.environ.get('GOSS_PATH') or 'bin/goss-linux-amd64')
+    # Library: HTTP
+    http_get_timeout = (os.environ.get('HTTP_GET_TIMEOUT') or '0.5')
+    http_max_retries = (os.environ.get('HTTP_MAX_RETRIES') or '2')
