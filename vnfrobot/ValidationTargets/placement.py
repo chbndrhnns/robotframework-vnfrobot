@@ -1,13 +1,24 @@
-from modules.ValidationTarget import ValidationTarget
+from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import NotFoundError, ValidationError
 from tools.testutils import validate_context, validate_against_regex, get_truth, string_matchers
 
 
-class Variable(ValidationTarget):
+class Placement(ValidationTarget):
+    """
+    Set deployment context
+
+    Ideas:
+    - has networks
+    - placement of sut: node.id is
+    - placement of sut: node.hostname is
+    - placement of sut: node.role is
+    - placement of sut: node.labels contain
+
+    """
     def __init__(self, instance=None):
-        super(Variable, self).__init__(instance)
-        self.valid_contexts = ['service']
-        self.entity_matcher = '[A-Z][A-Z0-9_]'
+        super(Placement, self).__init__(instance)
+        self.valid_contexts = ['deployment']
+        self.entity_matcher = '[a-zA-Z0-9_-]'
         self.value_matcher = '[^\s]'
 
     def validate(self):

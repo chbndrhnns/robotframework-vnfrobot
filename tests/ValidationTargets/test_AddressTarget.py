@@ -7,6 +7,7 @@ from exc import ValidationError, SetupError
 from VnfValidator import SUT
 from fixtures.test_data_Address import goss_results, addresses_test_data
 from tools import testutils
+from utils import set_test_data
 
 
 def test__context__invalid__fail(address_with_instance):
@@ -23,11 +24,7 @@ def test__validate__pass(address_with_instance, sut):
     ]
 
     for test in tests:
-        e.set_as_dict({
-            'entity': test[0],
-            'property': test[0],
-            'matcher': test[1],
-            'value': test[2]})
+        set_test_data(e, test)
         e.validate()
 
 
@@ -40,11 +37,7 @@ def test__validate__wrong_entity__fail(address_with_instance, sut):
     ]
 
     for test in tests:
-        e.set_as_dict({
-            'entity': test[0],
-            'property': test[0],
-            'matcher': test[1],
-            'value': test[2]})
+        set_test_data(e, test)
         assert not e.validate()
 
 
@@ -60,10 +53,7 @@ def test__validate__fail(address_with_instance, sut):
 
     for test in tests:
         with pytest.raises(ValidationError):
-            e.set('entity', test[0])
-            e.set('property', test[0])
-            e.set('matcher', test[1])
-            e.set('value', test[2])
+            set_test_data(e, test)
             e.validate()
 
 
@@ -81,13 +71,7 @@ def test__transform__pass(address_with_instance, sut, test, data, mapped, out):
     test = test.get('test')
     e = address_with_instance
     e.instance.sut = sut
-    e.set_as_dict({
-        'entity': test[0],
-        'property': test[0],
-        'matcher': test[1],
-        'value': test[2]
-    })
-
+    set_test_data(e, test)
     e.validate()
     e.transform()
 
@@ -104,10 +88,6 @@ def test__run__network_context__pass(address_with_instance, stack, network, volu
     e.instance.test_volume = volume_with_goss
 
     test = test.get('test')
-
-    e.set('entity', test[0])
-    e.set('property', test[0])
-    e.set('matcher', test[1])
-    e.set('value', test[2])
+    set_test_data(e, test)
 
     e.run_test()

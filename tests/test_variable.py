@@ -34,7 +34,7 @@ class VariableTest(TestCase):
             Keyword(name=u'Variable abc: is b'),
             Keyword(name=u'Variable A-B: is b'),
         ]
-        # with patch('modules.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+        # with patch('ValidationTargets.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
         run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                           expected_message=u'ValidationError: Value')
 
@@ -70,6 +70,6 @@ class VariableTest(TestCase):
         tests = [
             Keyword(name=u'Variable ABC: is ""'),
         ]
-        with patch('modules.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+        with patch('ValidationTargets.variable.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Value')

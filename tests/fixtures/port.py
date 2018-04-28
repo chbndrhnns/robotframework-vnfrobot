@@ -1,15 +1,15 @@
 import pytest
 from pytest import fixture
 
-from modules.port import Port
+from ValidationTargets.port import Port
 
 
-@fixture
+@fixture(scope='module')
 def port_data():
     return {'context': 'service', 'entity': '6370/TCP', 'property': 'state', 'matcher': 'is', 'value': 'open'}
 
 
-@fixture
+@fixture(scope='module')
 def port(port_data):
     port = Port()
     for k, v in port_data.iteritems():
@@ -17,8 +17,8 @@ def port(port_data):
     return port
 
 
-@fixture
 @pytest.mark.usefixture('instance')
+@fixture(scope='module')
 def port_with_instance(port, instance):
     port.instance = instance
     return port

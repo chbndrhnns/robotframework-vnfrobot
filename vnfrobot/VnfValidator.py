@@ -5,11 +5,11 @@ from robot.api import logger
 from robot.api.deco import keyword
 
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
-from modules.address import Address
-from modules.port import Port
-from modules.variable import Variable
+from ValidationTargets.address import Address
+from ValidationTargets.port import Port
+from ValidationTargets.variable import Variable
 from tools import orchestrator
-from modules.context import set_context
+from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
 from version import VERSION

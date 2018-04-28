@@ -2,6 +2,11 @@ from pytest import fixture
 
 
 @fixture
+def deployment_context():
+    return 'deployment'
+
+
+@fixture
 def application_context():
     return 'application'
 

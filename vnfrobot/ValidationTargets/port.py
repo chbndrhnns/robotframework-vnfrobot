@@ -3,7 +3,7 @@ import tempfile
 from docker.models.containers import Container
 from jinja2 import TemplateError
 
-from modules.ValidationTarget import ValidationTarget
+from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, DeploymentError
 from tools import testutils
 from tools.testutils import validate_context, validate_port, validate_property, validate_value, IpAddress, \

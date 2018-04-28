@@ -160,7 +160,7 @@ def stack(controller, stack_infos):
 
 
 # Fixtures for entity tests
-@fixture
+@fixture(scope='module')
 @pytest.mark.usefixtures('stack_infos')
 @pytest.mark.usefixtures('controller')
 @mock.patch('VnfValidator.BuiltIn', autospec=True)

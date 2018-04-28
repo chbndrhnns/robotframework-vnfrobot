@@ -1,9 +1,7 @@
 import json
 import tempfile
 
-from robot.libraries.BuiltIn import BuiltIn
-
-from modules.ValidationTarget import ValidationTarget
+from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, SetupError, DeploymentError
 from tools import testutils
 from tools.GossTool import GossTool

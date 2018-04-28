@@ -63,7 +63,7 @@ class LowLevelTest(TestCase):
         tests = [
             Keyword(name=u'Port 80: stateful is open'),
         ]
-        with patch('modules.port.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+        with patch('ValidationTargets.port.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Property')
 
@@ -74,7 +74,7 @@ class LowLevelTest(TestCase):
             Keyword(name=u'Port abc: stateful is open'),
             Keyword(name=u'Port abc: stateful is open'),
         ]
-        with patch('modules.port.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+        with patch('ValidationTargets.port.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Port')
 
@@ -84,6 +84,6 @@ class LowLevelTest(TestCase):
         tests = [
             Keyword(name=u'Port 80: state is openedd'),
         ]
-        with patch('modules.port.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
+        with patch('ValidationTargets.port.exc.SetupError.ROBOT_EXIT_ON_FAILURE', False):
             run_keyword_tests(test_instance=self, setup=None, tests=tests, expected_result=Result.FAIL,
                               expected_message=u'ValidationError: Value')
