@@ -12,8 +12,8 @@ def service_context():
 
 
 @fixture
-def node_context():
-    return 'node'
+def service_context():
+    return 'service'
 
 
 @fixture
