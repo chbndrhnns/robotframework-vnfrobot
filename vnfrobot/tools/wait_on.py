@@ -8,6 +8,7 @@ import docker
 from docker.models.containers import Container
 from docker.models.services import Service
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 
 
 def start_process(base_dir, options):
@@ -31,9 +32,12 @@ def wait_on_process(proc, returncode=0):
 
 def wait_on_condition(condition, delay=0.1, timeout=40):
     start_time = time.time()
+    # last_time = start_time
     while not condition():
         if time.time() - start_time > timeout:
             raise AssertionError("Timeout: %s" % condition)
+        # if time.time() - last_time > 15:
+        #     BuiltIn().log('Waiting since {} seconds now...'.format(time.time() - start_time), level='DEBUG', console=True)
         time.sleep(delay)
 
 

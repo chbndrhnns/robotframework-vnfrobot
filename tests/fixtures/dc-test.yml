@@ -6,7 +6,7 @@ services:
     ports:
     - 80
     volumes:
-    - ./goss:/goss
+      - ./goss:/goss
 
 volumes:
   goss:

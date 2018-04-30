@@ -59,12 +59,13 @@ def test__validate__fail(address_with_instance, sut):
 
 
 @pytest.mark.parametrize('test, goss_result', goss_results)
-def test__evaluate__pass(address_with_instance, sut, test, goss_result):
+def test__evaluate__pass(address_with_instance, goss_tool_instance, sut, test, goss_result):
     e = address_with_instance
     e.instance.sut = sut
-    e.test_result = json.loads(goss_result)
 
-    testutils.evaluate_results(e)
+    goss_tool_instance.test_results = json.loads(goss_result)
+
+    e.evaluate_results(goss_tool_instance)
 
 
 @pytest.mark.parametrize('test, data, mapped, out', addresses_test_data)

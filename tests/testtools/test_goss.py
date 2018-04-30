@@ -7,7 +7,7 @@ import pytest
 from docker.models.containers import Container
 
 from exc import TestToolError
-from tools.GossTool import GossTool
+from testtools.GossTool import GossTool
 
 
 @pytest.mark.integration
@@ -37,7 +37,7 @@ def test__run__goss_not_found__fail(controller, goss_sut_service):
     sut = goss_sut_service
 
     g = GossTool(controller, sut)
-    g.command = 'not_existing'
+    g._command = 'not_existing'
 
     with pytest.raises(TestToolError, match='goss executable was not found'):
         g.run()
@@ -48,7 +48,7 @@ def test__run__syntax_error__fail(controller, goss_sut_service):
     sut = goss_sut_service
 
     g = GossTool(controller, sut)
-    g.command = '/goss/goss-linux-amd64 /data'
+    g._command = '/goss/goss-linux-amd64 /data'
 
     with pytest.raises(TestToolError, match='Syntax error'):
         g.run()
@@ -70,7 +70,7 @@ def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_
 
     sidecar = controller.get_or_create_sidecar(
         image=sidecar.get('image'),
-        command=g.command,
+        command=g._command,
         network=network.name,
         volumes=volumes,
         name=sidecar_name
@@ -106,7 +106,7 @@ def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_go
 
     sidecar = controller.get_or_create_sidecar(
         image=sidecar.get('image'),
-        command=g.command,
+        command=g._command,
         network=network.name,
         volumes=volumes,
         name=sidecar_name

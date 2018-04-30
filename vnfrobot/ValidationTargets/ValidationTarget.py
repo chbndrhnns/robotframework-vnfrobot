@@ -1,23 +1,39 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
-from exc import SetupError
+from docker.models.containers import Container
+from docker.errors import APIError
+from robot.libraries.BuiltIn import BuiltIn
+
+from exc import SetupError, ValidationError, NotFoundError
+from settings import Settings
+from testtools.GossTool import GossTool
+from tools import orchestrator
 from tools.data_structures import SUT
 
 
-class ValidationTarget():
+class ValidationTarget:
     __metaclass__ = ABCMeta
 
     def __init__(self, instance=None):
         self.instance = instance
-        self.test_result = None
-
-        # sut
-        self.sut = None
+        self._test_results = None
 
         self.entity = None
         self.property = None
         self.matcher = None
         self.value = None
+
+    @abstractproperty
+    def options(self):
+        pass
+
+    @property
+    def test_results(self):
+        return self._test_results
+
+    @test_results.setter
+    def test_results(self, value):
+        self._test_results = value
 
     def get_as_dict(self):
         return {
@@ -58,8 +74,65 @@ class ValidationTarget():
         pass
 
     @abstractmethod
-    def run_test(self):
+    def _prepare_run(self, tool_instance):
         pass
+
+    def run_test(self, command=None):
+        test_volume_required = self.options.get('test_volume_required', False)
+        sidecar_required = self.options.get('sidecar_required', False)
+
+        try:
+            self.validate()
+            self.transform()
+            orchestrator.get_or_create_deployment(self.instance)
+            if test_volume_required:
+                self._create_test_volume()
+            if sidecar_required:
+                self._create_sidecar()
+            if test_volume_required:
+                self._connect_volume_to_sut()
+            tool_instance = self.options.get('test_tool', None)(
+                controller=self.instance.docker_controller,
+                sut=self.instance.sut
+            )
+            self._prepare_run(tool_instance)
+            tool_instance.command = self.options.get('command', None) or tool_instance.command
+            tool_instance.run()
+            self._cleanup()
+            self.evaluate_results(tool_instance)
+        except (ValidationError, NotFoundError) as exc:
+            raise exc
+
+    def _create_sidecar(self):
+        network_name = self.instance.sut.target
+        volumes = {
+            self.instance.test_volume: {
+                'bind': '/goss',
+                'mode': 'ro'
+            }
+        }
+        self.instance.sidecar = self.instance.docker_controller.get_or_create_sidecar(
+            name='robot_sidecar_for_{}'.format(self.instance.deployment_name),
+            command=GossTool(controller=self.instance.docker_controller).command,
+            network=network_name,
+            volumes=volumes)
+        self.instance.update_sut(target=self.instance.sidecar.name)
+        assert network_name in self.instance.sidecar.attrs['NetworkSettings']['Networks'].keys()
+
+    def _connect_volume_to_sut(self):
+        container = self.instance.docker_controller.connect_volume_to_service(self.instance.sut.service_id,
+                                                                              self.instance.test_volume)
+        assert isinstance(container, Container)
+        self.instance.update_sut(target=container.name)
+
+    def _create_test_volume(self):
+        self.instance.test_volume = orchestrator.check_or_create_test_tool_volume(
+            self.instance.docker_controller,
+            Settings.goss_helper_volume
+        )
+
+    def evaluate_results(self, tool_instance):
+        tool_instance.process_results(self)
 
     def _find_robot_instance(self):
         if not self.instance:
@@ -70,4 +143,25 @@ class ValidationTarget():
     def _check_test_data(self):
         missing = [key for key, value in self.get_as_dict().iteritems() if not value]
         if missing:
-            raise ValueError('No value for {}'.format(missing))
+            raise ValueError('Checking test data: No value supplied for {}'.format(missing))
+
+    def _cleanup(self):
+        if self.instance.sidecar:
+            BuiltIn().log('Cleanup sidecar: removing {}'.format(self.instance.sidecar.name),
+                          level='DEBUG',
+                          console=True)
+            assert isinstance(self.instance.sidecar, Container)
+            try:
+                self.instance.sidecar.kill()
+            except APIError:
+                pass
+
+            try:
+                self.instance.sidecar.remove()
+            except APIError as exc:
+                if not 'No such container' in exc.explanation:
+                    BuiltIn().log('Cleanup failed: could not remove {}: exc'.format(self.instance.sidecar.name, exc),
+                                  level='ERROR',
+                                  console=True)
+
+

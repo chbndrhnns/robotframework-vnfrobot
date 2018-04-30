@@ -44,22 +44,20 @@ def test__get_stack__pass(controller, stack):
 
 @pytest.mark.integration
 def test__list_containers__pass(controller, containers):
-    controller = DockerController(base_dir=path)
-
     assert isinstance(containers, list)
     assert len(containers) > 0
 
 
 @pytest.mark.integration
 def test__get_env__container(controller, container):
-    env = controller.get_env(container.name)
+    env = controller.get_container_config(container.name, 'Env')
     assert isinstance(env, list)
     assert [e for e in env if 'PATH' in e]
 
 
 @pytest.mark.integration
 def test__get_env__service(controller, stack, service_id):
-    env = controller.get_env(service_id)
+    env = controller.get_container_config(service_id, 'Env')
 
     assert isinstance(env, list)
     assert [e for e in env if 'PATH' in e]
@@ -162,7 +160,7 @@ def test__run_sidecar__stderr__fail(sidecar):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
 
-    with pytest.raises(DeploymentError, match='Could not run command'):
+    with pytest.raises(DeploymentError, match='Could not run _command'):
         controller.run_sidecar(name=name, command='abc_not_exists')
 
 
@@ -193,6 +191,7 @@ def test__run_sidecar__invalid_network__fail(sidecar):
 
 
 @pytest.mark.integration
+@pytest.mark.integration2
 def test__run_sidecar__network_ok__pass(sidecar, network):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
@@ -204,7 +203,7 @@ def test__run_sidecar__network_ok__pass(sidecar, network):
 
 @pytest.mark.integration
 @pytest.mark.flaky
-def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, stack, stack_infos, network, service_id):
+def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, network, service_id):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
     assert 'robot' in network.name

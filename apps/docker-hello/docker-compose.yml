@@ -3,6 +3,6 @@ version: "3"
 services:
   hello:
     image: hello-world:latest
-    entrypoint: /goss/goss-linux-amd64
+    entrypoint: /testtools/testtools-linux-amd64
     volumes:
-      - ../goss:/goss
+      - ../testtools:/testtools

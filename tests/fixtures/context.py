@@ -17,10 +17,5 @@ def service_context():
 
 
 @fixture
-def service_context():
-    return 'service'
-
-
-@fixture
 def network_context():
     return 'network'

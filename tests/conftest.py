@@ -16,12 +16,13 @@ from DockerController import DockerController
 
 # import fixtures as local test plugins
 pytest_plugins = [
-   "tests.fixtures.context",
-   "tests.fixtures.address",
-   "tests.fixtures.port",
-   "tests.fixtures.goss",
-   "tests.fixtures.placement",
+    "tests.fixtures.context",
+    "tests.fixtures.address",
+    "tests.fixtures.port",
+    "tests.fixtures.goss",
+    "tests.fixtures.placement",
 ]
+
 
 @fixture(scope='module')
 def base_name():
@@ -48,7 +49,7 @@ def try_remove_network(controller, name):
             raise
 
 
-@fixture
+@fixture(scope='module')
 def sidecar(base_name, controller, volume):
     data = {
         'name': 'robot_sidecar_for_{}'.format(base_name),
@@ -129,7 +130,7 @@ def controller():
 
 @fixture
 def container(base_name, controller):
-    c = controller.run_busybox()
+    c = controller.run_busybox(labels={'a': 'b'})
     yield c
     controller._kill_and_delete_container(c.name)
 

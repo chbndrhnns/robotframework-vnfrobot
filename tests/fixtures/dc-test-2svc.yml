@@ -5,10 +5,5 @@ services:
     image: nginx:1.13.12
     ports:
     - 80
-    volumes:
-    - ./goss:/goss
   redis:
     image: redis:alpine
-
-volumes:
-  goss:

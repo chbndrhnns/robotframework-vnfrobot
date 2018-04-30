@@ -1,6 +1,7 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import NotFoundError, ValidationError
-from tools import validators
+from testtools.DockerTool import DockerTool
+from tools import validators, orchestrator, matchers
 from tools.testutils import get_truth, call_validator
 from tools.matchers import string_matchers
 from tools.validators import Service
@@ -10,14 +11,7 @@ class Placement(ValidationTarget):
     """
     Set service context
 
-    # Ideas:
-    - placement: node.id is
-    - placement: node.hostname is
-    - placement: node.role is
-    - placement: node.labels contain
-
     """
-
     properties = {
         'node.id': {
             'matchers': ['is', 'is not'],
@@ -37,6 +31,7 @@ class Placement(ValidationTarget):
         }
     }
     allowed_contexts = ['service']
+    tool = DockerTool
 
     def __init__(self, instance=None):
         super(Placement, self).__init__(instance)
@@ -52,31 +47,6 @@ class Placement(ValidationTarget):
 
     def transform(self):
         pass
-
-    def run_test(self):
-        try:
-            self.validate()
-        except ValidationError as exc:
-            raise
-        try:
-            env = self.instance.docker_controller.get_env(self.instance.sut.service_id)
-            self.test_result = [e.split('=')[1] for e in env if self.entity == e.split('=')[0]]
-        except NotFoundError:
-            raise
-
-        self.evaluate_results()
-
-    def evaluate_results(self):
-        if not self.test_result:
-            raise ValidationError('No variable {} found.'.format(self.entity))
-
-        if not get_truth(self.test_result[0], string_matchers[self.matcher], self.value):
-            raise ValidationError(
-                'Placement: {} {}, actual: {}'.format(
-                    self.matcher,
-                    self.value,
-                    self.test_result[0])
-            )
 
     def get_as_dict(self):
         return {

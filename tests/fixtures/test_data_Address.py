@@ -91,7 +91,7 @@ addresses_test_data = [
 # Structure
 # (
 # {<data that can be given to the GossEntity>},
-# {<return value from goss>}
+# {<return value from testtools>}
 # )
 ###
 goss_results = [

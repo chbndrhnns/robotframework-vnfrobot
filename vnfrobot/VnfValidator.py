@@ -38,6 +38,7 @@ class VnfValidator(DynamicCore):
             'SKIP_UNDEPLOY': False,
         }
         self.test_volume = None
+        self.sidecar = None
         self.services = []
 
         logger.info(u"Importing {}".format(self.__class__))

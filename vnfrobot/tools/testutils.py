@@ -130,22 +130,6 @@ def _add_host_context(self, suite=None, host=None):
     return suite.keywords.create(context, type='setup')
 
 
-def evaluate_results(instance):
-    assert isinstance(instance.test_result['summary']['failed-count'], int)
-
-    BuiltIn().log_to_console(json.dumps(instance.test_result, indent=4, sort_keys=True))
-
-    errors = [res for res in instance.test_result['results'] if not res['successful']]
-    if errors:
-        for err in errors:
-            BuiltIn().log('Port {}: property {}, expected: {}, actual: {}'.format(
-                instance.entity,
-                err.get('property', ''),
-                err.get('expected'),
-                err.get('found')), level='INFO', console=True)
-        raise exc.ValidationError('Test not successful')
-
-
 def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Result.PASS, expected_message=None):
     caller_name = inspect.stack()[1][3]
     # TODO: verify that the expected method is called

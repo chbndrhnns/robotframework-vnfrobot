@@ -13,6 +13,7 @@ from docker.models.volumes import Volume
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
+from settings import Settings
 from tools import namesgenerator
 from tools.archive import Archive
 
@@ -25,17 +26,17 @@ class DockerController:
     def __init__(self, base_dir):
         self.base_dir = base_dir
         self._docker = docker.from_env()
-        self._docker_api = docker.APIClient(base_url='unix://var/run/docker.sock')
+        self._docker_api = docker.APIClient(base_url=Settings.docker.get('DOCKER_HOST'))
         self.helper = 'helper'
 
         if not self.base_dir:
             self.base_dir = os.getcwd()
             BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG', console=True)
 
-    def run_busybox(self):
+    def run_busybox(self, **kwargs):
         try:
             name = namesgenerator.get_random_name()
-            self._docker.containers.run('busybox', 'true', name=name, detach=True)
+            self._docker.containers.run('busybox', 'true', name=name, detach=True, **kwargs)
             return self._docker.containers.get(name)
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
@@ -54,12 +55,17 @@ class DockerController:
                 except (docker.errors.NotFound, TypeError):
                     raise NotFoundError(
                         'Could not find entity (service or container) for the provided value of "entity"')
-        BuiltIn().log('Running command {} in container {}'.format(command, entity), level='DEBUG', console=True)
-        return self._run_in_container(container=target, command=command)
+        BuiltIn().log('Running {} in {}'.format(command, target.name), level='DEBUG', console=True)
+
+        container_status = target.status
+        if 'created' in container_status:
+            return self.run_sidecar(sidecar=target)
+        else:
+            return self._run_in_container(container=target, command=command)
 
     def _run_in_container(self, container=None, command=None):
         if not command:
-            raise ValueError('command parameter must not be empty.')
+            raise ValueError('_command parameter must not be empty.')
 
         try:
             wait_on_container_status(self._docker, container.name)
@@ -86,7 +92,10 @@ class DockerController:
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
 
-    def get_env(self, entity):
+    def get_container_config(self, entity, key=None):
+        if not entity:
+            raise NotFoundError('No entity provided')
+
         # first, try if entity is a container
         try:
             wait_on_container_status(self._docker, entity)
@@ -95,17 +104,17 @@ class DockerController:
             # second, try if entity is a service
 
             try:
-                c = self.get_containers_for_service(entity)
+                c = self.get_containers_for_service(entity)[0]
             except NotFoundError as exc:
                 raise NotFoundError('Could not find service {}'.format(entity))
 
-            if isinstance(c, list):
-                # BuiltIn().log(
-                #     "Found {} containers in this service. Getting env for one should be enough.".format(len(c)),
-                #     level='DEBUG', console=True)
-                return c[0].attrs['Config']['Env']
+        if key:
+            return c.attrs['Config'].get(key, None)
+        else:
+            return c.attrs['Config']
 
-        return c.attrs['Config']['Env']
+    def get_node(self, node_id):
+        return self._docker.nodes.get(node_id)
 
     def get_service(self, service):
         try:
@@ -301,7 +310,7 @@ class DockerController:
 
     def get_or_create_sidecar(self, image='busybox', command='true', name='', volumes=None, network=None):
         # TODO Do not reuse for the moment being as we are reading stdout and the stdout history is not reset between
-        # different goss runs. We end up with multiple json objects we cannot easily decode for now
+        # different testtools runs. We end up with multiple json objects we cannot easily decode for now
         # # try to get an existing sidecar
         # if name:
         #     try:
@@ -314,8 +323,8 @@ class DockerController:
 
         try:
             self.get_or_pull_image(image)
-            logger.console('Creating sidecar container: name={}, image={}, command={}, volumes={}, networks={}'.format(
-                name, image, command, volumes, network))
+            BuiltIn().log('Creating sidecar container: name={}, image={}, _command={}, volumes={}, networks={}'.format(
+                name, image, command, volumes, network), level='DEBUG', console=True)
             return self._docker.containers.create(name=name if name else None,
                                                   image=image,
                                                   command=command,
@@ -364,7 +373,7 @@ class DockerController:
             raise DeploymentError('Sidecar {} not found.'.format(sidecar if sidecar else 'None'))
         except docker.errors.APIError as exc:
             if 'executable file not found' in exc.explanation:
-                raise DeploymentError('Could not run command: {}'.format(exc))
+                raise DeploymentError('Could not run _command: {}'.format(exc))
             else:
                 raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
         except docker.errors.ContainerError as exc:
@@ -402,7 +411,6 @@ class DockerController:
     def _send_file(self, content, destination, entity, filename):
         to_send = Archive('w').add_text_file(filename, content).close()
         try:
-            BuiltIn().log('Putting file {} on {} at {}'.format(filename, entity, destination), level='DEBUG')
             res = self._docker_api.put_archive(entity, destination, to_send.buffer)
             assert res
             # self.file_exists(entity, filename)
