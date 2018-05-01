@@ -160,7 +160,7 @@ def test__run_sidecar__stderr__fail(sidecar):
     controller = sidecar.get('controller')
     name = sidecar.get('name')
 
-    with pytest.raises(DeploymentError, match='Could not run _command'):
+    with pytest.raises(DeploymentError, match='Could not run command'):
         controller.run_sidecar(name=name, command='abc_not_exists')
 
 

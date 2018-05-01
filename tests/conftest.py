@@ -11,6 +11,7 @@ from pytest import fixture
 from robot.libraries.BuiltIn import BuiltIn
 
 import VnfValidator
+from exc import NotFoundError
 from testtools.DockerTool import DockerTool
 from testtools.GossTool import GossTool
 from tools import namesgenerator
@@ -39,21 +40,15 @@ def base_name():
 def try_remove_container(controller, name):
     try:
         controller.get_container(name).remove(force=True)
-    except (docker.errors.NotFound, docker.errors.APIError) as exc:
-        if 'No such container' in exc.explanation:
-            pass
-        else:
-            raise
+    except NotFoundError as exc:
+        pass
 
 
 def try_remove_network(controller, name):
     try:
         controller.get_network(name).remove()
-    except (docker.errors.NotFound, docker.errors.APIError) as exc:
-        if 'not found' in exc.explanation:
-            pass
-        else:
-            raise
+    except NotFoundError as exc:
+        pass
 
 
 @fixture(scope='module')
