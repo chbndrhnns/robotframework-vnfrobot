@@ -8,6 +8,7 @@ from docker.models.containers import Container
 from docker.models.services import Service
 from robot.api import logger
 
+from exc import DeploymentError
 from tools.data_structures import ProcessResult
 
 
@@ -177,9 +178,18 @@ def wait_on_services_status(client, services=None, status='Running'):
                     res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
                 else:
                     res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+
                 if res:
                     # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
                     state_ok += 1
+                else:
+                    # try to find out if an error occured
+                    tasks = service.tasks(filters={"desired-state": "Ready"})
+                    if len(tasks) > 0:
+                        task = tasks[0]
+                        err = task.get('Status', {}).get('Err')
+                        if err:
+                            raise DeploymentError('Could not deploy {}: {}'.format(service.name, err))
             return len(services) == state_ok
         return False
 

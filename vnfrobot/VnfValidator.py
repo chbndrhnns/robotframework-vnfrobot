@@ -191,7 +191,7 @@ class VnfValidator(DynamicCore):
     @keyword('Placement: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
         '|'.join(Placement.properties.keys()),
         '|'.join(string_matchers.keys())))
-    def port_kw(self, raw_prop, matcher, raw_val):
+    def placement_kw(self, raw_prop, matcher, raw_val):
         try:
             validation_target = Placement(self)
             validation_target.set_as_dict({

@@ -55,6 +55,7 @@ def test__run__syntax_error__fail(controller, goss_sut_service):
 
 
 @pytest.mark.integration
+@pytest.mark.skip
 def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_goss):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
@@ -83,6 +84,7 @@ def test__run__in_sidecar__pass(sidecar, gossfile_sidecar, network, volume_with_
 
 
 @pytest.mark.integration
+@pytest.mark.skip
 def test__run__in_sidecar_with_deployment__pass(sidecar, network, volume_with_goss, stack, service_id):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
