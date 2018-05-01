@@ -6,6 +6,7 @@ from robot.libraries.BuiltIn import BuiltIn
 import exc
 from exc import DeploymentError, TestToolError, NotFoundError
 from testtools.TestTool import TestTool
+from tools.testutils import timeit
 
 
 class GossTool(TestTool):
@@ -42,8 +43,8 @@ class GossTool(TestTool):
             raise TestToolError('Could not parse return value from goss: {}'.format(res))
         except AttributeError as exc:
             raise TestToolError('Error: {}'.format(exc))
-        except DeploymentError:
-            raise
+        except DeploymentError as exc:
+            raise DeploymentError('Could not run command in {}: {}'.format(self.sut.target, exc))
 
     def process_results(self, target):
         if not self.test_results:

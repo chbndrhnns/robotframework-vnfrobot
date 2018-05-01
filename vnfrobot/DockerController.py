@@ -21,7 +21,6 @@ from exc import NotFoundError, SetupError, DeploymentError
 from tools.testutils import timeit
 from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status, \
     start_process, wait_on_process
-from tools.data_structures import ProcessResult
 
 
 class DockerController:
@@ -57,8 +56,8 @@ class DockerController:
                 except (docker.errors.NotFound, TypeError):
                     raise NotFoundError(
                         'Could not find entity (service or container) for the provided value of "entity"')
-        BuiltIn().log('Running {} in {}'.format(command, target.name), level='DEBUG', console=True)
 
+        BuiltIn().log('Running {} in {}'.format(command, target.name), level='DEBUG', console=True)
         container_status = target.status
         if 'created' in container_status:
             return self.run_sidecar(sidecar=target)
@@ -126,10 +125,18 @@ class DockerController:
             raise NotFoundError('Cannot find service {}: {}'.format(service, exc))
 
     def get_container(self, container):
-        return self._docker.containers.get(container)
+        try:
+            return self._docker.containers.get(container)
+        except docker.errors.NotFound as exc:
+            raise NotFoundError(exc)
+        except:
+            raise
 
-    def get_containers(self):
-        return self._docker.containers.list()
+    def get_containers(self, **kwargs):
+        try:
+            return self._docker.containers.list(**kwargs)
+        except docker.errors.APIError as exc:
+            raise NotFoundError('get_containers failed: {}'.format(exc))
 
     def connect_network_to_service(self, service, network):
         try:
@@ -232,8 +239,8 @@ class DockerController:
     def get_network(self, name):
         try:
             return self._docker.networks.get(name)
-        except docker.errors.NotFound:
-            raise
+        except docker.errors.NotFound as exc:
+            raise NotFoundError(exc)
 
     def get_or_create_network(self, name, driver='overlay'):
         try:
@@ -325,7 +332,7 @@ class DockerController:
 
         try:
             self.get_or_pull_image(image)
-            BuiltIn().log('Creating sidecar container: name={}, image={}, _command={}, volumes={}, networks={}'.format(
+            BuiltIn().log('Creating sidecar container: name={}, image={}, command={}, volumes={}, networks={}'.format(
                 name, image, command, volumes, network), level='DEBUG', console=True)
             return self._docker.containers.create(name=name if name else None,
                                                   image=image,
@@ -375,9 +382,9 @@ class DockerController:
             raise DeploymentError('Sidecar {} not found.'.format(sidecar if sidecar else 'None'))
         except docker.errors.APIError as exc:
             if 'executable file not found' in exc.explanation:
-                raise DeploymentError('Could not run _command: {}'.format(exc))
+                raise DeploymentError('Could not run command: {}'.format(exc))
             else:
-                raise DeploymentError('Could not deploy sidecar: {}'.format(exc))
+                raise DeploymentError('Could not run sidecar: {}'.format(exc))
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=True)
             raise DeploymentError('Error: {}'.format(exc))
@@ -387,7 +394,6 @@ class DockerController:
     def _dispatch(self, options, project_options=None, returncode=0):
         project_options = project_options or []
         o = project_options + options
-        # BuiltIn().log('Dispatching: docker {}'.format(o), level='DEBUG', console=True)
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
 

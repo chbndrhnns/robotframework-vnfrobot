@@ -24,6 +24,7 @@ class DockerTool(TestTool):
     def get_container_labels(self):
         self.test_results = self.controller.get_container_config(self.sut.service_id, 'Labels')
 
+    @timeit
     def placement(self):
         labels = self.controller.get_container_config(self.sut.service_id, 'Labels')
         node_id = labels.get('com.docker.swarm.node.id')

@@ -4,7 +4,7 @@ from docker.models.containers import Container
 from docker.errors import APIError
 from robot.libraries.BuiltIn import BuiltIn
 
-from exc import SetupError, ValidationError, NotFoundError
+from exc import SetupError, ValidationError, NotFoundError, DeploymentError
 from settings import Settings
 from testtools.GossTool import GossTool
 from testtools.TestTool import TestTool
@@ -79,6 +79,10 @@ class ValidationTarget:
         pass
 
     def run_test(self, command=None):
+        # override sidecar decision for network context
+        if 'network' in self.instance.sut.target_type:
+            self.options['sidecar_required'] = True
+
         test_volume_required = self.options.get('test_volume_required', False)
         sidecar_required = self.options.get('sidecar_required', False)
 
@@ -90,7 +94,7 @@ class ValidationTarget:
                 self._create_test_volume()
             if sidecar_required:
                 self._create_sidecar()
-            if test_volume_required:
+            if not sidecar_required and test_volume_required:
                 self._connect_volume_to_sut()
             tool_instance = self.options.get('test_tool', None)(
                 controller=self.instance.docker_controller,
@@ -99,9 +103,10 @@ class ValidationTarget:
             self._prepare_run(tool_instance)
             tool_instance.command = self.options.get('command', None) or tool_instance.command
             tool_instance.run()
-            self._cleanup()
-        except (ValidationError, NotFoundError) as exc:
+        except (ValidationError, NotFoundError, DeploymentError) as exc:
             raise exc
+        finally:
+            self._cleanup()
 
         try:
             self.evaluate_results(tool_instance)
@@ -121,12 +126,13 @@ class ValidationTarget:
             command=GossTool(controller=self.instance.docker_controller).command,
             network=network_name,
             volumes=volumes)
-        self.instance.update_sut(target=self.instance.sidecar.name)
+        self.instance.update_sut(target_type='container', target=self.instance.sidecar.name)
         assert network_name in self.instance.sidecar.attrs['NetworkSettings']['Networks'].keys()
 
     def _connect_volume_to_sut(self):
-        container = self.instance.docker_controller.connect_volume_to_service(self.instance.sut.service_id,
-                                                                              self.instance.test_volume)
+        container = self.instance.docker_controller.connect_volume_to_service(
+            service=self.instance.sut.service_id,
+            volume=self.instance.test_volume)
         assert isinstance(container, Container)
         self.instance.update_sut(target=container.name)
 

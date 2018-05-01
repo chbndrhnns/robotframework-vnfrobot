@@ -8,8 +8,9 @@ import pytest
 from pytest import fixture
 
 # circular import? TODO???
+from robot.libraries.BuiltIn import BuiltIn
 
-
+import VnfValidator
 from testtools.DockerTool import DockerTool
 from testtools.GossTool import GossTool
 from tools import namesgenerator
@@ -175,9 +176,24 @@ def stack(controller, stack_infos):
 @fixture(scope='module')
 @pytest.mark.usefixtures('stack_infos')
 @pytest.mark.usefixtures('controller')
-@mock.patch('VnfValidator.BuiltIn', autospec=True)
 @mock.patch('VnfValidator.VnfValidator', autospec=True)
-def instance(lib, builtin, stack_infos, controller):
+def instance2(lib, stack_infos, controller):
+    lib.suite_source = 'bla.robot'
+    lib.goss_volume_name = 'goss-helper'
+    lib.deployment_name = None
+    lib.descriptor_file = stack_infos[1]
+    lib.docker_controller = controller
+    lib.sut = None
+    lib.sidecar = None
+    lib.update_sut.side_effect = update_sut
+    return lib
+
+
+@fixture(scope='module')
+@pytest.mark.usefixtures('stack_infos')
+@pytest.mark.usefixtures('controller')
+def instance(stack_infos, controller):
+    lib = VnfValidator.VnfValidator()
     lib.suite_source = 'bla.robot'
     lib.goss_volume_name = 'goss-helper'
     lib.deployment_name = None
@@ -186,6 +202,7 @@ def instance(lib, builtin, stack_infos, controller):
     lib.sut = None
     lib.sidecar = None
     return lib
+
 
 
 @fixture

@@ -63,7 +63,7 @@ def get_deployment(instance, descriptor):
             raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
     else:
         instance.deployment_name = namesgenerator.get_random_name()
-        BuiltIn().log('Name for the deployment: {}'.format(instance.deployment_name), level='DEBUG', console=True)
+        # BuiltIn().log('Name for the deployment: {}'.format(instance.deployment_name), level='DEBUG', console=True)
     return True
 
 
@@ -99,8 +99,9 @@ def create_deployment(instance):
 
 
 def remove_deployment(instance):
-    BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO', console=True)
-    res = instance.docker_controller.undeploy_stack(instance.deployment_name)
-    assert len(res.stderr) == 0
-    instance.docker_controller = None
-    return res
+    if instance.services:
+        BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO', console=True)
+        res = instance.docker_controller.undeploy_stack(instance.deployment_name)
+        assert len(res.stderr) == 0
+        instance.docker_controller = None
+        return res

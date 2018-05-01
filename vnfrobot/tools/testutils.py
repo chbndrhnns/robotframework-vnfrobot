@@ -175,6 +175,6 @@ def timeit(method):
             else:
                 BuiltIn().log('%r  %2.2f ms' % \
                               (method.__name__, (te - ts) * 1000), level='DEBUG', console=True)
-        return result
+            return result
 
     return timed

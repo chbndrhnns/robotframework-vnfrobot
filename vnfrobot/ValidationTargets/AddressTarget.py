@@ -1,9 +1,5 @@
-import json
-import tempfile
-
 from ValidationTargets.ValidationTarget import ValidationTarget
 from exc import ValidationError, SetupError, DeploymentError
-from settings import Settings
 from tools import validators, orchestrator
 from testtools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
@@ -18,9 +14,8 @@ class Address(ValidationTarget):
         }
     }
     options = {
-        'test_volume_required': True,
-        'sidecar_required': True,
         'test_tool': GossTool,
+        'test_volume_required': True
     }
     allowed_contexts = ['service', 'network']
 
