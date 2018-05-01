@@ -10,6 +10,7 @@ class Settings:
     tools = {'goss': {}}
 
     log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
+    timing = os.environ.get('VNFROBOT_TIMING') or False
 
     # Docker orchestrator
     docker = {

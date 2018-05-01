@@ -46,7 +46,7 @@ def get_deployment(instance, descriptor):
     if instance.suite_source is None:
         raise SetupError('Cannot determine directory of robot file.')
 
-    instance.descriptor_file = descriptor
+    instance.descriptor_file = os.path.realpath(os.path.join(os.path.dirname(instance.suite_source), descriptor))
     try:
         if not instance.docker_controller:
             instance.docker_controller = _get_controller(instance.suite_source)

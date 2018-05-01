@@ -9,6 +9,6 @@ from tests import path
 @pytest.mark.keyword
 def test__placement__pass():
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/placement.robot'))
-    result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/common.py'))
+    result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/robot/common.py'))
 
     assert result.return_code == 0

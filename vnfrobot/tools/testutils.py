@@ -1,5 +1,4 @@
 import inspect
-import json
 import re
 
 from string import lower
@@ -7,8 +6,10 @@ from string import lower
 from robot.libraries.BuiltIn import BuiltIn
 
 import exc
+from settings import Settings
 from tools.matchers import string_matchers
 from tools.validators import Validator
+from timeit import default_timer as timer
 
 
 def get_truth(inp, relate, val):
@@ -159,3 +160,21 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
 
 def str2bool(val):
     return val.lower() in ("yes", "true", "t", "1")
+
+
+def timeit(method):
+    def timed(*args, **kw):
+        result = method(*args, **kw)
+        if Settings.timing:
+            ts = timer()
+
+            te = timer()
+            if 'log_time' in kw:
+                name = kw.get('log_name', method.__name__.upper())
+                kw['log_time'][name] = int((te - ts) * 1000)
+            else:
+                BuiltIn().log('%r  %2.2f ms' % \
+                              (method.__name__, (te - ts) * 1000), level='DEBUG', console=True)
+        return result
+
+    return timed

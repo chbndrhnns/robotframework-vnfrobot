@@ -12,6 +12,6 @@ from tests import path
 def test__address__pass():
 
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/address.robot'))
-    result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/common.py'))
+    result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/robot/common.py'))
 
     assert result.return_code == 0

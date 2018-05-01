@@ -10,6 +10,6 @@ from tests import path
 def test_port_pass():
 
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/port.robot'))
-    result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/common.py'))
+    result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/robot/common.py'))
 
     assert result.return_code == 0
