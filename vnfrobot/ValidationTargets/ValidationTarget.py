@@ -79,6 +79,9 @@ class ValidationTarget:
         pass
 
     def run_test(self, command=None):
+        if not self.instance.sut.target_type:
+            raise ValidationError('No context given. Context must be set with "Set <context_type> context to <target>.')
+
         # override sidecar decision for network context
         if 'network' in self.instance.sut.target_type:
             self.options['sidecar_required'] = True

@@ -14,8 +14,6 @@ def set_context(instance, context_type=None, context=None):
 
     if context_type not in context_types:
         raise SetupError('Invalid context given. Must be {}'.format(context_types))
-    if not context:
-        raise SetupError('No context given. Context must be set with "Set <context_type> context to <target>"')
 
     instance.update_sut(
         target_type=context_type,
