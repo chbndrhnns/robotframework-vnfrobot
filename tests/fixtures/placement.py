@@ -1,7 +1,7 @@
 import pytest
 from pytest import fixture
 
-from ValidationTargets.placement import Placement
+from ValidationTargets.PlacementTarget import Placement
 
 
 @fixture

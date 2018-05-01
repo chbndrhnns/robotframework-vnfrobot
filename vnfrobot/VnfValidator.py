@@ -5,9 +5,9 @@ from robot.api import logger
 from robot.api.deco import keyword
 
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
-from ValidationTargets.address import Address
-from ValidationTargets.port import Port
-from ValidationTargets.variable import Variable
+from ValidationTargets.AddressTarget import Address
+from ValidationTargets.PortTarget import Port
+from ValidationTargets.VariableTarget import Variable
 from tools import orchestrator
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore

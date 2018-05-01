@@ -9,7 +9,7 @@ from tests import path
 @pytest.mark.keyword
 def test_port_pass():
 
-    suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/port.robot'))
+    suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/port.robot'))
     result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/common.py'))
 
     assert result.return_code == 0

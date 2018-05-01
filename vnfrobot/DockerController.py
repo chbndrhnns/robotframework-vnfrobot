@@ -19,7 +19,8 @@ from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
 from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status, \
-    start_process, wait_on_process, ProcessResult
+    start_process, wait_on_process
+from tools.data_structures import ProcessResult
 
 
 class DockerController:

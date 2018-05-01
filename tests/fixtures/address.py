@@ -1,8 +1,7 @@
 import pytest
 from pytest import fixture
 
-from ValidationTargets.address import Address
-from testtools.GossTool import GossTool
+from ValidationTargets.AddressTarget import Address
 
 
 @fixture(scope='module')
@@ -23,8 +22,3 @@ def address(address_data):
 def address_with_instance(address, instance):
     address.instance = instance
     return address
-
-
-@fixture
-def goss_tool_instance():
-    return GossTool()

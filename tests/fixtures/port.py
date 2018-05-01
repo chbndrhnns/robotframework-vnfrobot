@@ -1,7 +1,7 @@
 import pytest
 from pytest import fixture
 
-from ValidationTargets.port import Port
+from ValidationTargets.PortTarget import Port
 
 
 @fixture(scope='module')

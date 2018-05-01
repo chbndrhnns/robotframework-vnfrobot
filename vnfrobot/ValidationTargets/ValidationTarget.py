@@ -7,6 +7,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from exc import SetupError, ValidationError, NotFoundError
 from settings import Settings
 from testtools.GossTool import GossTool
+from testtools.TestTool import TestTool
 from tools import orchestrator
 from tools.data_structures import SUT
 
@@ -99,8 +100,12 @@ class ValidationTarget:
             tool_instance.command = self.options.get('command', None) or tool_instance.command
             tool_instance.run()
             self._cleanup()
-            self.evaluate_results(tool_instance)
         except (ValidationError, NotFoundError) as exc:
+            raise exc
+
+        try:
+            self.evaluate_results(tool_instance)
+        except ValidationError as exc:
             raise exc
 
     def _create_sidecar(self):
@@ -132,6 +137,8 @@ class ValidationTarget:
         )
 
     def evaluate_results(self, tool_instance):
+        if not isinstance(tool_instance, TestTool):
+            raise TypeError('evaluate_results must be called with an instance of TestTool.')
         tool_instance.process_results(self)
 
     def _find_robot_instance(self):

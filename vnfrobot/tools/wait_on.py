@@ -1,14 +1,14 @@
 # helpers from https://github.com/docker/compose/blob/master/tests/acceptance/cli_test.py
 import subprocess
 import time
-from collections import namedtuple
 from string import lower
 
 import docker
 from docker.models.containers import Container
 from docker.models.services import Service
 from robot.api import logger
-from robot.libraries.BuiltIn import BuiltIn
+
+from tools.data_structures import ProcessResult
 
 
 def start_process(base_dir, options):
@@ -185,6 +185,3 @@ def wait_on_services_status(client, services=None, status='Running'):
 
     assert isinstance(client, docker.DockerClient)
     return wait_on_condition(condition)
-
-
-ProcessResult = namedtuple('ProcessResult', 'stdout stderr')

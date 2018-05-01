@@ -13,22 +13,26 @@ class Placement(ValidationTarget):
 
     """
     properties = {
-        'node.id': {
+        # 'node.id': {
+        #     'matchers': ['is', 'is not'],
+        #     'value': '\S+'
+        # },
+        'node.role': {
             'matchers': ['is', 'is not'],
             'value': '\S+'
         },
-        'node.role': {
-            'matchers': ['contains', 'contains not', 'is', 'is not'],
-            'value': '\S+'
-        },
-        'node.hostname': {
-            'matchers': ['contains', 'contains not', 'is', 'is not'],
-            'value': '\S+'
-        },
-        'node.labels': {
-            'matchers': ['contains', 'contains not', 'is', 'is not'],
-            'value': '\S+'
-        }
+        # 'node.hostname': {
+        #     'matchers': ['contains', 'contains not', 'is', 'is not'],
+        #     'value': '\S+'
+        # },
+        # 'node.labels': {
+        #     'matchers': ['contains', 'contains not', 'is', 'is not'],
+        #     'value': '\S+'
+        # }
+    }
+    options = {
+        'test_tool': DockerTool,
+        'command': 'placement'
     }
     allowed_contexts = ['service']
     tool = DockerTool
@@ -46,6 +50,9 @@ class Placement(ValidationTarget):
         call_validator(self.value, validators.Regex, Placement.properties.get(self.property, {}).get('value', ''))
 
     def transform(self):
+        pass
+
+    def _prepare_run(self, tool_instance):
         pass
 
     def get_as_dict(self):

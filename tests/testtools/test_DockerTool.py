@@ -52,14 +52,17 @@ def dummy_sut():
 
 @pytest.mark.mock
 def test__get_env_vars__pass(mocker, dockertool, env_return_value):
+    def side_effect(*args, **kwargs):
+        return env_return_value
+
     mocker.patch.object(dockertool, 'controller')
-    dockertool.controller.get_container_config.return_value = env_return_value
+    dockertool.controller.get_container_config.side_effect = side_effect
 
     # Test
-    actual = dockertool._get_env_vars()
+    dockertool.env_vars()
 
     dockertool.controller.get_container_config.assert_called_once()
-    assert len(actual) == 2
+    assert len(dockertool.test_results) == 2
 
 
 @pytest.mark.mock
@@ -69,7 +72,7 @@ def test__get_env_vars__fail(mocker, dockertool):
 
     # Test
     with pytest.raises(NotFoundError):
-        dockertool._get_env_vars()
+        dockertool.env_vars()
 
     dockertool.controller.get_container_config.assert_called_once()
 
@@ -103,9 +106,9 @@ def test__get_container_labels__pass(mocker, dockertool):
 def test__get_container_labels2__pass(dockertool, sut, container_labels):
     dockertool.sut = sut
     # Test
-    actual = dockertool.get_container_labels()
+    dockertool.get_container_labels()
 
-    assert actual == container_labels
+    assert dockertool.test_results == container_labels
 
 
 @pytest.mark.integration
@@ -122,8 +125,8 @@ def test__get_node_labels2__pass(dockertool, sut, container_labels, node_labels)
     dockertool.sut = sut
 
     # Test
-    actual = dockertool.get_node_labels()
+    dockertool.get_node_labels()
 
-    assert actual == node_labels
+    assert dockertool.test_results == node_labels
 
 # TODO Hier gehts weiter!

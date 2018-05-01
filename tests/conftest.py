@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 
 import docker
@@ -6,10 +7,15 @@ from docker import errors
 import pytest
 from pytest import fixture
 
+# circular import? TODO???
+
+
+from testtools.DockerTool import DockerTool
+from testtools.GossTool import GossTool
 from tools import namesgenerator
 from tools.data_structures import SUT
 from tools import orchestrator
-from tools.wait_on import wait_on_services_status, wait_on_service_replication
+from tools.wait_on import wait_on_services_status
 from . import path
 
 from DockerController import DockerController
@@ -89,7 +95,10 @@ def containers(controller, service_id, stack):
 def volume(controller, goss_volume_name):
     res = controller.create_volume(goss_volume_name)
     yield goss_volume_name
-    controller.delete_volume(goss_volume_name)
+    try:
+        controller.delete_volume(goss_volume_name)
+    except:
+        pass
 
 
 @fixture
@@ -174,6 +183,7 @@ def instance(lib, builtin, stack_infos, controller):
     lib.descriptor_file = stack_infos[1]
     lib.docker_controller = controller
     lib.sut = None
+    lib.sidecar = None
     return lib
 
 
@@ -185,3 +195,13 @@ def sut(context='service'):
 @fixture
 def sut_deployment():
     return sut(context='deployment')
+
+
+@fixture
+def goss_tool_instance():
+    return GossTool()
+
+
+@fixture
+def docker_tool_instance():
+    return DockerTool()

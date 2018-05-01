@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from exc import SetupError, ValidationError
@@ -11,38 +13,40 @@ def test__context__invalid__fail(placement_with_instance):
         placement_with_instance.validate()
 
 
-@pytest.mark.parametrize('test', placement_target_test_data)
-def test__validate__pass(placement_with_instance, sut, test):
+@pytest.mark.parametrize('data', placement_target_test_data)
+def test__validate__pass(placement_with_instance, sut, data):
     e = placement_with_instance
     e.instance.sut = sut
 
-    set_test_data(e, test.get('test'))
+    set_test_data(e, data.get('test'))
     e.validate()
 
 
-@pytest.mark.parametrize('test', placement_target_test_data_fail)
-def test__validate__fail(placement_with_instance, sut, test):
+@pytest.mark.parametrize('data', placement_target_test_data_fail)
+def test__validate__fail(placement_with_instance, sut, data):
     e = placement_with_instance
     e.instance.sut = sut
 
-    set_test_data(e, test.get('test'))
+    set_test_data(e, data.get('test'))
     with pytest.raises(ValidationError):
         e.validate()
 
 
-@pytest.mark.parametrize('test', placement_target_test_data)
-def test__evaluate_results__pass(placement_with_instance, sut, test):
+@pytest.mark.parametrize('data', placement_target_test_data)
+def test__evaluate_results__pass(placement_with_instance, docker_tool_instance, sut, data):
     e = placement_with_instance
     e.instance.sut = sut
 
-    set_test_data(e, test.get('test'))
-    e.validate()
-    e.evaluate_results(e)
+    set_test_data(e, data.get('test'))
+    docker_tool_instance.test_results = data.get('result')
+    docker_tool_instance.command = 'placement'
+
+    e.evaluate_results(docker_tool_instance)
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize('test', placement_target_test_data)
-def test__run__pass(placement_with_instance, stack, test):
+@pytest.mark.parametrize('data', placement_target_test_data)
+def test__run__pass(placement_with_instance, stack, data):
     e = placement_with_instance
 
     name, path, success = stack
@@ -50,7 +54,7 @@ def test__run__pass(placement_with_instance, stack, test):
     e.instance.sut = SUT(target_type='service', target=name + '_sut', service_id=name + '_sut')
     e.instance.services = [name + '_sut']
 
-    test = test.get('test')
+    test = data.get('test')
     set_test_data(e, test)
 
     e.run_test()
