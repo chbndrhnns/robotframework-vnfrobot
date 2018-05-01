@@ -4,6 +4,7 @@ from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 from robot.api import logger
 from robot.api.deco import keyword
 
+from ValidationTargets.PlacementTarget import Placement
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from ValidationTargets.AddressTarget import Address
 from ValidationTargets.PortTarget import Port
@@ -180,6 +181,22 @@ class VnfValidator(DynamicCore):
             validation_target.set_as_dict({
                 'context': self.sut,
                 'entity': raw_entity,
+                'property': raw_prop,
+                'matcher': matcher,
+                'value': raw_val})
+            validation_target.run_test()
+        except (DataFormatError, ValidationError) as exc:
+            BuiltIn().fail(exc)
+
+    @keyword('Placement: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
+        '|'.join(Placement.properties.keys()),
+        '|'.join(string_matchers.keys())))
+    def port_kw(self, raw_prop, matcher, raw_val):
+        try:
+            validation_target = Placement(self)
+            validation_target.set_as_dict({
+                'context': self.sut,
+                'entity': 'placement',
                 'property': raw_prop,
                 'matcher': matcher,
                 'value': raw_val})

@@ -1,10 +1,5 @@
-import tempfile
-
-from docker.models.containers import Container
-from jinja2 import TemplateError
-
 from ValidationTargets.ValidationTarget import ValidationTarget
-from tools import testutils, validators, orchestrator
+from tools import validators
 from tools.testutils import validate_port, validate_property, validate_value, validate_matcher, call_validator
 from tools.validators import IpAddress
 from testtools.GossTool import GossTool

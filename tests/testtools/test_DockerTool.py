@@ -120,13 +120,3 @@ def test__get_container_labels__fail(dockertool):
         dockertool.get_container_labels()
 
 
-@pytest.mark.integration
-def test__get_node_labels2__pass(dockertool, sut, container_labels, node_labels):
-    dockertool.sut = sut
-
-    # Test
-    dockertool.get_node_labels()
-
-    assert dockertool.test_results == node_labels
-
-# TODO Hier gehts weiter!

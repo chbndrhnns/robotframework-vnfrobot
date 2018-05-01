@@ -160,6 +160,7 @@ def stack(controller, stack_infos):
     path = stack_infos[1]
 
     res = controller.deploy_stack(path, name)
+    assert res
     services = controller.get_services(name)
     wait_on_services_status(controller._docker, services)
 
