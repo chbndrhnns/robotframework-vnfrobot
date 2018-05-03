@@ -48,7 +48,7 @@ class VnfValidator(DynamicCore):
             if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
                 self.deployment_options['SKIP_UNDEPLOY'] = True
 
-            self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}")
+            self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}").strip('\'')
         except RobotNotRunningError:
             pass
 
@@ -210,7 +210,7 @@ class VnfValidator(DynamicCore):
             BuiltIn().log('No descriptor file specified. Assuming fake deployment...', level='INFO', console=True)
             return
         try:
-            orchestrator.get_deployment(self, descriptor)
+            orchestrator.get_or_create_deployment(self)
         except SetupError as exc:
             BuiltIn().fatal_error(exc)
 

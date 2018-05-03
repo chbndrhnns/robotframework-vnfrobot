@@ -42,11 +42,10 @@ def _get_controller(source):
     return DockerController(base_dir=os.path.dirname(source))
 
 
-def get_deployment(instance, descriptor):
+def _get_deployment(instance):
     if instance.suite_source is None:
         raise SetupError('Cannot determine directory of robot file.')
 
-    instance.descriptor_file = os.path.realpath(os.path.join(os.path.dirname(instance.suite_source), descriptor))
     try:
         if not instance.docker_controller:
             instance.docker_controller = _get_controller(instance.suite_source)
@@ -69,15 +68,24 @@ def get_deployment(instance, descriptor):
 
 def get_or_create_deployment(instance):
     try:
-        if len(instance.services) is 0:
-            create_deployment(instance)
-        else:
-            get_deployment(instance, instance.descriptor_file)
+        f = os.path.realpath(os.path.join(os.path.dirname(instance.suite_source), instance.descriptor_file))
+        instance.descriptor_file = _check_file_exists(f)
+        if instance.deployment_name:
+            _get_deployment(instance)
+        elif len(instance.services) is 0:
+            _create_deployment(instance)
     except (DeploymentError, SetupError) as exc:
         raise exc
 
 
-def create_deployment(instance):
+def _check_file_exists(f):
+    if not os.path.isfile(f):
+        raise SetupError('Descriptor "{}" not found.'.format(f))
+    return f
+
+
+
+def _create_deployment(instance):
     descriptor = instance.descriptor_file
     deployment = instance.deployment_name
     ctl = instance.docker_controller

@@ -26,7 +26,7 @@ class ValidationTarget:
 
     @abstractproperty
     def options(self):
-        pass
+        raise NotImplementedError('must be implemented by the subclass')
 
     @property
     def test_results(self):
@@ -72,11 +72,11 @@ class ValidationTarget:
 
     @abstractmethod
     def transform(self):
-        pass
+        raise NotImplementedError('must be implemented by the subclass')
 
     @abstractmethod
     def _prepare_run(self, tool_instance):
-        pass
+        raise NotImplementedError('must be implemented by the subclass')
 
     def run_test(self, command=None):
         if not self.instance.sut.target_type:
@@ -179,5 +179,3 @@ class ValidationTarget:
                     BuiltIn().log('Cleanup failed: could not remove {}: exc'.format(self.instance.sidecar.name, exc),
                                   level='ERROR',
                                   console=True)
-
-

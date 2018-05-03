@@ -18,7 +18,6 @@ from tools import namesgenerator
 from tools.archive import Archive
 
 from exc import NotFoundError, SetupError, DeploymentError
-from tools.testutils import timeit
 from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status, \
     start_process, wait_on_process
 
