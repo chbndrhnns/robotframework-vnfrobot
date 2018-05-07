@@ -39,7 +39,10 @@ def check_or_create_test_tool_volume(instance, volume):
 
 
 def _get_controller(source):
-    return DockerController(base_dir=os.path.dirname(source))
+    try:
+        return DockerController(base_dir=os.path.dirname(source))
+    except SetupError as exc:
+        raise exc
 
 
 def _get_deployment(instance):
@@ -47,32 +50,25 @@ def _get_deployment(instance):
         raise SetupError('Cannot determine directory of robot file.')
 
     try:
-        if not instance.docker_controller:
-            instance.docker_controller = _get_controller(instance.suite_source)
-    except SetupError as exc:
-        raise exc
-
-    if instance.deployment_name:
-        try:
-            instance.docker_controller.find_stack(instance.deployment_name)
-            if not instance.services:
-                BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
-                              console=True)
-        except DeploymentError:
-            raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
-    else:
-        instance.deployment_name = namesgenerator.get_random_name()
-        # BuiltIn().log('Name for the deployment: {}'.format(instance.deployment_name), level='DEBUG', console=True)
-    return True
+        instance.docker_controller.find_stack(instance.deployment_name)
+        if not instance.services:
+            BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
+                          console=True)
+        return True
+    except DeploymentError:
+        raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
 
 
 def get_or_create_deployment(instance):
     try:
         f = os.path.realpath(os.path.join(os.path.dirname(instance.suite_source), instance.descriptor_file))
         instance.descriptor_file = _check_file_exists(f)
+        if not instance.docker_controller:
+            instance.docker_controller = _get_controller(instance.suite_source)
         if instance.deployment_name:
             _get_deployment(instance)
         elif len(instance.services) is 0:
+            instance.deployment_name = namesgenerator.get_random_name()
             _create_deployment(instance)
     except (DeploymentError, SetupError) as exc:
         raise exc
@@ -84,14 +80,13 @@ def _check_file_exists(f):
     return f
 
 
-
 def _create_deployment(instance):
     descriptor = instance.descriptor_file
     deployment = instance.deployment_name
     ctl = instance.docker_controller
-    assert deployment
-    assert descriptor
-    assert ctl
+    assert deployment, "deployment name is required"
+    assert descriptor, "descriptor is required"
+    assert ctl, "docker_controller is required"
 
     try:
         BuiltIn().log('Deploying {} as {}'.format(descriptor, deployment), level='INFO',
@@ -102,7 +97,7 @@ def _create_deployment(instance):
         instance.services.extend(ctl.get_services(deployment))
         wait_on_services_status(ctl._docker, instance.services)
         return True
-    except DeploymentError as exc:
+    except (DeploymentError, TypeError) as exc:
         raise SetupError('Error during deployment of {}: {}'.format(deployment, exc))
 
 

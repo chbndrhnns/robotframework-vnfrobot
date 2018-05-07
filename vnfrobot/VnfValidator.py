@@ -48,7 +48,7 @@ class VnfValidator(DynamicCore):
             if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
                 self.deployment_options['SKIP_UNDEPLOY'] = True
 
-            self.deployment_name = BuiltIn().get_variable_value("${USE_DEPLOYMENT}").strip('\'')
+            self.deployment_name = (BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
         except RobotNotRunningError:
             pass
 

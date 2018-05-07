@@ -226,7 +226,12 @@ class DockerController:
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
 
+    def clean_networks(self):
+        self._dispatch(['network', 'prune', '--force'])
+
     def deploy_stack(self, descriptor, name):
+        assert name, "name is required for deploy_stack"
+        assert descriptor, "descriptor is required for deploy_stack"
         res = self._dispatch(['stack', 'deploy', '-c', descriptor, name])
         if res.stderr:
             raise DeploymentError(res.stderr)

@@ -82,6 +82,8 @@ def service_id(stack_infos):
     return '{}_sut'.format(stack_infos[0])
 
 
+
+
 @fixture(scope='module')
 def containers(controller, service_id, stack):
     return controller.get_containers_for_service(service_id)
