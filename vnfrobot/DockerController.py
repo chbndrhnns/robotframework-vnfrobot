@@ -363,6 +363,14 @@ class DockerController:
 
     def run_sidecar(self, name='', sidecar=None, image='busybox', command='true', volumes=None, network=None):
         stdout, stderr = '', ''
+
+        # maybe try this:
+        # docker service create --network dockercoins_default --name debug \
+        #        --constraint node.hostname==$HOSTNAME alpine sleep 1000000000
+        #
+        #
+        #
+
         try:
             if not sidecar:
                 sidecar = self.get_or_create_sidecar(image, command, name, volumes, network)

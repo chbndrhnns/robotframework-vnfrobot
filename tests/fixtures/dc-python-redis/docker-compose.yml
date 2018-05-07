@@ -3,16 +3,24 @@
 version: '3'
 services:
   app:
-    image: dc-nginx-python-redis_app:latest
+    image: hubby/dc-nginx-python-redis_app:0.1
     depends_on:
       - redis
     environment:
       - REDIS_HOST=redis
     ports:
       - "5000:5000"
+    networks:
+      - m2m
   redis:
     image: redis:3.2-alpine
     volumes:
       - redis_data:/data
+    networks:
+      - m2m
+
 volumes:
   redis_data:
+
+networks:
+  m2m:
