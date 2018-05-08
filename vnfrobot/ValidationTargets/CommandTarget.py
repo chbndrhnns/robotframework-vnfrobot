@@ -30,7 +30,7 @@ class Command(ValidationTarget):
         'test_tool': DockerTool,
         'command': 'run_in_container'
     }
-    allowed_contexts = ['service']
+    allowed_contexts = ['service', 'network']
 
     def __init__(self, instance=None):
         super(Command, self).__init__(instance)

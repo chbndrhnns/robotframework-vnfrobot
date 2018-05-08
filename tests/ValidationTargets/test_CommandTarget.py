@@ -4,7 +4,7 @@ import pytest
 
 from exc import SetupError, ValidationError
 from fixtures.test_data_CommandTarget import command_target_test_data_pass, command_target_test_data_fail, \
-    command_target_integration_test_data
+    command_target_integration_test_data, command_target_network_context_test_data
 from tools.data_structures import SUT
 from utils import set_test_data
 
@@ -54,6 +54,21 @@ def test__run__pass(command_with_instance, stack, data, service_id):
     name, path, success = stack
     e.instance.deployment_name = name
     e.instance.sut = SUT('service', 'sut', service_id)
+
+    test = data.get('test')
+    set_test_data(e, test)
+
+    e.run_test()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize('data', command_target_network_context_test_data)
+def test__run__network_context__pass(command_with_instance, stack, data, service_id):
+    e = command_with_instance
+
+    name, path, success = stack
+    e.instance.deployment_name = name
+    e.instance.sut = SUT('network', 'm2m', service_id)
 
     test = data.get('test')
     set_test_data(e, test)

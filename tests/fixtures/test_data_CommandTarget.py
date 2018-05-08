@@ -13,6 +13,27 @@ command_target_test_data_fail = [
     (['"sh --version"', 'stderr', 'is greater', '"a"']),
 ]
 
+command_target_network_context_test_data = [
+    (
+        {
+            'test': [r"echo bla", 'stdout', 'contains', 'bla'],
+            'result': {
+                'code': 0,
+                'res': ''
+            }
+        }
+    ),
+    (
+        {
+            'test': [r"echo bla", 'stdout', 'contains not', 'blub'],
+            'result': {
+                'code': 0,
+                'res': ''
+            }
+        }
+    )
+]
+
 command_target_integration_test_data = [
     (
         {
