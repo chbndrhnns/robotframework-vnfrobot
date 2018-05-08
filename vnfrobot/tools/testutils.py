@@ -13,6 +13,13 @@ from timeit import default_timer as timer
 
 
 def get_truth(inp, relate, val):
+    if inp is None:
+        raise exc.ValidationError('get_truth: actual value not set.')
+    if not relate:
+        raise exc.ValidationError('get_truth: matcher not set.')
+    if val is None:
+        raise exc.ValidationError('get_truth: expected value not set.')
+
     # special case: contains not is not covered by the operator module
     if relate == 'contains_not':
         return val not in inp
@@ -20,6 +27,12 @@ def get_truth(inp, relate, val):
     if relate.__name__ == 'contains':
         return relate(inp, val)
 
+    try:
+        inp_integer = int(inp)
+        val_integer = int(val)
+        return relate(val_integer, inp_integer)
+    except ValueError:
+        pass
     return relate(val, inp)
 
 

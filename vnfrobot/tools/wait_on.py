@@ -63,7 +63,7 @@ def wait_on_container_status(client, container, status='Running'):
     Wait until a container is in the desired state.
 
     Args:
-        client: Docker client
+        client: DockerController
         container: container name to search for
         status: str,list desired status, can also be a list of states, default: Running
 
@@ -72,7 +72,7 @@ def wait_on_container_status(client, container, status='Running'):
     """
 
     def condition():
-        res = container if isinstance(container, Container) else client.containers.get(container)
+        res = container if isinstance(container, Container) else client._docker.containers.get(container)
         if res and isinstance(status, basestring):
             if 'Running' in status:
                 return res.attrs['State'][status]
@@ -93,7 +93,7 @@ def wait_on_container_status(client, container, status='Running'):
 
     container = container.name if isinstance(container, Container) else container
     # logger.console('Waiting for {} to be {}...'.format(container, status))
-    assert isinstance(client, docker.DockerClient)
+    assert isinstance(client._docker, docker.DockerClient)
     return wait_on_condition(condition)
 
 
@@ -102,7 +102,7 @@ def wait_on_service_status(client, service, status='Running'):
     Wait until a service is in the desired state.
 
     Args:
-        client: Docker client
+        client: DockerController
         service: service name to search for
         status: desired status, default: Running
 
@@ -111,12 +111,12 @@ def wait_on_service_status(client, service, status='Running'):
     """
 
     def condition():
-        res = service if isinstance(service, Service) else client.services.get(service)
+        res = service if isinstance(service, Service) else client._docker.services.get(service)
         if res:
             return res.attrs['State'][status] == True
         return False
 
-    assert isinstance(client, docker.DockerClient)
+    assert isinstance(client._docker, docker.DockerClient)
     return wait_on_condition(condition)
 
 
@@ -127,7 +127,7 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
 
     Args:
         current_instances: list of containers
-        client: Docker client
+        client: DockerController
         service: service name to search for
         status: desired status, default: Running
 
@@ -137,7 +137,7 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
 
     def condition():
         # logger.console('waiting for {} to have a container in state {}'.format(service, status))
-        res = client.containers.list(filters={
+        res = client._docker.containers.list(filters={
             'label': 'com.docker.swarm.service.name={}'.format(service),
             'status': lower(status)
         })
@@ -152,7 +152,7 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
             return new_instances.isdisjoint(current_instances)
 
     service = service.name if isinstance(service, Service) else service
-    assert isinstance(client, docker.DockerClient)
+    assert isinstance(client._docker, docker.DockerClient)
     assert isinstance(service, basestring)
     return wait_on_condition(condition)
 
@@ -163,7 +163,7 @@ def wait_on_services_status(client, services=None, status='Running'):
 
     Args:
         services: List of services to wait for
-        client: Docker client
+        client: DockerController
         status: desired status, default: Running
 
     Returns:
@@ -175,9 +175,9 @@ def wait_on_services_status(client, services=None, status='Running'):
             state_ok = 0
             for service in services:
                 if isinstance(service, Service):
-                    res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
+                    res = client._docker.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
                 else:
-                    res = client.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+                    res = client._docker.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
 
                 if res:
                     # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
@@ -189,9 +189,12 @@ def wait_on_services_status(client, services=None, status='Running'):
                         task = tasks[0]
                         err = task.get('Status', {}).get('Err')
                         if err:
-                            raise DeploymentError('Could not deploy {}: {}'.format(service.name, err))
+                            if 'failed to allocate gateway' in err:
+                                client._docker_api.prune_networks()
+                            else:
+                                raise DeploymentError('Could not deploy {}: {}'.format(service.name, err))
             return len(services) == state_ok
         return False
 
-    assert isinstance(client, docker.DockerClient)
+    assert isinstance(client._docker, docker.DockerClient)
     return wait_on_condition(condition)

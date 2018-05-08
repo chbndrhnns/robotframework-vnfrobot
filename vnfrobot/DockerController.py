@@ -49,14 +49,14 @@ class DockerController:
         if not target:
             try:
                 target = self.get_container(entity)
-            except (docker.errors.NotFound, TypeError):
+            except (NotFoundError, TypeError):
                 try:
                     target = self.get_containers_for_service(entity)[0]
-                except (docker.errors.NotFound, TypeError):
+                except (NotFoundError, TypeError):
                     raise NotFoundError(
-                        'Could not find entity (service or container) for the provided value of "entity"')
+                        'Could not find entity (service or container) {}'.format(entity if entity else '<None>'))
 
-        BuiltIn().log('Running {} in {}'.format(command, target.name), level='DEBUG', console=True)
+        BuiltIn().log('Running "{}" in {}'.format(command, target.name), level='DEBUG', console=True)
         container_status = target.status
         if 'created' in container_status:
             return self.run_sidecar(sidecar=target)
@@ -68,9 +68,18 @@ class DockerController:
             raise ValueError('_command parameter must not be empty.')
 
         try:
-            wait_on_container_status(self._docker, container.name)
-            res = container.exec_run(cmd=command, tty=True)
-            return res
+            wait_on_container_status(self, container.name)
+
+            # idea from https://github.com/docker/docker-py/issues/1989
+            exec_id = container.client.api.exec_create(container.id, command)['Id']
+            res = container.client.api.exec_start(exec_id)
+            # res = container.exec_run(cmd=command)
+            # res = container.exec_run(cmd=command, tty=True, stderr=True, stdout=True)
+            ret_code = container.client.api.exec_inspect(exec_id)['ExitCode']
+            return {
+                'code': ret_code,
+                'res': res
+            }
         except (docker.errors.APIError, AttributeError) as exc:
             raise SetupError(exc)
 
@@ -80,7 +89,7 @@ class DockerController:
 
         try:
             wait_on_service_replication(self._docker, service)
-            wait_on_service_container_status(self._docker, service)
+            wait_on_service_container_status(self, service)
             res = self._docker.containers.list(all=True,
                                                filters={
                                                    'label': 'com.docker.swarm.service.name={}'.format(service),
@@ -98,7 +107,7 @@ class DockerController:
 
         # first, try if entity is a container
         try:
-            wait_on_container_status(self._docker, entity)
+            wait_on_container_status(self, entity)
             c = self._docker.containers.get(entity)
         except docker.errors.NotFound as exc:
             # second, try if entity is a service
@@ -140,7 +149,7 @@ class DockerController:
     def connect_network_to_service(self, service, network):
         try:
             wait_on_service_replication(self._docker, service)
-            wait_on_service_container_status(self._docker, service)
+            wait_on_service_container_status(self, service)
 
             n = network if isinstance(network, Network) else self.get_network(network)
             s = service if isinstance(service, Service) else self.get_service(service)
@@ -191,9 +200,9 @@ class DockerController:
 
         # wait for the update to take place
         wait_on_service_replication(self._docker, service)
-        wait_on_service_container_status(self._docker, service, current_instances)
+        wait_on_service_container_status(self, service, current_instances)
         c = self.get_containers_for_service(service)[0]
-        wait_on_container_status(self._docker, c)
+        wait_on_container_status(self, c)
         return c
 
     def connect_volume_to_service(self, service, volume):
@@ -204,7 +213,7 @@ class DockerController:
 
         try:
             wait_on_service_replication(self._docker, service)
-            wait_on_service_container_status(self._docker, service)
+            wait_on_service_container_status(self, service)
 
             v = volume if isinstance(volume, Volume) else self.get_volume(volume)
             s = service if isinstance(service, Service) else self.get_service(service)
@@ -227,7 +236,7 @@ class DockerController:
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
 
     def clean_networks(self):
-        self._dispatch(['network', 'prune', '--force'])
+        self._docker_api.prune_networks()
 
     def deploy_stack(self, descriptor, name):
         assert name, "name is required for deploy_stack"
@@ -238,7 +247,9 @@ class DockerController:
         return True
 
     def undeploy_stack(self, name):
-        return self._dispatch(['stack', 'rm', name])
+        a = self._dispatch(['stack', 'rm', name])
+        self.clean_networks()
+        return a
 
     def get_network(self, name):
         try:
@@ -379,7 +390,7 @@ class DockerController:
         try:
             if not sidecar:
                 sidecar = self.get_or_create_sidecar(image, command, name, volumes, network)
-            wait_on_container_status(self._docker, sidecar, ['Created', 'Exited'])
+            wait_on_container_status(self, sidecar, ['Created', 'Exited'])
             sidecar.start()
             sidecar.wait()
             stdout = sidecar.logs(stdout=True, stderr=False)

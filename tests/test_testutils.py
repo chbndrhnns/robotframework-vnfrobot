@@ -8,6 +8,15 @@ import operator
 not_valid_match = 'not valid'
 
 
+def test__get_truth__empty_inp__fail():
+    inp = None
+    relate = operator.contains
+    val = 'cd'
+
+    with pytest.raises(ValidationError):
+        get_truth(inp, relate, val)
+
+
 def test__get_truth__contains_string():
     inp = 'abcd efg'
     relate = operator.contains

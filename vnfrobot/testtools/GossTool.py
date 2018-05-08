@@ -17,7 +17,7 @@ class GossTool(TestTool):
         self.gossfile = gossfile
         self.command = '/goss/goss-linux-amd64 --gossfile {} validate --format json'.format(self.gossfile)
 
-    def run(self):
+    def run(self, target):
         res = ''
         try:
             if not self.sut:
@@ -25,12 +25,13 @@ class GossTool(TestTool):
             if not self.controller:
                 raise AttributeError('Controller is necessary to run goss.')
 
-            res = self.controller.execute(self.sut.target, self.command).strip()
-            self.test_results = json.loads(res)
+            res = self.controller.execute(self.sut.target, self.command)
+            self.test_results = json.loads(res.get('res', {}).strip())
             return self.test_results
         except NotFoundError as exc:
             raise exc
         except (json.JSONDecoder, ValueError) as exc:
+            res = res.get('res', {}).strip()
             if 'No help topic' in res:
                 raise TestToolError('Syntax error while calling goss on {}: {}'.format(self.sut.target, res))
             elif 'File error: open' in res:

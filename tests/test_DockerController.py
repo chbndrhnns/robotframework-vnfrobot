@@ -132,7 +132,7 @@ def test__execute_in_stack__pass(controller, stack, service_id):
     try:
         containers = controller.get_containers_for_service(service_id)
         res = controller.execute(containers[0], ['sh', '-c', '\'echo "{}"\''.format(string)])
-        assert string in res
+        assert string in res.get('res')
     finally:
         _cleanup(controller, service_id)
 

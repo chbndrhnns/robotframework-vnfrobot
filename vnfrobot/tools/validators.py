@@ -112,7 +112,7 @@ class InList(Validator):
         if not self.context:
             raise exc.ValidationError('Context is necessary for the validator "{}"'.format(self.name))
         if not isinstance(self.context, list):
-            raise exc.ValidationError('Context must be of instance list()'.format())
+            raise exc.ValidationError('Context for validator must be of instance list(), got {}'.format(self.name, self.context))
 
     def validate(self, entity):
         return entity in self.context
@@ -132,7 +132,33 @@ class Regex(Validator):
                 raise exc.ValidationError('Context must be a valid regex'.format())
 
     def validate(self, entity):
-        found = re.search(self.context, entity)
+        found = re.findall(self.context, entity)
+        if not found:
+            BuiltIn().log('Value "{}" not allowed. Must match the regex {}'.format(entity, self.context), level='ERROR',
+                          console=True)
+            return False
+        return True
+
+
+class String(Validator):
+    def validate(self, entity):
+        if not isinstance(entity, basestring):
+            BuiltIn().log('Value "{}" not allowed. Must be string'.format(entity), level='ERROR',
+                          console=True)
+            return False
+        return True
+
+
+class QuotedString(Validator):
+    # found at https://gist.github.com/bpeterso2000/11277541
+    regex = re.compile(
+        r"(?P<quote>['\"])(?P<string>.*?)(?<!\\)(?P=quote)")
+
+    def __init__(self):
+        super(QuotedString, self).__init__()
+
+    def validate(self, entity):
+        found = QuotedString.regex.search(entity)
         if not found:
             BuiltIn().log('Value "{}" not allowed. Must match the regex {}'.format(entity, self.context), level='ERROR',
                           console=True)

@@ -78,7 +78,7 @@ class ValidationTarget:
     def _prepare_run(self, tool_instance):
         raise NotImplementedError('must be implemented by the subclass')
 
-    def run_test(self, command=None):
+    def run_test(self):
         if not self.instance.sut.target_type:
             raise ValidationError('No context given. Context must be set with "Set <context_type> context to <target>.')
 
@@ -105,7 +105,7 @@ class ValidationTarget:
             )
             self._prepare_run(tool_instance)
             tool_instance.command = self.options.get('command', None) or tool_instance.command
-            tool_instance.run()
+            tool_instance.run(self)
         except (ValidationError, NotFoundError, DeploymentError) as exc:
             raise exc
         finally:
@@ -159,7 +159,7 @@ class ValidationTarget:
     def _check_test_data(self):
         missing = [key for key, value in self.get_as_dict().iteritems() if not value]
         if missing:
-            raise ValueError('Checking test data: No value supplied for {}'.format(missing))
+            raise ValidationError('Checking test data: No value supplied for {}'.format(missing))
 
     def _cleanup(self):
         if self.instance.sidecar:

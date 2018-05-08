@@ -25,6 +25,7 @@ from DockerController import DockerController
 # import fixtures as local test plugins
 pytest_plugins = [
     "tests.fixtures.context",
+    "tests.fixtures.command",
     "tests.fixtures.address",
     "tests.fixtures.port",
     "tests.fixtures.goss",
@@ -80,8 +81,6 @@ def network_name(stack_infos):
 @fixture(scope='module')
 def service_id(stack_infos):
     return '{}_sut'.format(stack_infos[0])
-
-
 
 
 @fixture(scope='module')
@@ -160,7 +159,7 @@ def stack(controller, stack_infos):
     res = controller.deploy_stack(path, name)
     assert res
     services = controller.get_services(name)
-    wait_on_services_status(controller._docker, services)
+    wait_on_services_status(controller, services)
 
     yield (name, path, res)
 
@@ -170,22 +169,6 @@ def stack(controller, stack_infos):
 
 
 # Fixtures for entity tests
-@fixture(scope='module')
-@pytest.mark.usefixtures('stack_infos')
-@pytest.mark.usefixtures('controller')
-@mock.patch('VnfValidator.VnfValidator', autospec=True)
-def instance2(lib, stack_infos, controller):
-    lib.suite_source = 'bla.robot'
-    lib.goss_volume_name = 'goss-helper'
-    lib.deployment_name = None
-    lib.descriptor_file = stack_infos[1]
-    lib.docker_controller = controller
-    lib.sut = None
-    lib.sidecar = None
-    lib.update_sut.side_effect = update_sut
-    return lib
-
-
 @fixture(scope='module')
 @pytest.mark.usefixtures('stack_infos')
 @pytest.mark.usefixtures('controller')
@@ -199,7 +182,6 @@ def instance(stack_infos, controller):
     lib.sut = None
     lib.sidecar = None
     return lib
-
 
 
 @fixture

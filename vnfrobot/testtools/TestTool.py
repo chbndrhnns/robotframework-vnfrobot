@@ -10,11 +10,12 @@ class TestTool:
     def __init__(self, controller, sut):
         self.controller = controller if isinstance(controller, DockerController) else None
         self.sut = sut
+        self.target = None
         self._command = None
         self._test_results = None
 
     @abstractmethod
-    def run(self):
+    def run(self, target):
         pass
 
     @property

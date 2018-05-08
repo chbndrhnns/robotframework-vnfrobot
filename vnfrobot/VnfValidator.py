@@ -4,6 +4,7 @@ from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 from robot.api import logger
 from robot.api.deco import keyword
 
+from ValidationTargets.CommandTarget import Command
 from ValidationTargets.PlacementTarget import Placement
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from ValidationTargets.AddressTarget import Address
@@ -14,7 +15,7 @@ from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
 from version import VERSION
-from tools.matchers import string_matchers
+from tools.matchers import string_matchers, all_matchers
 
 
 class VnfValidator(DynamicCore):
@@ -102,9 +103,21 @@ class VnfValidator(DynamicCore):
         except NotFoundError as exc:
             BuiltIn().fatal_error(exc)
 
-    @keyword('Command')
-    def command_kw(self):
-        pass
+    @keyword('Command "${{raw_entity:.+}}": ${{raw_prop:{}}} ${{matcher:{}}} "${{raw_val:.+}}"'.format(
+        '|'.join(Command.properties.keys()),
+        '|'.join(all_matchers.keys())))
+    def command_kw(self, raw_entity, raw_prop, matcher, raw_val):
+        try:
+            validation_target = Command(self)
+            validation_target.set_as_dict({
+                'context': self.sut,
+                'entity': raw_entity,
+                'property': raw_prop,
+                'matcher': matcher,
+                'value': raw_val})
+            validation_target.run_test()
+        except (DataFormatError, ValidationError) as exc:
+            BuiltIn().fail(exc)
 
     @keyword('Process')
     def process_kw(self):

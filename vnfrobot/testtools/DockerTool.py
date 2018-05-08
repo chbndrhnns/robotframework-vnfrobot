@@ -1,6 +1,6 @@
 from exc import ValidationError
 from testtools.TestTool import TestTool
-from tools.matchers import string_matchers
+from tools.matchers import string_matchers, all_matchers
 from tools.testutils import get_truth, timeit
 
 
@@ -9,7 +9,8 @@ class DockerTool(TestTool):
     def __init__(self, controller=None, sut=None):
         super(DockerTool, self).__init__(controller, sut)
 
-    def run(self):
+    def run(self, target):
+        self.target = target
         if not self.command:
             raise ValidationError('DockerTool: run(): No command given.')
         o = getattr(self, self.command, None)
@@ -24,6 +25,9 @@ class DockerTool(TestTool):
     def get_container_labels(self):
         self.test_results = self.controller.get_container_config(self.sut.service_id, 'Labels')
 
+    def run_in_container(self):
+        self.test_results = self.controller.execute(self.sut.service_id, self.target.entity)
+
     @timeit
     def placement(self):
         labels = self.controller.get_container_config(self.sut.service_id, 'Labels')
@@ -37,14 +41,19 @@ class DockerTool(TestTool):
         if not self.test_results:
             raise ValidationError('DockerTool: No {} "{}" found.'.format(self.command, target.entity))
 
-        res = getattr(self, '_process_{}'.format(self.command))(entity=target.entity)
+        method_name = '_process_{}'.format(self.command)
+        m = getattr(self, method_name, None)
+        if not m:
+            raise ValidationError('There is no method {} in DockerTool.'.format(method_name))
+        res = m(entity=target.entity)
 
         actual = res[0] if isinstance(res, list) else res
 
-        if not get_truth(actual, string_matchers[target.matcher], target.value):
+        if not get_truth(actual, all_matchers[target.matcher], target.value):
             raise ValidationError(
-                '{}: {} {}, actual: {}'.format(
+                '{}: {} {} {}, actual: {}'.format(
                     target.entity,
+                    target.property if target.property else target.entity,
                     target.matcher,
                     target.value,
                     actual)
@@ -58,3 +67,10 @@ class DockerTool(TestTool):
         # labels are  in obj.attrs['Spec']['Labels']
 
         return self.test_results.get('Spec', {}).get('Role', '')
+
+    def _process_run_in_container(self, entity):
+        if 'return code' in self.target.property:
+            return self.test_results.get('code', '')
+        else:
+            return self.test_results.get('res', '').strip()
+

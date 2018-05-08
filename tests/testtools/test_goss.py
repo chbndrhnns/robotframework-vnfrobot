@@ -5,10 +5,12 @@ from time import sleep
 
 import pytest
 from docker.models.containers import Container
+from mock import MagicMock
 
 from exc import TestToolError
 from testtools.GossTool import GossTool
 
+target = MagicMock()
 
 @pytest.mark.integration
 def test__run__pass(controller, gossfile, goss_sut_service):
@@ -16,7 +18,7 @@ def test__run__pass(controller, gossfile, goss_sut_service):
 
     controller.put_file(sut.target, gossfile)
     g = GossTool(controller, sut, gossfile=os.path.basename(gossfile))
-    res = g.run()
+    res = g.run(target)
 
     assert res['summary']['failed-count'] == 1
 
@@ -29,7 +31,7 @@ def test__run__gossfile_not_found__fail(controller, goss_sut_service):
     g.gossfile = 'bla'
 
     with pytest.raises(TestToolError, match='Gossfile not found'):
-        g.run()
+        g.run(target)
 
 
 @pytest.mark.integration
@@ -40,7 +42,7 @@ def test__run__goss_not_found__fail(controller, goss_sut_service):
     g._command = 'not_existing'
 
     with pytest.raises(TestToolError, match='goss executable was not found'):
-        g.run()
+        g.run(target)
 
 
 @pytest.mark.integration
@@ -51,7 +53,7 @@ def test__run__syntax_error__fail(controller, goss_sut_service):
     g._command = '/goss/goss-linux-amd64 /data'
 
     with pytest.raises(TestToolError, match='Syntax error'):
-        g.run()
+        g.run(target)
 
 
 @pytest.mark.integration
