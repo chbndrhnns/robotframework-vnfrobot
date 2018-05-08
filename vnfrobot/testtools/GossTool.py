@@ -26,12 +26,12 @@ class GossTool(TestTool):
                 raise AttributeError('Controller is necessary to run goss.')
 
             res = self.controller.execute(self.sut.target, self.command)
-            self.test_results = json.loads(res.get('res', {}).strip())
+            self.test_results = json.loads(res)
             return self.test_results
         except NotFoundError as exc:
             raise exc
         except (json.JSONDecoder, ValueError) as exc:
-            res = res.get('res', {}).strip()
+            res = res.get('res') if isinstance(res, dict) else res
             if 'No help topic' in res:
                 raise TestToolError('Syntax error while calling goss on {}: {}'.format(self.sut.target, res))
             elif 'File error: open' in res:
