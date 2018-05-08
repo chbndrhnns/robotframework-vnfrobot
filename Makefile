@@ -1,6 +1,21 @@
 run-logserver:
 	live-server --open=logs/report.html
 
+test-unit:
+	. .robot/bin/activate && \
+	PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'not integration'
+
+test-integration:
+	. .robot/bin/activate && \
+    PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'not keyword' -m 'not flaky'
+
+test-keywords:
+	. .robot/bin/activate && \
+    PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'keyword'
+
+test: test-unit test-integration test-keywords
+	echo true
+
 robot-tests:
 	. .robot/bin/activate && \
 	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
@@ -13,18 +28,6 @@ easy-voting-tests:
 	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
 	-d logs \
 	apps/easy-voting-app/easy-voting-app-simple.robot
-
-robot-http-test:
-	. .robot/bin/activate && \
-	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
-	-d logs \
-	tests/HTTPTest.robot
-
-socket-tests:
-	. .robot/bin/activate && \
-	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
-	-d logs \
-	tests/SocketTest.robot
 
 install-requirements:
 	npm install -g live-server

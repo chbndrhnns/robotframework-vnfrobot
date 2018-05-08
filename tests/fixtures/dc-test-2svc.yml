@@ -5,5 +5,12 @@ services:
     image: nginx:1.13.12
     ports:
     - 80
+    networks:
+    - m2m
   redis:
     image: redis:alpine
+    networks:
+    - m2m
+
+networks:
+  m2m:
