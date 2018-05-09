@@ -1,4 +1,4 @@
-version: "3"
+version: "3.2"
 
 services:
   sut:
@@ -14,3 +14,6 @@ services:
 
 networks:
   m2m:
+    # needs to be set so that we can run the sidecar
+    driver: overlay
+    attachable: true

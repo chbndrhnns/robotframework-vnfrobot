@@ -85,6 +85,7 @@ class ValidationTarget:
         # override sidecar decision for network context
         if 'network' in self.instance.sut.target_type:
             self.options['sidecar_required'] = True
+            self.options['test_volume_required'] = True
 
         test_volume_required = self.options.get('test_volume_required', False)
         sidecar_required = self.options.get('sidecar_required', False)
@@ -92,11 +93,22 @@ class ValidationTarget:
         try:
             self.validate()
             self.transform()
+        except (ValidationError, NotFoundError, DeploymentError) as exc:
+            self._cleanup()
+            raise exc
+
+        try:
             orchestrator.get_or_create_deployment(self.instance)
+        except (ValidationError, NotFoundError, DeploymentError) as exc:
+            self._cleanup()
+            raise exc
+
+        try:
             if test_volume_required:
                 self._create_test_volume()
             if sidecar_required:
-                self._create_sidecar()
+                sidecar_command = self.options.get('sidecar_command', None)
+                self._create_sidecar(command=sidecar_command)
             if not sidecar_required and test_volume_required:
                 self._connect_volume_to_sut()
             tool_instance = self.options.get('test_tool', None)(
@@ -105,6 +117,13 @@ class ValidationTarget:
             )
             self._prepare_run(tool_instance)
             tool_instance.command = self.options.get('command', None) or tool_instance.command
+        except (ValidationError, NotFoundError, DeploymentError) as exc:
+            self._cleanup()
+            raise exc
+        except:
+            raise
+
+        try:
             tool_instance.run(self)
         except (ValidationError, NotFoundError, DeploymentError) as exc:
             raise exc
@@ -116,8 +135,11 @@ class ValidationTarget:
         except ValidationError as exc:
             raise exc
 
-    def _create_sidecar(self):
-        network_name = self.instance.sut.target
+    def _create_sidecar(self, command=None):
+        if not command:
+            command = GossTool(controller=self.instance.docker_controller).command
+        network_name = self.instance.sut.service_id
+        assert self.instance.docker_controller.get_network(network_name), '_create_sidecar: cannot find network {}'.format(network_name)
         volumes = {
             self.instance.test_volume: {
                 'bind': '/goss',
@@ -126,7 +148,7 @@ class ValidationTarget:
         }
         self.instance.sidecar = self.instance.docker_controller.get_or_create_sidecar(
             name='robot_sidecar_for_{}'.format(self.instance.deployment_name),
-            command=GossTool(controller=self.instance.docker_controller).command,
+            command=command,
             network=network_name,
             volumes=volumes)
         self.instance.update_sut(target_type='container', target=self.instance.sidecar.name)
@@ -179,3 +201,4 @@ class ValidationTarget:
                     BuiltIn().log('Cleanup failed: could not remove {}: exc'.format(self.instance.sidecar.name, exc),
                                   level='ERROR',
                                   console=True)
+            self.instance.sidecar = None

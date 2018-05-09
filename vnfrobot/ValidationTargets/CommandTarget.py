@@ -45,7 +45,7 @@ class Command(ValidationTarget):
         validate_value(Command.properties, self.property, self.value)
 
     def transform(self):
-        pass
+        self.options['sidecar_command'] = self.entity
 
     def _prepare_run(self, tool_instance):
         pass

@@ -10,7 +10,7 @@ from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from ValidationTargets.AddressTarget import Address
 from ValidationTargets.PortTarget import Port
 from ValidationTargets.VariableTarget import Variable
-from tools import orchestrator
+from tools import orchestrator, matchers
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
@@ -78,7 +78,7 @@ class VnfValidator(DynamicCore):
             service_id=kwargs.get('service_id', self.sut.service_id),
         )
 
-        BuiltIn().log('\nUpdating context: type={}, service={}, target={}'.format(
+        BuiltIn().log('\nUpdating context: target_type={}, service_id={}, target={}'.format(
             self.sut.target_type if self.sut.target_type else 'Not set',
             self.sut.service_id if self.sut.service_id else 'Not set',
             self.sut.target if self.sut.target else 'Not set'),
@@ -103,9 +103,11 @@ class VnfValidator(DynamicCore):
         except NotFoundError as exc:
             BuiltIn().fatal_error(exc)
 
-    @keyword('Command "${{raw_entity:.+}}": ${{raw_prop:{}}} ${{matcher:{}}} "${{raw_val:.+}}"'.format(
+    @keyword('Command ${{raw_entity:{}}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:{}}}'.format(
+        matchers.quoted_or_unquoted_string,
         '|'.join(Command.properties.keys()),
-        '|'.join(all_matchers.keys())))
+        '|'.join(all_matchers.keys()),
+        matchers.quoted_or_unquoted_string))
     def command_kw(self, raw_entity, raw_prop, matcher, raw_val):
         try:
             validation_target = Command(self)

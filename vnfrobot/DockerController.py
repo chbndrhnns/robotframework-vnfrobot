@@ -400,7 +400,10 @@ class DockerController:
 
             if stderr:
                 raise DeploymentError('Found stderr: {}'.format(stderr))
-            return stdout
+            return {
+                'code': 0,
+                'res': stdout
+            }
         except docker.errors.NotFound as exc:
             raise DeploymentError('Sidecar {} not found.'.format(sidecar if sidecar else 'None'))
         except docker.errors.APIError as exc:

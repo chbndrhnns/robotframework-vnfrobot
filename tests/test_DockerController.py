@@ -143,7 +143,7 @@ def test__run_sidecar__pass(sidecar):
     name = sidecar.get('name')
 
     res = controller.run_sidecar(name=name, command='ls')
-    assert 'bin' in res
+    assert 'bin' in res['res']
 
 
 @pytest.mark.integration
@@ -178,7 +178,7 @@ def test__run_sidecar__goss_volume_ok__pass(sidecar, goss_volume_name):
 
     res = controller.run_sidecar(name=name, volumes=volumes, command='ls /goss')
 
-    assert '' in res
+    assert 'goss-linux-amd64' in res.get('res')
 
 
 @pytest.mark.integration
@@ -198,7 +198,7 @@ def test__run_sidecar__network_ok__pass(sidecar, network):
     assert 'robot' in network.name
 
     res = controller.run_sidecar(name=name, network=network.name, command='ping -W1 -c1 127.0.0.1')
-    assert '0% packet loss' in res
+    assert '0% packet loss' in res.get('res')
 
 
 @pytest.mark.integration

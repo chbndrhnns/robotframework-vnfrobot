@@ -13,9 +13,9 @@ class DockerTool(TestTool):
         self.target = target
         if not self.command:
             raise ValidationError('DockerTool: run(): No command given.')
-        o = getattr(self, self.command, None)
-        if callable(o):
-            o()
+        command = getattr(self, self.command, None)
+        if callable(command):
+            command()
         else:
             raise ValidationError('DockerTool: run(): Cannot find command "{}" in DockerTool.'.format(self.command))
 
@@ -26,9 +26,12 @@ class DockerTool(TestTool):
         self.test_results = self.controller.get_container_config(self.sut.service_id, 'Labels')
 
     def run_in_container(self):
-        self.test_results = self.controller.execute(self.sut.service_id, self.target.entity)
+        if 'service' in self.sut.target_type:
+            target = self.sut.service_id
+        else:
+            target = self.sut.target
+        self.test_results = self.controller.execute(target, self.target.entity)
 
-    @timeit
     def placement(self):
         labels = self.controller.get_container_config(self.sut.service_id, 'Labels')
         node_id = labels.get('com.docker.swarm.node.id')
@@ -72,5 +75,6 @@ class DockerTool(TestTool):
         if 'return code' in self.target.property:
             return self.test_results.get('code', '')
         else:
+            assert isinstance(self.test_results, dict), '_process_run_in_container: dict expected for res'
             return self.test_results.get('res', '').strip()
 

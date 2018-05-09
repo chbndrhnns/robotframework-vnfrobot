@@ -48,12 +48,12 @@ def test__evaluate__pass(command_with_instance, sut, data, docker_tool_instance)
 
 @pytest.mark.integration
 @pytest.mark.parametrize('data', command_target_integration_test_data)
-def test__run__pass(command_with_instance, stack, data, service_id):
+def test__run__pass(command_with_instance, stack, data):
     e = command_with_instance
 
     name, path, success = stack
     e.instance.deployment_name = name
-    e.instance.sut = SUT('service', 'sut', service_id)
+    e.instance.sut = SUT('service', 'sut', '{}_sut'.format(name))
 
     test = data.get('test')
     set_test_data(e, test)
@@ -63,12 +63,12 @@ def test__run__pass(command_with_instance, stack, data, service_id):
 
 @pytest.mark.integration
 @pytest.mark.parametrize('data', command_target_network_context_test_data)
-def test__run__network_context__pass(command_with_instance, stack, data, service_id):
+def test__run__network_context__pass(command_with_instance, stack, data):
     e = command_with_instance
 
     name, path, success = stack
     e.instance.deployment_name = name
-    e.instance.sut = SUT('network', 'm2m', service_id)
+    e.instance.sut = SUT('network', 'm2m', '{}_m2m'.format(name))
 
     test = data.get('test')
     set_test_data(e, test)
