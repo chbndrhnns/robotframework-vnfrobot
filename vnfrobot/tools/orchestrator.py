@@ -1,13 +1,11 @@
 import os
 
-from docker.errors import NotFound
 from robot.libraries.BuiltIn import BuiltIn
 
-from tools import namesgenerator
-from exc import SetupError, DeploymentError
 from DockerController import DockerController
+from exc import SetupError, DeploymentError
+from tools import namesgenerator
 from tools.wait_on import wait_on_services_status
-
 from . import path
 
 

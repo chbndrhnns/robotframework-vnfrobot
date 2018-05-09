@@ -1,15 +1,9 @@
-import inspect
 import re
-
 from string import lower
 
-from robot.libraries.BuiltIn import BuiltIn
-
 import exc
-from settings import Settings
 from tools.matchers import string_matchers
 from tools.validators import Validator
-from timeit import default_timer as timer
 
 
 def get_truth(inp, relate, val):
@@ -65,19 +59,19 @@ def call_validator(entity, validator, context=None):
         raise TypeError('call_validator must be called with validator callable. Got: {}'.format(entity))
 
 
-def validate_value(properties, property, value):
-    validator = properties[property]
+def validate_value(properties, prop, value):
+    validator = properties[prop]
 
     if isinstance(validator.get('values'), list):
-        valid = value in properties.get(property, {}).get('values', {})
+        valid = value in properties.get(prop, {}).get('values', {})
         if not valid:
             raise exc.ValidationError(
-                'Value "{}" not allowed for {}. Must be any of {}'.format(value, property, properties[property]))
+                'Value "{}" not allowed for {}. Must be any of {}'.format(value, prop, properties[prop]))
     elif isinstance(validator.get('value')(), Validator):
         v = validator.get('value')()
         if not v.validate(value):
             raise exc.ValidationError(
-                'Value "{}" not allowed for {}. Must be any of {}'.format(value, property, v.name))
+                'Value "{}" not allowed for {}. Must be any of {}'.format(value, prop, v.name))
 
     return value
 
@@ -134,20 +128,11 @@ class Result:
 regex_method = re.compile('test__(\w+)__\w+')
 
 
-def _add_host_context(self, suite=None, host=None):
-    if suite is None:
-        return None
-    if host is None:
-        return None
-
-    context = 'Set context to {}'.format(host)
-    return suite.keywords.create(context, type='setup')
-
-
+# noinspection PyUnusedLocal
 def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Result.PASS, expected_message=None):
-    caller_name = inspect.stack()[1][3]
+    # caller_name = inspect.stack()[1][3]
     # TODO: verify that the expected method is called
-    test_name = regex_method.findall(caller_name)[0]
+    # test_name = regex_method.findall(caller_name)[0]
 
     run_count = 0
     context = test_instance.suite.tests
@@ -173,21 +158,3 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
 
 def str2bool(val):
     return val.lower() in ("yes", "true", "t", "1")
-
-
-def timeit(method):
-    def timed(*args, **kw):
-        result = method(*args, **kw)
-        if Settings.timing:
-            ts = timer()
-
-            te = timer()
-            if 'log_time' in kw:
-                name = kw.get('log_name', method.__name__.upper())
-                kw['log_time'][name] = int((te - ts) * 1000)
-            else:
-                BuiltIn().log('%r  %2.2f ms' % \
-                              (method.__name__, (te - ts) * 1000), level='DEBUG', console=True)
-            return result
-
-    return timed

@@ -1,5 +1,3 @@
-import re
-
 from ValidationTargets.ValidationTarget import ValidationTarget
 from testtools.DockerTool import DockerTool
 from tools import validators, matchers

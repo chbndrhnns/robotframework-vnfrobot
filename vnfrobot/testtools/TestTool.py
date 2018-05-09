@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
 from DockerController import DockerController
-from tools.testutils import timeit
 
 
 class TestTool:

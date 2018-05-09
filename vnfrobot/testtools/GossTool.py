@@ -6,7 +6,6 @@ from robot.libraries.BuiltIn import BuiltIn
 import exc
 from exc import DeploymentError, TestToolError, NotFoundError
 from testtools.TestTool import TestTool
-from tools.testutils import timeit
 
 
 class GossTool(TestTool):
@@ -33,9 +32,9 @@ class GossTool(TestTool):
             else:
                 raise RuntimeError('Cannot interpret result: {}'.format(res))
             return self.test_results
-        except NotFoundError as exc:
-            raise exc
-        except (json.JSONDecoder, ValueError) as exc:
+        except NotFoundError as e:
+            raise e
+        except (json.JSONDecoder, ValueError):
             res = res.get('res') if isinstance(res, dict) else res
             if 'No help topic' in res:
                 raise TestToolError('Syntax error while calling goss on {}: {}'.format(self.sut.target, res))
@@ -47,10 +46,10 @@ class GossTool(TestTool):
                 raise TestToolError('goss executable was not found on {}: {}'.format(self.sut.target, res))
 
             raise TestToolError('Could not parse return value from goss: {}'.format(res))
-        except (AttributeError, RuntimeError) as exc:
-            raise TestToolError('Error: {}'.format(exc))
-        except DeploymentError as exc:
-            raise DeploymentError('Could not run command in {}: {}'.format(self.sut.target, exc))
+        except (AttributeError, RuntimeError) as e:
+            raise TestToolError('Error: {}'.format(e))
+        except DeploymentError as e:
+            raise DeploymentError('Could not run command in {}: {}'.format(self.sut.target, e))
 
     def process_results(self, target):
         if not self.test_results:
@@ -81,8 +80,8 @@ class GossTool(TestTool):
                     entity=target.instance.sut.target,
                     file_to_transfer=f.name,
                     filename='goss.yaml')
-            except (TypeError, ValueError) as exc:
-                raise exc.ValidationError('ValidationError: {}'.format(exc))
-            except DeploymentError as exc:
-                raise DeploymentError('Could not run test tool on {}: {}'.format(target.instance.sut, exc))
+            except (TypeError, ValueError) as e:
+                raise e.ValidationError('ValidationError: {}'.format(e))
+            except DeploymentError as e:
+                raise DeploymentError('Could not run test tool on {}: {}'.format(target.instance.sut, e))
 

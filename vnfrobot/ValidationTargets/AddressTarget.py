@@ -1,6 +1,6 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
-from exc import ValidationError, SetupError, DeploymentError
-from tools import validators, orchestrator
+from exc import ValidationError, SetupError
+from tools import validators
 from testtools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
 from tools.testutils import call_validator

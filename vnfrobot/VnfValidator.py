@@ -53,12 +53,14 @@ class VnfValidator(DynamicCore):
         except RobotNotRunningError:
             pass
 
+    # noinspection PyUnusedLocal
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
 
         self.deploy_kw(self.descriptor_file)
 
+    # noinspection PyUnusedLocal
     def _end_suite(self, name, attrs):
         if self.deployment_options['SKIP_UNDEPLOY']:
             logger.console('Skipping undeployment')
@@ -72,6 +74,7 @@ class VnfValidator(DynamicCore):
 
     def update_sut(self, **kwargs):
         # create a new namedtuple and use the old values if no new value is available
+        # noinspection PyProtectedMember
         self.sut = self.sut._replace(
             target_type=kwargs.get('target_type', self.sut.target_type),
             target=kwargs.get('target', self.sut.target),

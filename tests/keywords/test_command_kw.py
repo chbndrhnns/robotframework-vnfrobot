@@ -9,7 +9,7 @@ from tests import path
 
 @pytest.mark.integration
 @pytest.mark.keyword
-def test__command__pass():
+def test__command_kw__pass():
 
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/command.robot'))
     result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/robot/common.py'))

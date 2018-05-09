@@ -1,7 +1,7 @@
 from exc import ValidationError
 from testtools.TestTool import TestTool
-from tools.matchers import string_matchers, all_matchers
-from tools.testutils import get_truth, timeit
+from tools.matchers import all_matchers
+from tools.testutils import get_truth
 
 
 class DockerTool(TestTool):

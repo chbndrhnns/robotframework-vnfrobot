@@ -1,11 +1,8 @@
-import json
+import os
 from string import lower
 
-import os
-from time import sleep
-
-from docker import errors
 import docker
+from docker import errors
 from docker.models.containers import Container
 from docker.models.networks import Network
 from docker.models.services import Service
@@ -13,11 +10,10 @@ from docker.models.volumes import Volume
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
+from exc import NotFoundError, SetupError, DeploymentError
 from settings import Settings
 from tools import namesgenerator
 from tools.archive import Archive
-
-from exc import NotFoundError, SetupError, DeploymentError
 from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status, \
     start_process, wait_on_process
 
@@ -109,12 +105,12 @@ class DockerController:
         try:
             wait_on_container_status(self, entity)
             c = self._docker.containers.get(entity)
-        except docker.errors.NotFound as exc:
+        except docker.errors.NotFound:
             # second, try if entity is a service
 
             try:
                 c = self.get_containers_for_service(entity)[0]
-            except NotFoundError as exc:
+            except NotFoundError:
                 raise NotFoundError('Could not find service {}'.format(entity))
 
         if key:
@@ -135,10 +131,8 @@ class DockerController:
     def get_container(self, container):
         try:
             return self._docker.containers.get(container)
-        except docker.errors.NotFound as exc:
+        except (docker.errors.NotFound, docker.errors.APIError) as exc:
             raise NotFoundError(exc)
-        except:
-            raise
 
     def get_containers(self, **kwargs):
         try:
@@ -196,7 +190,9 @@ class DockerController:
 
         """
         service = service if isinstance(service, Service) else self.get_service(service)
-        BuiltIn().log('Waiting for service to update {}...'.format(service.name if isinstance(service, Service) else ''), level='DEBUG', console=True)
+        BuiltIn().log(
+            'Waiting for service to update {}...'.format(service.name if isinstance(service, Service) else ''),
+            level='DEBUG', console=True)
 
         # wait for the update to take place
         wait_on_service_replication(self._docker, service)
@@ -226,7 +222,7 @@ class DockerController:
             for mount in mounts:
                 if v.name in mount.get('Source', {}):
                     return self.get_containers_for_service(s)[0]
-        except AttributeError, ValueError:
+        except (AttributeError, ValueError):
             pass
 
         BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
@@ -378,7 +374,6 @@ class DockerController:
                 raise NotFoundError('Image {} not found: {}'.format(image, exc))
 
     def run_sidecar(self, name='', sidecar=None, image='busybox', command='true', volumes=None, network=None):
-        stdout, stderr = '', ''
 
         # maybe try this:
         # docker service create --network dockercoins_default --name debug \
@@ -393,8 +388,8 @@ class DockerController:
             wait_on_container_status(self, sidecar, ['Created', 'Exited'])
             sidecar.start()
             sidecar.wait()
-            stdout = sidecar.logs(stdout=True, stderr=False)
-            stderr = sidecar.logs(stdout=False, stderr=True)
+            stdout = sidecar.logs(stdout=True, stderr=False) or ''
+            stderr = sidecar.logs(stdout=False, stderr=True) or ''
 
             # BuiltIn().log(stdout, level='DEBUG', console=True)
 
@@ -404,7 +399,7 @@ class DockerController:
                 'code': 0,
                 'res': stdout
             }
-        except docker.errors.NotFound as exc:
+        except docker.errors.NotFound:
             raise DeploymentError('Sidecar {} not found.'.format(sidecar if sidecar else 'None'))
         except docker.errors.APIError as exc:
             if 'executable file not found' in exc.explanation:

@@ -1,5 +1,5 @@
 import copy
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 from jinja2 import Environment
 from robot.libraries.BuiltIn import BuiltIn

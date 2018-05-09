@@ -9,7 +9,7 @@ from tests import path
 
 @pytest.mark.integration
 @pytest.mark.keyword
-def test__address__pass():
+def test__address_kw__pass():
 
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/address.robot'))
     result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/robot/common.py'))

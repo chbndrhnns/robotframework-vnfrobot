@@ -38,7 +38,8 @@ def wait_on_condition(condition, delay=0.1, timeout=40):
         if time.time() - start_time > timeout:
             raise AssertionError("Timeout: %s" % condition)
         # if time.time() - last_time > 15:
-        #     BuiltIn().log('Waiting since {} seconds now...'.format(time.time() - start_time), level='DEBUG', console=True)
+        #     BuiltIn().log('Waiting since {} seconds now...'.format(time.time() - start_time),
+        # level='DEBUG', console=True)
         time.sleep(delay)
 
 
@@ -58,6 +59,7 @@ def wait_on_service_replication(client, service):
     return wait_on_condition(condition)
 
 
+# noinspection PyProtectedMember
 def wait_on_container_status(client, container, status='Running'):
     """
     Wait until a container is in the desired state.
@@ -72,6 +74,7 @@ def wait_on_container_status(client, container, status='Running'):
     """
 
     def condition():
+        # noinspection PyProtectedMember
         res = container if isinstance(container, Container) else client._docker.containers.get(container)
         if res and isinstance(status, basestring):
             if 'Running' in status:
@@ -97,6 +100,7 @@ def wait_on_container_status(client, container, status='Running'):
     return wait_on_condition(condition)
 
 
+# noinspection PyProtectedMember
 def wait_on_service_status(client, service, status='Running'):
     """
     Wait until a service is in the desired state.
@@ -110,16 +114,18 @@ def wait_on_service_status(client, service, status='Running'):
 
     """
 
+    # noinspection PyProtectedMember
     def condition():
         res = service if isinstance(service, Service) else client._docker.services.get(service)
         if res:
-            return res.attrs['State'][status] == True
+            return res.attrs['State'][status] is True
         return False
 
     assert isinstance(client._docker, docker.DockerClient)
     return wait_on_condition(condition)
 
 
+# noinspection PyProtectedMember
 def wait_on_service_container_status(client, service=None, current_instances=None, status='running'):
     """
     Wait until a first container that belongs to a service is in the desired state.
@@ -137,6 +143,7 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
 
     def condition():
         # logger.console('waiting for {} to have a container in state {}'.format(service, status))
+        # noinspection PyProtectedMember
         res = client._docker.containers.list(filters={
             'label': 'com.docker.swarm.service.name={}'.format(service),
             'status': lower(status)
@@ -146,7 +153,8 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
         if not current_instances:
             return True if res else False
         else:
-            if not res: return False
+            if not res:
+                return False
             new_instances = frozenset(res)
             # logger.console('current_instances {}, new_instances: {}'.format(current_instances, new_instances))
             return new_instances.isdisjoint(current_instances)
@@ -157,27 +165,32 @@ def wait_on_service_container_status(client, service=None, current_instances=Non
     return wait_on_condition(condition)
 
 
-def wait_on_services_status(client, services=None, status='Running'):
+# noinspection PyProtectedMember
+def wait_on_services_status(client, services=None):
     """
     Wait until all provided services are in the desired state.
 
     Args:
         services: List of services to wait for
         client: DockerController
-        status: desired status, default: Running
 
     Returns:
 
     """
 
+    # noinspection PyProtectedMember,PyProtectedMember,PyProtectedMember
     def condition():
         if isinstance(services, list) and len(services) > 0:
             state_ok = 0
             for service in services:
                 if isinstance(service, Service):
-                    res = client._docker.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service.name)})
+                    res = client._docker.containers.list(filters={
+                        'label': 'com.docker.swarm.service.name={}'.format(service.name)
+                    })
                 else:
-                    res = client._docker.containers.list(filters={'label': 'com.docker.swarm.service.name={}'.format(service)})
+                    res = client._docker.containers.list(filters={
+                        'label': 'com.docker.swarm.service.name={}'.format(service)
+                    })
 
                 if res:
                     # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))

@@ -12,6 +12,7 @@ class Archive(object):
     `tar` buffers on the fly, or read from them.
 
     Methods in this class can be chained JS style."""
+
     def __init__(self, mode, data=None):
         self.file = io.BytesIO(data)
         self.tar = tarfile.open(mode=mode, fileobj=self.file)

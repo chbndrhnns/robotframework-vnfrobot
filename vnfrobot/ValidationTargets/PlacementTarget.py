@@ -1,10 +1,7 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
-from exc import NotFoundError, ValidationError
 from testtools.DockerTool import DockerTool
-from tools import validators, orchestrator, matchers
-from tools.testutils import get_truth, call_validator
-from tools.matchers import string_matchers
-from tools.validators import Service
+from tools import validators
+from tools.testutils import call_validator
 
 
 class Placement(ValidationTarget):

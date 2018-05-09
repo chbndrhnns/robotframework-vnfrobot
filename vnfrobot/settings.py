@@ -1,4 +1,5 @@
 import os
+# noinspection PyPackageRequirements
 from dotenv import load_dotenv, find_dotenv
 
 

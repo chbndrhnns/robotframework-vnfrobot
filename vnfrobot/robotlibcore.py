@@ -25,17 +25,19 @@ import sys
 from settings import Settings
 
 try:
+    # noinspection PyProtectedMember
     from robot import keyword
 except ImportError:  # Support RF < 2.9
     def keyword(name=None, tags=()):
         if callable(name):
             return keyword()(name)
+
         def decorator(func):
             func.robot_name = name
             func.robot_tags = tags
             return func
-        return decorator
 
+        return decorator
 
 PY2 = sys.version_info < (3,)
 
@@ -69,6 +71,7 @@ class HybridCore(object):
                             .format(component.__class__.__name__))
         return self._get_members_from_instannce(component)
 
+    # noinspection PyMethodMayBeStatic
     def _get_members_from_instannce(self, instance):
         # Avoid calling properties by getting members from class, not instance.
         cls = type(instance)
@@ -91,6 +94,7 @@ class HybridCore(object):
         return sorted(self.keywords)
 
 
+# noinspection PyMethodMayBeStatic
 class DynamicCore(HybridCore):
     _get_keyword_tags_supported = False  # get_keyword_tags is new in RF 3.0.2
     settings = Settings()

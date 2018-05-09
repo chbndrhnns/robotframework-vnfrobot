@@ -120,8 +120,6 @@ class ValidationTarget:
         except (ValidationError, NotFoundError, DeploymentError) as exc:
             self._cleanup()
             raise exc
-        except:
-            raise
 
         try:
             tool_instance.run(self)
@@ -139,7 +137,8 @@ class ValidationTarget:
         if not command:
             command = GossTool(controller=self.instance.docker_controller).command
         network_name = self.instance.sut.service_id
-        assert self.instance.docker_controller.get_network(network_name), '_create_sidecar: cannot find network {}'.format(network_name)
+        assert self.instance.docker_controller.get_network(
+            network_name), '_create_sidecar: cannot find network {}'.format(network_name)
         volumes = {
             self.instance.test_volume: {
                 'bind': '/goss',
@@ -197,7 +196,7 @@ class ValidationTarget:
             try:
                 self.instance.sidecar.remove()
             except APIError as exc:
-                if not 'No such container' in exc.explanation:
+                if 'No such container' not in exc.explanation:
                     BuiltIn().log('Cleanup failed: could not remove {}: exc'.format(self.instance.sidecar.name, exc),
                                   level='ERROR',
                                   console=True)

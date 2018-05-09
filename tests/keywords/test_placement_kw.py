@@ -7,7 +7,7 @@ from tests import path
 
 @pytest.mark.integration
 @pytest.mark.keyword
-def test__placement__pass():
+def test__placement_kw__pass():
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/placement.robot'))
     result = suite.run(output=None, variablefile=os.path.join(path, 'fixtures/robot/common.py'))
 

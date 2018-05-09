@@ -58,7 +58,7 @@ class Domain(Validator):
     def validate(self, val):
         try:
             return validators.domain(val)
-        except Exception:
+        except validators.ValidationFailure:
             pass
 
 
@@ -72,7 +72,7 @@ class IpAddress(Validator):
             return True
         try:
             return validators.ipv4(val) or (validators.ipv6(val))
-        except Exception:
+        except validators.ValidationFailure:
             pass
 
 
@@ -112,7 +112,10 @@ class InList(Validator):
         if not self.context:
             raise exc.ValidationError('Context is necessary for the validator "{}"'.format(self.name))
         if not isinstance(self.context, list):
-            raise exc.ValidationError('Context for validator must be of instance list(), got {}'.format(self.name, self.context))
+            raise exc.ValidationError('Context for validator must be of instance list(), got {}'.format(
+                self.name,
+                self.context)
+            )
 
     def validate(self, entity):
         return entity in self.context

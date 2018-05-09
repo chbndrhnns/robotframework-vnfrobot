@@ -1,8 +1,7 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
-from exc import NotFoundError, ValidationError, DeploymentError
 from testtools.DockerTool import DockerTool
-from tools import validators, matchers, orchestrator, testutils
-from tools.testutils import validate_against_regex, get_truth, call_validator
+from tools import validators, matchers
+from tools.testutils import call_validator
 
 
 class Variable(ValidationTarget):

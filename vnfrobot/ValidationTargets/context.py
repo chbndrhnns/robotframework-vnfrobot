@@ -1,8 +1,7 @@
 from robot.libraries.BuiltIn import BuiltIn
 
-from tools.data_structures import SUT
 from exc import NotFoundError, SetupError
-from tools.wait_on import wait_on_container_status, wait_on_service_replication, wait_on_service_container_status
+from tools.wait_on import wait_on_service_container_status
 
 
 def _generate_sidecar_name(service_id):
@@ -50,6 +49,7 @@ def prepare_context(instance, context_type=None, context=None):
     instance.update_sut(target_type=context_type, target=context, service_id=service_id)
 
 
+# noinspection PyProtectedMember
 def _prepare_service_context(controller, instance, service_id):
     ctl = instance.docker_controller._docker
     wait_on_service_container_status(ctl, service_id)
