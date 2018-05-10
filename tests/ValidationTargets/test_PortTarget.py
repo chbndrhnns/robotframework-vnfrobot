@@ -40,6 +40,7 @@ def test__transform__pass(port_with_instance, sut, test, data, mapped, out):
     set_test_data(e, test)
 
     e.validate()
+    e._prepare_transform()
     e.transform()
 
     assert yaml.safe_load(e.transformed_data) == yaml.safe_load(out.get('expected_yaml'))

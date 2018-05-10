@@ -15,13 +15,13 @@ class Address(ValidationTarget):
     }
     options = {
         'test_tool': GossTool,
-        'test_volume_required': True
+        'test_volume_required': True,
+        'transformation_handler': GossAddr
     }
     allowed_contexts = ['service', 'network']
 
     def __init__(self, instance=None):
         super(Address, self).__init__(instance)
-        self.transformed_data = {}
         self.port = None
         self.address = None
 
@@ -50,14 +50,14 @@ class Address(ValidationTarget):
     def _prepare_run(self, tool_instance):
         tool_instance.inject_gossfile(self)
 
-    def transform(self):
+    def _prepare_transform(self):
         # tcp: // ip - address - or -domain - name:80:
         # reachable: true
         # timeout: 500
         #
         # create exchange format
 
-        data = {
+        self.data = {
             'addresses': [
                 {
                     'port': self.port,
@@ -70,6 +70,4 @@ class Address(ValidationTarget):
                 }
             ]
         }
-        entity = GossAddr(data)
-        self.transformed_data = entity.transform(entity)
 

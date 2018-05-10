@@ -6,7 +6,6 @@ from ruamel import yaml
 from exc import ValidationError, SetupError
 from VnfValidator import SUT
 from fixtures.test_data_Address import goss_results, addresses_test_data
-from tools import testutils
 from utils import set_test_data
 
 
@@ -75,6 +74,7 @@ def test__transform__pass(address_with_instance, sut, test, data, mapped, out):
     e.instance.sut = sut
     set_test_data(e, test)
     e.validate()
+    e._prepare_transform()
     e.transform()
 
     assert yaml.safe_load(e.transformed_data) == yaml.safe_load(out.get('expected_yaml'))

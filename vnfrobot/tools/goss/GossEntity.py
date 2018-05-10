@@ -11,18 +11,45 @@ from settings import Settings
 class GossEntity:
     __metaclass__ = ABCMeta
 
-    template = "__not_for_use__"
-    key_mappings = {}
-    type_mappings = {}
-    value_mappings = {}
-    matcher_mappings = {}
+    """
+    GossEntity is used to represent an module of the goss tool.
+    
+    Required fields:
+    - name: the identifier used in the transform() method of the validation target to hold the data
+    - template: a Jinja2 template for creating the YAML file towards goss
+    - key_mappings:
+    - value_mappings:
+    - type_mappings:
+    - matcher_mappings:    
+    
+    """
+
+    name = None
+    template = None
+    key_mappings = None
+    type_mappings = None
+    value_mappings = None
+    matcher_mappings = None
 
     def __init__(self, data):
+        assert isinstance(self.name, basestring), \
+            'A GossEntity requires a name field'
+        assert isinstance(self.template, basestring), \
+            'A GossEntity requires a Jinja2 template in field "class.template"'
+        assert isinstance(self.type_mappings, dict), \
+            'A GossEntity requires a dict object in field "class.type_mappings"'
+        assert isinstance(self.key_mappings, dict), \
+            'A GossEntity requires a dict object in field "class.key_mappings"'
+        assert isinstance(self.value_mappings, dict), \
+            'A GossEntity requires a dict object in field "class.value_mappings"'
+        assert isinstance(self.matcher_mappings, dict), \
+            'A GossEntity requires a dict object in field "class.matcher_mappings"'
+
         self.inp = data
         self.mapped = copy.deepcopy(data)
         self.out = None
 
-    def transform(self, entity):
+    def transform_to_goss(self, entity):
         """
         Transform the test data into the yaml format that is understood by goss.
 
@@ -45,7 +72,7 @@ class GossEntity:
 
         """
         entities = self.mapped.get(goss_entity.name)
-        assert isinstance(entities, list), 'entities is no list'
+        assert isinstance(entities, list), 'GossEntity:apply_mappings(): entities is no list'
 
         for entity in entities:
             try:

@@ -5,6 +5,7 @@ from robot.api import logger
 from robot.api.deco import keyword
 
 from ValidationTargets.CommandTarget import Command
+from ValidationTargets.FileTarget import File
 from ValidationTargets.PlacementTarget import Placement
 from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from ValidationTargets.AddressTarget import Address
@@ -172,9 +173,23 @@ class VnfValidator(DynamicCore):
     def group_kw(self):
         pass
 
-    @keyword('File')
-    def file_kw(self):
-        pass
+    @keyword('File ${{raw_entity:{}}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:{}}}'.format(
+        matchers.quoted_or_unquoted_string,
+        '|'.join(File.properties.keys()),
+        '|'.join(all_matchers.keys()),
+        matchers.quoted_or_unquoted_string))
+    def file_kw(self, raw_entity, raw_prop, matcher, raw_val):
+        try:
+            validation_target = File(self)
+            validation_target.set_as_dict({
+                'context': self.sut,
+                'entity': raw_entity,
+                'property': raw_prop,
+                'matcher': matcher,
+                'value': raw_val})
+            validation_target.run_test()
+        except (DataFormatError, ValidationError) as exc:
+            BuiltIn().fail(exc)
 
     @keyword('Symbolic Link')
     def symlink_kw(self):

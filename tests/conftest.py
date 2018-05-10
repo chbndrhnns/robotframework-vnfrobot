@@ -1,14 +1,9 @@
 from __future__ import absolute_import
 import os
 
-import docker
-import mock
 from docker import errors
 import pytest
 from pytest import fixture
-
-# circular import? TODO???
-from robot.libraries.BuiltIn import BuiltIn
 
 import VnfValidator
 from exc import NotFoundError
@@ -27,6 +22,7 @@ pytest_plugins = [
     "tests.fixtures.context",
     "tests.fixtures.command",
     "tests.fixtures.address",
+    "tests.fixtures.file",
     "tests.fixtures.port",
     "tests.fixtures.goss",
     "tests.fixtures.placement",

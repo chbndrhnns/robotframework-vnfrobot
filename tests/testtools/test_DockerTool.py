@@ -50,6 +50,7 @@ def dummy_sut():
     return SUT(target_type='service', target='', service_id='')
 
 
+@pytest.mark.kw_env_vars
 @pytest.mark.mock
 def test__get_env_vars__pass(mocker, dockertool, env_return_value):
     def side_effect(*args, **kwargs):
@@ -65,6 +66,7 @@ def test__get_env_vars__pass(mocker, dockertool, env_return_value):
     assert len(dockertool.test_results) == 2
 
 
+@pytest.mark.kw_env_vars
 @pytest.mark.mock
 def test__get_env_vars__fail(mocker, dockertool):
     mocker.patch.object(dockertool, 'controller')
@@ -77,6 +79,7 @@ def test__get_env_vars__fail(mocker, dockertool):
     dockertool.controller.get_container_config.assert_called_once()
 
 
+@pytest.mark.kw_placement
 @pytest.mark.mock
 def test__get_container_labels__pass(mocker, dockertool, container_labels):
     mocker.patch.object(dockertool, 'controller')
@@ -90,6 +93,7 @@ def test__get_container_labels__pass(mocker, dockertool, container_labels):
     assert actual == container_labels
 
 
+@pytest.mark.kw_placement
 @pytest.mark.mock
 def test__get_container_labels__pass(mocker, dockertool):
     mocker.patch.object(dockertool, 'controller')
@@ -102,6 +106,7 @@ def test__get_container_labels__pass(mocker, dockertool):
     dockertool.controller.get_container_config.assert_called_once()
 
 
+@pytest.mark.kw_placement
 @pytest.mark.integration
 def test__get_container_labels2__pass(dockertool, sut, container_labels):
     dockertool.sut = sut

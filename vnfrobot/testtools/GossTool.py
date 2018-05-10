@@ -82,7 +82,7 @@ class GossTool(TestTool):
                     file_to_transfer=f.name,
                     filename='goss.yaml')
             except (TypeError, ValueError) as e:
-                raise e.ValidationError('ValidationError: {}'.format(e))
+                raise exc.ValidationError('ValidationError: {}'.format(e))
             except DeploymentError as e:
                 raise DeploymentError('Could not run test tool on {}: {}'.format(target.instance.sut, e))
 

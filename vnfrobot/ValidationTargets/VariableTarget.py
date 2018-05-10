@@ -34,7 +34,7 @@ class Variable(ValidationTarget):
         call_validator(self.matcher, validators.InList, Variable.properties.get('entity', {}).get('matchers'))
         call_validator(self.value, validators.Regex, Variable.properties.get('entity', {}).get('value'))
 
-    def transform(self):
+    def _prepare_transform(self):
         pass
 
     def _prepare_run(self, tool_instance):

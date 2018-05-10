@@ -20,7 +20,8 @@ class Port(ValidationTarget):
     }
     options = {
         'test_volume_required': True,
-        'test_tool': GossTool
+        'test_tool': GossTool,
+        'transformation_handler': GossPort
     }
 
     def __init__(self, instance=None):
@@ -40,7 +41,7 @@ class Port(ValidationTarget):
         validate_matcher([self.matcher], limit_to=Port.properties.get('entity', {}).get('matchers', []))
         self.value = validate_value(Port.properties, self.property, self.value)
 
-    def transform(self):
+    def _prepare_transform(self):
         # create exchange format
         self.data = {'ports': [{'port': self.port, 'protocol': self.protocol}]}
         port = self.data.get('ports', [])[0]
@@ -58,7 +59,7 @@ class Port(ValidationTarget):
                     'value': 'open',
                 }})
         g = GossPort(self.data)
-        self.transformed_data = g.transform(g)
+        self.transformed_data = g.transform_to_goss(g)
 
     def _prepare_run(self, tool_instance):
         tool_instance.inject_gossfile(self)

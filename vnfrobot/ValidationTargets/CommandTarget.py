@@ -42,7 +42,7 @@ class Command(ValidationTarget):
         call_validator(self.matcher, validators.InList, Command.properties.get(self.property, {}).get('matchers', []))
         validate_value(Command.properties, self.property, self.value)
 
-    def transform(self):
+    def _prepare_transform(self):
         self.options['sidecar_command'] = self.entity
 
     def _prepare_run(self, tool_instance):

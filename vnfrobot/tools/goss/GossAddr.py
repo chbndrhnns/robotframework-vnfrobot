@@ -2,6 +2,7 @@ from tools.goss.GossEntity import GossEntity
 
 
 class GossAddr(GossEntity):
+    name = 'addresses'
     template = \
         """addr:
             {% for addr in addresses %}
@@ -13,6 +14,7 @@ class GossAddr(GossEntity):
     key_mappings = {
         'state': 'reachable'
     }
+    type_mappings = {}
     value_mappings = {
         'reachable': {
             'reachable': True,
@@ -28,4 +30,3 @@ class GossAddr(GossEntity):
 
     def __init__(self, data):
         GossEntity.__init__(self, data)
-        self.name = 'addresses'

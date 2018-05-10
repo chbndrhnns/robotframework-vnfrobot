@@ -203,6 +203,7 @@ def test__run_sidecar__network_ok__pass(sidecar, network):
 
 @pytest.mark.integration
 @pytest.mark.flaky
+@pytest.mark.skip('flaky. works stand-alone but not in whole suite')
 def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, network, service_id):
     controller = sidecar.get('controller')
     sidecar_name = sidecar.get('name')
@@ -222,6 +223,7 @@ def test__run_sidecar__attach_to_deployment_network__pass(controller, sidecar, n
 
 @pytest.mark.integration
 @pytest.mark.flaky
+@pytest.mark.skip('flaky. works stand-alone but not in whole suite')
 def test__connect_container_to_network__pass(controller, stack, network, service_id):
     res = controller.connect_network_to_service(service_id, network.name)
     assert res

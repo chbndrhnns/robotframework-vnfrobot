@@ -2,6 +2,7 @@ from tools.goss.GossEntity import GossEntity
 
 
 class GossPort(GossEntity):
+    name = 'ports'
     template = \
         """port:
             {% for port in ports %}
@@ -35,5 +36,4 @@ class GossPort(GossEntity):
 
     def __init__(self, data):
         GossEntity.__init__(self, data)
-        self.name = 'ports'
 

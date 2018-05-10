@@ -10,6 +10,7 @@ from testtools.GossTool import GossTool
 from testtools.TestTool import TestTool
 from tools import orchestrator
 from tools.data_structures import SUT
+from tools.goss.GossEntity import GossEntity
 
 
 class ValidationTarget:
@@ -23,6 +24,9 @@ class ValidationTarget:
         self.property = None
         self.matcher = None
         self.value = None
+
+        self.data = {}
+        self.transformed_data = {}
 
     @abstractproperty
     def options(self):
@@ -71,12 +75,21 @@ class ValidationTarget:
         pass
 
     @abstractmethod
-    def transform(self):
+    def _prepare_transform(self):
         raise NotImplementedError('must be implemented by the subclass')
 
     @abstractmethod
     def _prepare_run(self, tool_instance):
         raise NotImplementedError('must be implemented by the subclass')
+
+    def transform(self):
+        if self.options.get('transformation_handler'):
+            if not self.data:
+                self._prepare_transform()
+            handler = self.options.get('transformation_handler', None)
+            assert handler, 'ValidationTarget:transform_to_goss() expects a class instance for the transformation handler'
+            self.transformed_data = handler(self.data).transform_to_goss(handler)
+            return self.transformed_data
 
     def run_test(self):
         if not self.instance.sut.target_type:
@@ -92,6 +105,7 @@ class ValidationTarget:
 
         try:
             self.validate()
+            self._prepare_transform()
             self.transform()
         except (ValidationError, NotFoundError, DeploymentError) as exc:
             self._cleanup()
