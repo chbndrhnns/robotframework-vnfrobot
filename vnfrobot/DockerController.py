@@ -276,6 +276,13 @@ class DockerController:
 
         n.remove()
 
+    def delete_container(self, name):
+        try:
+            c = self._docker.containers.get(name)
+            c.remove()
+        except (docker.errors.APIError, docker.errors.NotFound) as exc:
+            raise DeploymentError('Could not delete container {}'.format(name))
+
     def create_volume(self, name):
         try:
             return self._docker.volumes.create(name)
@@ -340,6 +347,16 @@ class DockerController:
         #             return c
         #     except docker.errors.NotFound:
         #         pass
+
+        # remove existing sidecar
+        try:
+            self.delete_container(name)
+            BuiltIn().log('Removing existing sidecar container {}'.format(name),
+                          level='DEBUG',
+                          console=Settings.to_console
+                          )
+        except DeploymentError:
+            pass
 
         try:
             self.get_or_pull_image(image)
