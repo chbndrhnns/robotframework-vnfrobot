@@ -1,6 +1,6 @@
 # App source: https://hackernoon.com/docker-tutorial-getting-started-with-python-redis-and-nginx-81a9d740d091
 
-version: '3'
+version: '3.2'
 services:
   app:
     image: hubby/dc-nginx-python-redis_app:0.1
@@ -24,3 +24,6 @@ volumes:
 
 networks:
   m2m:
+    # needs to be set so that we can run the sidecar
+    driver: overlay
+    attachable: true
