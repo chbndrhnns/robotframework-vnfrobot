@@ -12,6 +12,7 @@ from testtools.GossTool import GossTool
 
 target = MagicMock()
 
+
 @pytest.mark.integration
 def test__run__pass(controller, gossfile, goss_sut_service):
     sut = goss_sut_service

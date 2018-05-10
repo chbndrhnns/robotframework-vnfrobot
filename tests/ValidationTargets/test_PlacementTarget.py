@@ -6,11 +6,13 @@ from tools.data_structures import SUT
 from utils import set_test_data
 
 
+@pytest.mark.target
 def test__context__invalid__fail(placement_with_instance):
     with pytest.raises(SetupError, match='No SUT'):
         placement_with_instance.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('data', placement_target_test_data)
 def test__validate__pass(placement_with_instance, sut, data):
     e = placement_with_instance
@@ -20,6 +22,7 @@ def test__validate__pass(placement_with_instance, sut, data):
     e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('data', placement_target_test_data_fail)
 def test__validate__fail(placement_with_instance, sut, data):
     e = placement_with_instance
@@ -30,6 +33,7 @@ def test__validate__fail(placement_with_instance, sut, data):
         e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('data', placement_target_test_data)
 def test__evaluate_results__pass(placement_with_instance, docker_tool_instance, sut, data):
     e = placement_with_instance
@@ -42,6 +46,7 @@ def test__evaluate_results__pass(placement_with_instance, docker_tool_instance, 
     e.evaluate_results(docker_tool_instance)
 
 
+@pytest.mark.target
 @pytest.mark.integration
 @pytest.mark.parametrize('data', placement_target_test_data)
 def test__run__pass(placement_with_instance, stack, data):

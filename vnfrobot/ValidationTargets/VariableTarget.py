@@ -13,7 +13,7 @@ class Variable(ValidationTarget):
     properties = {
         'entity': {
             'matchers': matchers.all_matchers.keys(),
-            'value': '[^\s]'
+            'values': '[^\s]'
         }
     }
 
@@ -32,7 +32,7 @@ class Variable(ValidationTarget):
         call_validator(self.instance.sut.target_type, validators.Context, Variable.allowed_contexts)
         call_validator(self.entity, validators.Regex, Variable.entity_matcher)
         call_validator(self.matcher, validators.InList, Variable.properties.get('entity', {}).get('matchers'))
-        call_validator(self.value, validators.Regex, Variable.properties.get('entity', {}).get('value'))
+        call_validator(self.value, validators.Regex, Variable.properties.get('entity', {}).get('values'))
 
     def _prepare_transform(self):
         pass

@@ -7,12 +7,14 @@ from tools.data_structures import SUT
 from utils import set_test_data
 
 
+@pytest.mark.target
 @pytest.mark.kw_file
 def test__context__invalid__fail(file_with_instance):
     with pytest.raises(SetupError, match='No SUT'):
         file_with_instance.validate()
 
 
+@pytest.mark.target
 @pytest.mark.kw_file
 @pytest.mark.parametrize('test', file_target_test_data_pass)
 def test__validate__pass(file_with_instance, sut, test):
@@ -23,6 +25,7 @@ def test__validate__pass(file_with_instance, sut, test):
     e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.kw_file
 @pytest.mark.parametrize('test', file_target_test_data_fail)
 def test__validate__fail(file_with_instance, sut, test):
@@ -34,6 +37,7 @@ def test__validate__fail(file_with_instance, sut, test):
         e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.kw_file
 @pytest.mark.parametrize('test, data, expected, yaml', file_test_data)
 def test__prepare_transform__pass(file_with_instance, sut, test, data, expected, yaml, mocker):
@@ -46,6 +50,7 @@ def test__prepare_transform__pass(file_with_instance, sut, test, data, expected,
     assert e.data == data.get('data')
 
 
+@pytest.mark.target
 @pytest.mark.kw_file
 @pytest.mark.integration
 @pytest.mark.parametrize('test', file_target_test_data_pass)

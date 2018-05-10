@@ -173,6 +173,23 @@ class VnfValidator(DynamicCore):
     def group_kw(self):
         pass
 
+    @keyword('File ${{raw_entity:{}}}: ${{matcher:{}}} ${{raw_val:{}}}'.format(
+        matchers.quoted_or_unquoted_string,
+        '|'.join(string_matchers.keys()),
+        matchers.quoted_or_unquoted_string))
+    def file_kw_content(self, raw_entity, matcher, raw_val):
+        try:
+            validation_target = File(self)
+            validation_target.set_as_dict({
+                'context': self.sut,
+                'entity': raw_entity,
+                'property': 'content',
+                'matcher': matcher,
+                'value': raw_val})
+            validation_target.run_test()
+        except (DataFormatError, ValidationError) as exc:
+            BuiltIn().fail(exc)
+
     @keyword('File ${{raw_entity:{}}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:{}}}'.format(
         matchers.quoted_or_unquoted_string,
         '|'.join(File.properties.keys()),

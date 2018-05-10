@@ -52,7 +52,7 @@ def _get_deployment(instance):
         instance.docker_controller.find_stack(instance.deployment_name)
         if not instance.services:
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
-                          console=True)
+                          console=Settings.to_console)
         instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
         return True
     except DeploymentError:
@@ -91,7 +91,7 @@ def _create_deployment(instance):
 
     try:
         BuiltIn().log('Deploying {} as {}'.format(descriptor, deployment), level='INFO',
-                      console=True)
+                      console=Settings.to_console)
         res = instance.docker_controller.deploy_stack(descriptor, deployment)
         assert res
         BuiltIn().log('Waiting for deployment {}...'.format(deployment), level='INFO', console=Settings.to_console)

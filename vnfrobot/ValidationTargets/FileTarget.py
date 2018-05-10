@@ -12,6 +12,14 @@ class File(ValidationTarget):
             'matchers': matchers.boolean_matchers,
             'values': ['existing']
         },
+        'mode': {
+            'matchers': matchers.boolean_matchers,
+            'values': validators.Permission
+        },
+        'content': {
+            'matchers': ['contains'],
+            'values': validators.String
+        }
     }
     options = {
         'test_volume_required': True,

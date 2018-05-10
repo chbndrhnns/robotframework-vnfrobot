@@ -88,7 +88,7 @@ class Context(Validator):
     def validate(self, entity=None):
         if entity not in self.context:
             BuiltIn().log('Context "{}" not allowed. Must be any of {}'.format(entity, self.context), level='ERROR',
-                          console=True)
+                          console=Settings.to_console)
             return False
         return True
 
@@ -104,7 +104,7 @@ class Property(Validator):
     def validate(self, entity):
         if entity not in self.context.keys():
             BuiltIn().log('Property "{}" not allowed. Must be any of {}'.format(entity, self.context), level='ERROR',
-                          console=True)
+                          console=Settings.to_console)
             return False
         return True
 
@@ -141,7 +141,7 @@ class Regex(Validator):
         found = re.findall(self.context, entity)
         if not found:
             BuiltIn().log('Value "{}" not allowed. Must match the regex {}'.format(entity, self.context), level='ERROR',
-                          console=True)
+                          console=Settings.to_console)
             return False
         return True
 
@@ -150,7 +150,7 @@ class String(Validator):
     def validate(self, entity):
         if not isinstance(entity, basestring):
             BuiltIn().log('Value "{}" not allowed. Must be string'.format(entity), level='ERROR',
-                          console=True)
+                          console=Settings.to_console)
             return False
         return True
 
@@ -158,19 +158,13 @@ class String(Validator):
 class Permission(Validator):
     def validate(self, entity):
         if entity not in ['executable']:
-            with NamedTemporaryFile() as f:
-                try:
-                    os.chmod(f.name, entity)
-                    return True
-                except (OSError, TypeError):
-                    try:
-                        converted = int(entity, 8)
-                        os.chmod(f.name, converted)
-                        return True
-                    except (OSError, TypeError):
-                        BuiltIn().log('Value "{}" not allowed for permission'.format(entity), level='ERROR',
-                                          console=Settings.to_console)
-                    return False
+            try:
+                int(entity)
+                return True
+            except (ValueError, OSError, TypeError):
+                BuiltIn().log('Value "{}" not allowed for permission'.format(entity), level='ERROR',
+                              console=Settings.to_console)
+            return False
         return True
 
 
@@ -186,6 +180,6 @@ class QuotedString(Validator):
         found = QuotedString.regex.search(entity)
         if not found:
             BuiltIn().log('Value "{}" not allowed. Must match the regex {}'.format(entity, self.context), level='ERROR',
-                          console=True)
+                          console=Settings.to_console)
             return False
         return True

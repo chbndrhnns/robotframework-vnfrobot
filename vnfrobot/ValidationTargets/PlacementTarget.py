@@ -16,7 +16,7 @@ class Placement(ValidationTarget):
         # },
         'node.role': {
             'matchers': ['is', 'is not'],
-            'value': '\S+'
+            'values': '\S+'
         },
         # 'node.hostname': {
         #     'matchers': ['contains', 'contains not', 'is', 'is not'],
@@ -44,7 +44,7 @@ class Placement(ValidationTarget):
         call_validator(self.instance.sut.target_type, validators.Context, Placement.allowed_contexts)
         call_validator(self.property, validators.Property, Placement.properties)
         call_validator(self.matcher, validators.InList, Placement.properties.get(self.property, {}).get('matchers', []))
-        call_validator(self.value, validators.Regex, Placement.properties.get(self.property, {}).get('value', ''))
+        call_validator(self.value, validators.Regex, Placement.properties.get(self.property, {}).get('values', ''))
 
     def _prepare_transform(self):
         pass

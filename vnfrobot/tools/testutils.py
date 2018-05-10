@@ -67,8 +67,8 @@ def validate_value(properties, prop, value):
         if not valid:
             raise exc.ValidationError(
                 'Value "{}" not allowed for {}. Must be any of {}'.format(value, prop, properties[prop]))
-    elif isinstance(validator.get('value')(), Validator):
-        v = validator.get('value')()
+    elif isinstance(validator.get('values')(), Validator):
+        v = validator.get('values')()
         if not v.validate(value):
             raise exc.ValidationError(
                 'Value "{}" not allowed for {}. Must be any of {}'.format(value, prop, v.name))

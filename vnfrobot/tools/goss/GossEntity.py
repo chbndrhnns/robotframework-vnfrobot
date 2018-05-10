@@ -6,6 +6,7 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from exc import TransformationError
 from settings import Settings
+from tools.goss.transformers import ValueTransformer
 
 
 class GossEntity:
@@ -115,7 +116,7 @@ class GossEntity:
                     raise TransformationError('map values: {} - {}'.format(new_key, exc))
 
         for key in keys_replaced:
-            if entity.get(key):
+            if key_mappings.get(key) != key:
                 del entity[key]
 
         return entity
@@ -127,6 +128,13 @@ class GossEntity:
         new_matcher = matcher_mapping.get(old_matcher, None)
         # replace old value with new value if a mapping exists
         if value_mappings.get(new_key, {}):
+            # use ValueTransformer if available
+            try:
+                data = entity.get(old_key, None)
+                entity[new_key] = value_mappings.get(new_key)(data=data).transformed
+                return
+            except TypeError:
+                pass
             if isinstance(entity[new_key], list):
                 entity[new_key].append(value_mappings.get(new_key, {}).get(entity, None))
             else:

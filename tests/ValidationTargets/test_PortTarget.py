@@ -7,11 +7,13 @@ from tools.data_structures import SUT
 from utils import set_test_data
 
 
+@pytest.mark.target
 def test__context__invalid__fail(port_with_instance):
     with pytest.raises(SetupError, match='No SUT'):
         port_with_instance.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('test', port_target_test_data_pass)
 def test__validate__pass(port_with_instance, sut, test):
     e = port_with_instance
@@ -21,6 +23,7 @@ def test__validate__pass(port_with_instance, sut, test):
     e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('test', port_target_test_data_fail)
 def test__validate__fail(port_with_instance, sut, test):
     e = port_with_instance
@@ -31,6 +34,7 @@ def test__validate__fail(port_with_instance, sut, test):
         e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('test, data, mapped, out', ports_test_data)
 def test__transform__pass(port_with_instance, sut, test, data, mapped, out):
     test = test.get('test')
@@ -46,6 +50,7 @@ def test__transform__pass(port_with_instance, sut, test, data, mapped, out):
     assert yaml.safe_load(e.transformed_data) == yaml.safe_load(out.get('expected_yaml'))
 
 
+@pytest.mark.target
 @pytest.mark.integration
 @pytest.mark.parametrize('test, data, mapped, out', ports_test_data)
 def test__run__service_context__pass(port_with_instance, stack, volume_with_goss, test, data, mapped, out):
@@ -59,5 +64,3 @@ def test__run__service_context__pass(port_with_instance, stack, volume_with_goss
     e.instance.test_volume = volume_with_goss
 
     set_test_data(e, test.get('test'))
-
-

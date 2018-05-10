@@ -15,7 +15,7 @@ class Port(ValidationTarget):
         },
         'listening address': {
             'matchers': [],
-            'value': IpAddress
+            'values': IpAddress
         }
     }
     options = {

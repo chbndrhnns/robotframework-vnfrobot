@@ -10,7 +10,6 @@ from testtools.GossTool import GossTool
 from testtools.TestTool import TestTool
 from tools import orchestrator
 from tools.data_structures import SUT
-from tools.goss.GossEntity import GossEntity
 
 
 class ValidationTarget:
@@ -200,7 +199,7 @@ class ValidationTarget:
         if self.instance.sidecar:
             BuiltIn().log('Cleanup sidecar: removing {}'.format(self.instance.sidecar.name),
                           level='DEBUG',
-                          console=True)
+                          console=Settings.to_console)
             assert isinstance(self.instance.sidecar, Container)
             try:
                 self.instance.sidecar.kill()
@@ -213,5 +212,5 @@ class ValidationTarget:
                 if 'No such container' not in exc.explanation:
                     BuiltIn().log('Cleanup failed: could not remove {}: exc'.format(self.instance.sidecar.name, exc),
                                   level='ERROR',
-                                  console=True)
+                                  console=Settings.to_console)
             self.instance.sidecar = None

@@ -13,15 +13,15 @@ class Command(ValidationTarget):
     properties = {
         'return code': {
             'matchers': matchers.number_matchers.keys(),
-            'value': String
+            'values': String
         },
         'stdout': {
             'matchers': ['is', 'is not', 'contains', 'contains not'],
-            'value': String
+            'values': String
         },
         'stderr': {
             'matchers': ['is', 'is not', 'contains', 'contains not'],
-            'value': String
+            'values': String
         },
     }
     options = {

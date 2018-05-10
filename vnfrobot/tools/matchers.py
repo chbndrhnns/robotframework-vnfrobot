@@ -25,4 +25,4 @@ string_matchers = dict(boolean_matchers, **{
 
 all_matchers = dict(string_matchers, **number_matchers)
 
-quoted_or_unquoted_string = """.+"|'.+'|\S+"""
+quoted_or_unquoted_string = """".+"|'.+'|\S+"""

@@ -7,7 +7,7 @@ test-unit:
 
 test-integration:
 	. .robot/bin/activate && \
-    PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'not keyword' -m 'not flaky'
+    PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'not keyword' 
 
 test-keywords:
 	. .robot/bin/activate && \

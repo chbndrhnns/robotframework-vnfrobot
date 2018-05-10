@@ -9,11 +9,13 @@ from fixtures.test_data_Address import goss_results, addresses_test_data
 from utils import set_test_data
 
 
+@pytest.mark.target
 def test__context__invalid__fail(address_with_instance):
     with pytest.raises(SetupError, match='No SUT'):
         address_with_instance.validate()
 
 
+@pytest.mark.target
 def test__validate__pass(address_with_instance, sut):
     e = address_with_instance
     e.instance.sut = sut
@@ -27,6 +29,7 @@ def test__validate__pass(address_with_instance, sut):
         e.validate()
 
 
+@pytest.mark.target
 def test__validate__wrong_entity__fail(address_with_instance, sut):
     e = address_with_instance
     e.instance.sut = sut
@@ -41,6 +44,7 @@ def test__validate__wrong_entity__fail(address_with_instance, sut):
             assert not e.validate()
 
 
+@pytest.mark.target
 def test__validate__fail(address_with_instance, sut):
     e = address_with_instance
     e.instance.sut = sut
@@ -57,6 +61,7 @@ def test__validate__fail(address_with_instance, sut):
             e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('test, goss_result', goss_results)
 def test__evaluate__pass(address_with_instance, goss_tool_instance, sut, test, goss_result):
     e = address_with_instance
@@ -66,7 +71,7 @@ def test__evaluate__pass(address_with_instance, goss_tool_instance, sut, test, g
 
     e.evaluate_results(goss_tool_instance)
 
-
+@pytest.mark.target
 @pytest.mark.parametrize('test, data, mapped, out', addresses_test_data)
 def test__transform__pass(address_with_instance, sut, test, data, mapped, out):
     test = test.get('test')
@@ -81,6 +86,7 @@ def test__transform__pass(address_with_instance, sut, test, data, mapped, out):
 
 
 @pytest.mark.integration
+@pytest.mark.target
 @pytest.mark.parametrize('test, data, mapped, out', addresses_test_data)
 def test__run__network_context__pass(address_with_instance, stack, network, volume_with_goss, test, data, mapped, out):
     e = address_with_instance

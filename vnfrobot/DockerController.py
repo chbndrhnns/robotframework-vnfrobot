@@ -376,8 +376,6 @@ class DockerController:
         except docker.errors.ContainerError as exc:
             BuiltIn().log(exc, level='DEBUG', console=Settings.to_console)
             raise DeploymentError('Error: {}'.format(exc))
-        except Exception as exc:
-            raise exc
 
     def get_or_pull_image(self, image):
         try:

@@ -8,12 +8,13 @@ from fixtures.test_data_CommandTarget import command_target_test_data_pass, comm
 from tools.data_structures import SUT
 from utils import set_test_data
 
-
+@pytest.mark.target
 def test__context__invalid__fail(command_with_instance):
     with pytest.raises(SetupError, match='No SUT'):
         command_with_instance.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('test', command_target_test_data_pass)
 def test__validate__pass(command_with_instance, sut, test):
     e = command_with_instance
@@ -23,6 +24,7 @@ def test__validate__pass(command_with_instance, sut, test):
     e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('test', command_target_test_data_fail)
 def test__validate__fail(command_with_instance, sut, test):
     e = command_with_instance
@@ -33,6 +35,7 @@ def test__validate__fail(command_with_instance, sut, test):
         e.validate()
 
 
+@pytest.mark.target
 @pytest.mark.parametrize('data', command_target_integration_test_data)
 def test__evaluate__pass(command_with_instance, sut, data, docker_tool_instance):
     e = command_with_instance
@@ -46,6 +49,7 @@ def test__evaluate__pass(command_with_instance, sut, data, docker_tool_instance)
     e.evaluate_results(docker_tool_instance)
 
 
+@pytest.mark.target
 @pytest.mark.integration
 @pytest.mark.parametrize('data', command_target_integration_test_data)
 def test__run__pass(command_with_instance, stack, data):
@@ -61,6 +65,7 @@ def test__run__pass(command_with_instance, stack, data):
     e.run_test()
 
 
+@pytest.mark.target
 @pytest.mark.integration
 @pytest.mark.parametrize('data', command_target_network_context_test_data)
 def test__run__network_context__pass(command_with_instance, stack, data):
