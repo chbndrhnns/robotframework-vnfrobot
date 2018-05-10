@@ -5,6 +5,7 @@ from robot.libraries.BuiltIn import BuiltIn
 
 import exc
 from exc import DeploymentError, TestToolError, NotFoundError
+from settings import Settings
 from testtools.TestTool import TestTool
 
 
@@ -57,7 +58,7 @@ class GossTool(TestTool):
 
         assert isinstance(self.test_results['summary']['failed-count'], int)
 
-        BuiltIn().log(json.dumps(self.test_results, indent=4, sort_keys=True), level='DEBUG', console=True)
+        BuiltIn().log(json.dumps(self.test_results, indent=4, sort_keys=True), level='DEBUG', console=Settings.to_console)
 
         errors = [res for res in self.test_results['results'] if not res['successful']]
         if errors:
@@ -66,7 +67,7 @@ class GossTool(TestTool):
                     target.entity,
                     err.get('property', ''),
                     err.get('expected'),
-                    err.get('found')), level='INFO', console=True)
+                    err.get('found')), level='INFO', console=Settings.to_console)
             raise exc.ValidationError('Test not successful')
 
     @staticmethod

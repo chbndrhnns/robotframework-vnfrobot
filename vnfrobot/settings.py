@@ -12,6 +12,7 @@ class Settings:
 
     log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
     timing = os.environ.get('VNFROBOT_TIMING') or False
+    to_console = os.environ.get('VNFROBOT_TO_CONSOLE') or False
 
     # Docker orchestrator
     docker = {

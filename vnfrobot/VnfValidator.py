@@ -10,6 +10,7 @@ from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from ValidationTargets.AddressTarget import Address
 from ValidationTargets.PortTarget import Port
 from ValidationTargets.VariableTarget import Variable
+from settings import Settings
 from tools import orchestrator, matchers
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
@@ -88,7 +89,7 @@ class VnfValidator(DynamicCore):
                 self.sut.target_type if self.sut.target_type else 'Not set',
                 self.sut.service_id if self.sut.service_id else 'Not set',
                 self.sut.target if self.sut.target else 'Not set'),
-                    level='INFO', console=True)
+                    level='INFO', console=Settings.to_console)
         except NotFoundError as exc:
             raise NotFoundError('update_sut: Fatal error: {} "{}" not found.'.format(temp_sut.target_type, temp_sut.target))
 
@@ -250,7 +251,7 @@ class VnfValidator(DynamicCore):
     @keyword('Deploy ${descriptor:\S+}')
     def deploy_kw(self, descriptor):
         if self.descriptor_file is None:
-            BuiltIn().log('No descriptor file specified. Assuming fake deployment...', level='INFO', console=True)
+            BuiltIn().log('No descriptor file specified. Assuming fake deployment...', level='INFO', console=Settings.to_console)
             return
         try:
             orchestrator.get_or_create_deployment(self)

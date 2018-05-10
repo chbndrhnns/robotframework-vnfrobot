@@ -39,7 +39,7 @@ def wait_on_condition(condition, delay=0.1, timeout=40):
             raise AssertionError("Timeout: %s" % condition)
         # if time.time() - last_time > 15:
         #     BuiltIn().log('Waiting since {} seconds now...'.format(time.time() - start_time),
-        # level='DEBUG', console=True)
+        # level='DEBUG', console=Settings.to_console)
         time.sleep(delay)
 
 

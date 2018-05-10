@@ -27,7 +27,7 @@ class DockerController:
 
         if not self.base_dir:
             self.base_dir = os.getcwd()
-            BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG', console=True)
+            BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG', console=Settings.to_console)
 
     def run_busybox(self, **kwargs):
         try:
@@ -52,7 +52,7 @@ class DockerController:
                     raise NotFoundError(
                         'Could not find entity (service or container) {}'.format(entity if entity else '<None>'))
 
-        BuiltIn().log('Running "{}" in {}'.format(command, target.name), level='DEBUG', console=True)
+        BuiltIn().log('Running "{}" in {}'.format(command, target.name), level='DEBUG', console=Settings.to_console)
         container_status = target.status
         if 'created' in container_status:
             return self.run_sidecar(sidecar=target)
@@ -92,7 +92,7 @@ class DockerController:
                                                    'status': lower(state)
                                                })
             # BuiltIn().log('Get containers for services {}: {}'.format(
-            #     service, [c.name for c in res ] if res else 'None'), level='DEBUG', console=True)
+            #     service, [c.name for c in res ] if res else 'None'), level='DEBUG', console=Settings.to_console)
             return res
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
@@ -150,7 +150,7 @@ class DockerController:
         except (docker.errors.NotFound, docker.errors.APIError, NotFoundError) as exc:
             raise DeploymentError('Entity not found: {}'.format(exc))
 
-        BuiltIn().log('Connecting network {} to service {}...'.format(n.name, s.name), level='DEBUG', console=True)
+        BuiltIn().log('Connecting network {} to service {}...'.format(n.name, s.name), level='DEBUG', console=Settings.to_console)
         try:
             return self.update_service(s, networks=[n.name])
         except docker.errors.APIError as exc:
@@ -192,7 +192,7 @@ class DockerController:
         service = service if isinstance(service, Service) else self.get_service(service)
         BuiltIn().log(
             'Waiting for service to update {}...'.format(service.name if isinstance(service, Service) else ''),
-            level='DEBUG', console=True)
+            level='DEBUG', console=Settings.to_console)
 
         # wait for the update to take place
         wait_on_service_replication(self._docker, service)
@@ -225,7 +225,7 @@ class DockerController:
         except (AttributeError, ValueError):
             pass
 
-        BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=True)
+        BuiltIn().log('Connecting volume {} to service {}...'.format(v.name, s.name), level='DEBUG', console=Settings.to_console)
         try:
             return self.update_service(s, mounts=['{}:/goss:ro'.format(v.name)])
         except docker.errors.APIError as exc:
@@ -305,7 +305,7 @@ class DockerController:
         except docker.errors.NotFound:
             pass
 
-        BuiltIn().log('Copying {} to {}...'.format(path, volume), level='DEBUG', console=True)
+        BuiltIn().log('Copying {} to {}...'.format(path, volume), level='DEBUG', console=Settings.to_console)
         try:
             res = self._dispatch(['run', '-v', '{}:/data'.format(volume), '--name', self.helper, 'busybox', 'true'])
             assert len(res.stderr) == 0
@@ -344,7 +344,7 @@ class DockerController:
         try:
             self.get_or_pull_image(image)
             BuiltIn().log('Creating sidecar container: name={}, image={}, command={}, volumes={}, networks={}'.format(
-                name, image, command, volumes, network), level='DEBUG', console=True)
+                name, image, command, volumes, network), level='DEBUG', console=Settings.to_console)
             return self._docker.containers.create(name=name if name else None,
                                                   image=image,
                                                   command=command,
@@ -357,7 +357,7 @@ class DockerController:
         except NotFoundError as exc:
             raise DeploymentError('Image {} not found: {}'.format(image if image else '', exc))
         except docker.errors.ContainerError as exc:
-            BuiltIn().log(exc, level='DEBUG', console=True)
+            BuiltIn().log(exc, level='DEBUG', console=Settings.to_console)
             raise DeploymentError('Error: {}'.format(exc))
         except Exception as exc:
             raise exc
@@ -391,7 +391,7 @@ class DockerController:
             stdout = sidecar.logs(stdout=True, stderr=False) or ''
             stderr = sidecar.logs(stdout=False, stderr=True) or ''
 
-            # BuiltIn().log(stdout, level='DEBUG', console=True)
+            # BuiltIn().log(stdout, level='DEBUG', console=Settings.to_console)
 
             if stderr:
                 raise DeploymentError('Found stderr: {}'.format(stderr))
@@ -407,7 +407,7 @@ class DockerController:
             else:
                 raise DeploymentError('Could not run sidecar: {}'.format(exc))
         except docker.errors.ContainerError as exc:
-            BuiltIn().log(exc, level='DEBUG', console=True)
+            BuiltIn().log(exc, level='DEBUG', console=Settings.to_console)
             raise DeploymentError('Error: {}'.format(exc))
         finally:
             self._kill_and_delete_container(sidecar)
@@ -432,7 +432,7 @@ class DockerController:
         if isinstance(entity, Container):
             entity = entity.name
         filename = filename or os.path.basename(file_to_transfer)
-        BuiltIn().log('Putting file {} on {}'.format(filename, entity), level='DEBUG', console=True)
+        BuiltIn().log('Putting file {} on {}'.format(filename, entity), level='DEBUG', console=Settings.to_console)
         with open(file_to_transfer, 'r') as f:
             content = f.read()
             self._send_file(content, destination, entity, filename)

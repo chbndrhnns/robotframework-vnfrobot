@@ -30,7 +30,7 @@ def prepare_context(instance, context_type=None, context=None):
     except NotFoundError:
         raise SetupError('Service {} not found in deployment {}'.format(context, instance.deployment_name))
 
-    BuiltIn().log('\nPreparing for context "{}"'.format(context_type), level='DEBUG', console=True)
+    BuiltIn().log('\nPreparing for context "{}"'.format(context_type), level='DEBUG', console=Settings.to_console)
 
     if context_type == 'network':
         try:
@@ -60,7 +60,7 @@ def _prepare_service_context(controller, instance, service_id):
 
 
 def _prepare_network_context(controller, service_id):
-    BuiltIn().log('Creating helper network...', level='DEBUG', console=True)
+    BuiltIn().log('Creating helper network...', level='DEBUG', console=Settings.to_console)
 
     network = controller.get_or_create_network(_generate_sidecar_name(service_id))
     sidecar = controller.get_or_create_sidecar(
