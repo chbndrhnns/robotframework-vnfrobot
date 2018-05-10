@@ -31,7 +31,7 @@ class GossEntity:
         self.apply_mappings(entity)
 
         self.out = Environment().from_string(entity.template).render(self.mapped)
-        BuiltIn().log_to_console('\n{}'.format(self.out))
+        BuiltIn().log('\n{}'.format(self.out), level='DEBUG', console=True)
 
         return self.out
 

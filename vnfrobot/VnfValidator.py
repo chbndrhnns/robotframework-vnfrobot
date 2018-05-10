@@ -75,17 +75,42 @@ class VnfValidator(DynamicCore):
     def update_sut(self, **kwargs):
         # create a new namedtuple and use the old values if no new value is available
         # noinspection PyProtectedMember
-        self.sut = self.sut._replace(
+        temp_sut = self.sut._replace(
             target_type=kwargs.get('target_type', self.sut.target_type),
             target=kwargs.get('target', self.sut.target),
             service_id=kwargs.get('service_id', self.sut.service_id),
         )
 
-        BuiltIn().log('\nUpdating context: target_type={}, service_id={}, target={}'.format(
-            self.sut.target_type if self.sut.target_type else 'Not set',
-            self.sut.service_id if self.sut.service_id else 'Not set',
-            self.sut.target if self.sut.target else 'Not set'),
-            level='INFO', console=True)
+        try:
+            self.sut = self._check_sut_availability(temp_sut)
+
+            BuiltIn().log('\nUpdating context: target_type={}, service_id={}, target={}'.format(
+                self.sut.target_type if self.sut.target_type else 'Not set',
+                self.sut.service_id if self.sut.service_id else 'Not set',
+                self.sut.target if self.sut.target else 'Not set'),
+                    level='INFO', console=True)
+        except NotFoundError as exc:
+            raise NotFoundError('update_sut: Fatal error: {} "{}" not found.'.format(temp_sut.target_type, temp_sut.target))
+
+    def _check_sut_availability(self, temp_sut):
+        import pydevd
+        # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
+
+        try:
+            if temp_sut.target_type == 'network':
+                self.docker_controller.get_network(temp_sut.service_id)
+            elif temp_sut.target_type == 'service':
+                self.docker_controller.get_service(temp_sut.service_id)
+            elif temp_sut.target_type == 'container':
+                self.docker_controller.get_containers(filters={
+                                                          'name': temp_sut.service_id
+                                                      },
+                                                      all=True)
+            else:
+                raise NotFoundError('_check_sut_availability: target_type {} is invalid'.format(temp_sut.target_type))
+            return temp_sut
+        except NotFoundError as exc:
+            raise exc
 
     def run_keyword(self, name, args, kwargs):
         """

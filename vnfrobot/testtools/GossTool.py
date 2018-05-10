@@ -57,7 +57,7 @@ class GossTool(TestTool):
 
         assert isinstance(self.test_results['summary']['failed-count'], int)
 
-        BuiltIn().log_to_console(json.dumps(self.test_results, indent=4, sort_keys=True))
+        BuiltIn().log(json.dumps(self.test_results, indent=4, sort_keys=True), level='DEBUG', console=True)
 
         errors = [res for res in self.test_results['results'] if not res['successful']]
         if errors:
