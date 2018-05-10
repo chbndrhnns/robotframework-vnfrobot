@@ -205,3 +205,18 @@ def test__validate_entity__port__fail(port):
 
     with pytest.raises(ValidationError, match=not_valid_match):
         call_validator(port, validator)
+
+
+@pytest.mark.parametrize('perm', ['executable', '0755', 0600])
+def test__validate_entity__port__pass(perm):
+    validator = validators.Permission
+
+    assert call_validator(perm, validator)
+
+
+@pytest.mark.parametrize('perm', ['executb', 65537, '0'])
+def test__validate_entity__port__fail(perm):
+    validator = validators.Permission
+
+    with pytest.raises(ValidationError, match=not_valid_match):
+        call_validator(perm, validator)

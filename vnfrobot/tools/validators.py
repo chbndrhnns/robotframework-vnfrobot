@@ -1,12 +1,15 @@
 from __future__ import absolute_import
 
+import os
 import re
 from abc import ABCMeta, abstractmethod
+from tempfile import TemporaryFile, NamedTemporaryFile
 
 import validators
 from robot.libraries.BuiltIn import BuiltIn
 
 import exc
+from settings import Settings
 
 
 class Validator:
@@ -149,6 +152,25 @@ class String(Validator):
             BuiltIn().log('Value "{}" not allowed. Must be string'.format(entity), level='ERROR',
                           console=True)
             return False
+        return True
+
+
+class Permission(Validator):
+    def validate(self, entity):
+        if entity not in ['executable']:
+            with NamedTemporaryFile() as f:
+                try:
+                    os.chmod(f.name, entity)
+                    return True
+                except (OSError, TypeError):
+                    try:
+                        converted = int(entity, 8)
+                        os.chmod(f.name, converted)
+                        return True
+                    except (OSError, TypeError):
+                        BuiltIn().log('Value "{}" not allowed for permission'.format(entity), level='ERROR',
+                                          console=Settings.to_console)
+                    return False
         return True
 
 
