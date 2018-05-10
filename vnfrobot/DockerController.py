@@ -393,7 +393,7 @@ class DockerController:
     def run_sidecar(self, name='', sidecar=None, image='busybox', command='true', volumes=None, network=None):
 
         # maybe try this:
-        # docker service create --network dockercoins_default --name debug \
+        # docker service create --network dockercoins_default --name set_breakpoint \
         #        --constraint node.hostname==$HOSTNAME alpine sleep 1000000000
         #
         #

@@ -158,3 +158,8 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
 
 def str2bool(val):
     return val.lower() in ("yes", "true", "t", "1")
+
+
+def set_breakpoint():
+    import pydevd
+    pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)

@@ -72,7 +72,7 @@ def get_or_create_deployment(instance):
             _create_deployment(instance)
         assert len(instance.services) > 0, "instance.services should not be empty after get_or_create_deployment()"
     except (DeploymentError, SetupError) as exc:
-        raise exc
+        raise SetupError(exc)
 
 
 def _check_file_exists(f):

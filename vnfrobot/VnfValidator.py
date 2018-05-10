@@ -15,6 +15,7 @@ from tools import orchestrator, matchers
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
+from tools.testutils import set_breakpoint
 from version import VERSION
 from tools.matchers import string_matchers, all_matchers
 
@@ -94,9 +95,6 @@ class VnfValidator(DynamicCore):
             raise NotFoundError('update_sut: Fatal error: {} "{}" not found.'.format(temp_sut.target_type, temp_sut.target))
 
     def _check_sut_availability(self, temp_sut):
-        import pydevd
-        # pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
-
         try:
             if temp_sut.target_type == 'network':
                 self.docker_controller.get_network(temp_sut.service_id)
