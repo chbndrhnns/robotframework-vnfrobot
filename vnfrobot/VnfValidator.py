@@ -59,9 +59,12 @@ class VnfValidator(DynamicCore):
     # noinspection PyUnusedLocal
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
-        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}")
+        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}") or 'docker-compose.yml'
 
-        self.deploy_kw(self.descriptor_file)
+        try:
+            orchestrator.get_or_create_deployment(self)
+        except SetupError as exc:
+            BuiltIn().fatal_error(exc)
 
     # noinspection PyUnusedLocal
     def _end_suite(self, name, attrs):
@@ -284,16 +287,6 @@ class VnfValidator(DynamicCore):
             validation_target.run_test()
         except (DataFormatError, ValidationError) as exc:
             BuiltIn().fail(exc)
-
-    @keyword('Deploy ${descriptor:\S+}')
-    def deploy_kw(self, descriptor):
-        if self.descriptor_file is None:
-            BuiltIn().log('No descriptor file specified. Assuming fake deployment...', level='INFO', console=Settings.to_console)
-            return
-        try:
-            orchestrator.get_or_create_deployment(self)
-        except SetupError as exc:
-            BuiltIn().fatal_error(exc)
 
     @keyword('Remove deployment')
     def remove_deployment_kw(self):

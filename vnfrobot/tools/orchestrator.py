@@ -1,6 +1,7 @@
 import os
 
 from robot.libraries.BuiltIn import BuiltIn
+from ruamel import yaml
 
 from DockerController import DockerController
 from exc import SetupError, DeploymentError
@@ -75,6 +76,7 @@ def get_or_create_deployment(instance):
     try:
         f = os.path.realpath(os.path.join(os.path.dirname(instance.suite_source), instance.descriptor_file))
         instance.descriptor_file = _check_file_exists(f)
+        _check_valid_yaml(f)
         if not instance.docker_controller:
             instance.docker_controller = _get_controller(instance.suite_source)
         if instance.deployment_name:
@@ -91,6 +93,16 @@ def _check_file_exists(f):
     if not os.path.isfile(f):
         raise SetupError('Descriptor "{}" not found.'.format(f))
     return f
+
+
+def _check_valid_yaml(f):
+    try:
+        with open(f, 'r') as inp:
+            res = yaml.safe_load(inp)
+            if not isinstance(res, dict):
+                raise ValueError
+    except ValueError:
+        raise SetupError('Descriptor "{}" is not a valid YAML file.'.format(f))
 
 
 def _create_deployment(instance):
