@@ -16,6 +16,8 @@ ROBOT_CMD:=robot --timestampoutputs --loglevel ${LOGLEVEL}
 
 prepare:
 	find . -name '*.pyc' -delete
+	docker ps > /dev/null 2>&1 || echo "Docker is not running."
+	(docker info | grep "Swarm: active" > /dev/null 2>&1) || echo "Docker needs to be running Swarm mode."
 
 run-logserver:
 	live-server --open=logs/report.html
@@ -25,7 +27,6 @@ app1: prepare
 
 app2: prepare
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}
-
 
 test-unit: prepare
 	${VENV} && ${VARS} ${PYTEST_CMD} --ignore='tests/fixtures' --ignore 'tests/keywords' -m 'not integration' tests

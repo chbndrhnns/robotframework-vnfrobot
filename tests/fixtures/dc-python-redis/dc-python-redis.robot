@@ -3,7 +3,6 @@ Library   VnfValidator
 
 *** Variables ***
 ${DESCRIPTOR}     docker-compose.yml
-${USE_DEPLOYMENT}  'fervent_wescoff'
 
 
 *** Test Cases ***
@@ -44,5 +43,5 @@ In the network m2m, there are two services
   [Documentation]  Make sure there are only two services at all.
   
 The redis counter increases after sending an HTTP GET to the web server at http://<app>:5000/
-  [Documentation] Validates that the visits to the web site are actually recorded in the redis database.
+  [Documentation]  Validates that the visits to the web site are actually recorded in the redis database.
   

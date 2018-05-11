@@ -48,21 +48,25 @@ def _get_controller(source):
         raise exc
 
 
-def _get_deployment(instance):
+def _get_deployment(instance, deployment_name):
     if instance.suite_source is None:
         raise SetupError('\nCannot determine directory of robot file.')
 
+    BuiltIn().log('\nOptions: {}'.format(instance.deployment_options),
+                  level='INFO',
+                  console=True)
+
     try:
-        instance.docker_controller.find_stack(instance.deployment_name)
+        instance.docker_controller.find_stack(deployment_name)
         if not instance.services:
-            BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
+            BuiltIn().log('Using existing deployment: {}'.format(deployment_name), level='INFO',
                           console=Settings.to_console)
     except DeploymentError:
-        raise SetupError('\nExisting deployment {} not found.'.format(instance.deployment_name))
+        raise SetupError('\nExisting deployment "{}" not found.'.format(deployment_name))
 
     try:
         # retrieve and store services that belong to the deployment
-        instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
+        instance.services.extend(instance.docker_controller.get_services(deployment_name))
         assert len(instance.services) > 0, \
             "instance.services should not be empty after get_or_create_deployment()"
 
@@ -73,6 +77,7 @@ def _get_deployment(instance):
             "instance.containers should not be empty after get_or_create_deployment()"
 
         _health_check_services(instance)
+        instance.deployment_name = deployment_name
     except DeploymentError as exc:
         raise SetupError('\nError during health check: {}'.format(exc.message))
 
@@ -90,8 +95,10 @@ def get_or_create_deployment(instance):
         _check_valid_yaml(f)
         if not instance.docker_controller:
             instance.docker_controller = _get_controller(instance.suite_source)
-        if instance.deployment_name:
-            _get_deployment(instance)
+
+        deployment_name = instance.deployment_name or instance.deployment_options.get('USE_DEPLOYMENT')
+        if deployment_name:
+            _get_deployment(instance, deployment_name)
         elif len(instance.services) is 0:
             instance.deployment_name = namesgenerator.get_random_name()
             _create_deployment(instance)
@@ -117,20 +124,20 @@ def _check_valid_yaml(f):
 
 def _create_deployment(instance):
     descriptor = instance.descriptor_file
-    deployment = instance.deployment_name
+    deployment_name = instance.deployment_name
     ctl = instance.docker_controller
-    assert deployment, "deployment name is required"
+    assert deployment_name, "deployment name is required"
     assert descriptor, "descriptor is required"
     assert ctl, "docker_controller is required"
 
     try:
-        BuiltIn().log('Deploying {} as {}'.format(descriptor, deployment), level='INFO',
+        BuiltIn().log('Deploying {} as {}'.format(descriptor, deployment_name), level='INFO',
                       console=True)
-        res = instance.docker_controller.deploy_stack(descriptor, deployment)
+        res = instance.docker_controller.deploy_stack(descriptor, deployment_name)
         assert res
-        _get_deployment(instance)
+        _get_deployment(instance, deployment_name)
     except (DeploymentError, TypeError) as exc:
-        raise SetupError('\nError during deployment of {}: {}'.format(deployment, exc))
+        raise SetupError('\nError during deployment of {}: {}'.format(deployment_name, exc))
 
 
 def remove_deployment(instance):

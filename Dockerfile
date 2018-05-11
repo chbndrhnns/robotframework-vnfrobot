@@ -14,3 +14,4 @@ RUN . .robot/bin/activate && pip install -r requirements.txt
 
 COPY . .
 
+CMD ["./robot.sh", "/data/*.robot"]
