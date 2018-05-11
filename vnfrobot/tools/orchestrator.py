@@ -103,7 +103,7 @@ def _create_deployment(instance):
 
     try:
         BuiltIn().log('Deploying {} as {}'.format(descriptor, deployment), level='INFO',
-                      console=Settings.to_console)
+                      console=True)
         res = instance.docker_controller.deploy_stack(descriptor, deployment)
         assert res
         BuiltIn().log('Waiting for deployment {}...'.format(deployment), level='INFO', console=Settings.to_console)
@@ -118,7 +118,7 @@ def remove_deployment(instance):
     if instance.deployment_options['SKIP_UNDEPLOY']:
         if instance.services:
             BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO',
-                          console=Settings.to_console)
+                          console=True)
             res = instance.docker_controller.undeploy_stack(instance.deployment_name)
             assert len(res.stderr) == 0
             instance.docker_controller = None
