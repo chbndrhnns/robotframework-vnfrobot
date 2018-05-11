@@ -70,8 +70,10 @@ class VnfValidator(DynamicCore):
             return
 
         if self.docker_controller and self.descriptor_file:
-            logger.debug('Removing deployment "{}"'.format(self.descriptor_file))
-            self.remove_deployment_kw()
+            BuiltIn().log('Removing deployment "{}"'.format(self.descriptor_file),
+                          level='INFO',
+                          console=Settings.to_console)
+            orchestrator.remove_deployment(self)
         else:
             logger.console('Skipping: remove deployment')
 

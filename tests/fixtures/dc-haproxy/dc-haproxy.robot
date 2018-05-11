@@ -1,6 +1,5 @@
 *** Settings ***
 Library     VnfValidator
-Variables   common.py
 
 *** Variables ***
 ${SKIP_UNDEPLOY}    True

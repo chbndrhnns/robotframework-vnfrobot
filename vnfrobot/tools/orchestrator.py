@@ -54,9 +54,19 @@ def _get_deployment(instance):
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
                           console=Settings.to_console)
         instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
-        return True
     except DeploymentError:
         raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
+
+    try:
+        _health_check_services(instance)
+        return True
+    except DeploymentError as exc:
+        raise SetupError('Error during health check: {}'.format(exc.message))
+
+
+def _health_check_services(instance):
+    assert instance.services, '_health_check_services: services list should not be empty'
+    wait_on_services_status(instance.docker_controller, instance.services)
 
 
 def get_or_create_deployment(instance):
@@ -103,9 +113,11 @@ def _create_deployment(instance):
 
 
 def remove_deployment(instance):
-    if instance.services:
-        BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO', console=Settings.to_console)
-        res = instance.docker_controller.undeploy_stack(instance.deployment_name)
-        assert len(res.stderr) == 0
-        instance.docker_controller = None
-        return res
+    if instance.deployment_options['SKIP_UNDEPLOY']:
+        if instance.services:
+            BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO',
+                          console=Settings.to_console)
+            res = instance.docker_controller.undeploy_stack(instance.deployment_name)
+            assert len(res.stderr) == 0
+            instance.docker_controller = None
+            return res

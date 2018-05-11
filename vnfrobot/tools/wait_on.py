@@ -7,8 +7,10 @@ import docker
 from docker.models.containers import Container
 from docker.models.services import Service
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 
 from exc import DeploymentError
+from settings import Settings
 from tools.data_structures import ProcessResult
 
 
@@ -183,19 +185,20 @@ def wait_on_services_status(client, services=None):
         if isinstance(services, list) and len(services) > 0:
             state_ok = 0
             for service in services:
-                if isinstance(service, Service):
-                    res = client._docker.containers.list(filters={
-                        'label': 'com.docker.swarm.service.name={}'.format(service.name)
-                    })
-                else:
-                    res = client._docker.containers.list(filters={
-                        'label': 'com.docker.swarm.service.name={}'.format(service)
-                    })
+                service_name = service.name if isinstance(service, Service) else service
+
+                res = client._docker.containers.list(filters={
+                    'label': 'com.docker.swarm.service.name={}'.format(service_name)
+                })
 
                 if res:
                     # logger.console('Found container {} belonging to service {}...'.format(res[0].name, service))
                     state_ok += 1
                 else:
+                    # BuiltIn().log('Waiting for service {}...'.format(service_name),
+                    #               level='DEBUG',
+                    #               console=Settings.to_console)
+
                     # try to find out if an error occured
                     tasks = service.tasks(filters={"desired-state": "Ready"})
                     if len(tasks) > 0:
@@ -204,6 +207,8 @@ def wait_on_services_status(client, services=None):
                         if err:
                             if 'failed to allocate gateway' in err:
                                 client._docker_api.prune_networks()
+                            elif 'No such image' in err:
+                                raise DeploymentError('Service {}: {}'.format(service_name, err))
                             else:
                                 raise DeploymentError('Could not deploy {}: {}'.format(service.name, err))
             return len(services) == state_ok

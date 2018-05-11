@@ -6,10 +6,10 @@ Variables   common.py
 ${REDIS_BINARY}     /usr/local/bin/redis-server
 
 *** Test Cases ***
-#redis binary is executable
-#    set service context to redis
-#    File ${REDIS_BINARY}: state is existing
-#    File ${REDIS_BINARY}: mode is executable
+redis binary is executable
+    set service context to redis
+    File ${REDIS_BINARY}: state is existing
+    File ${REDIS_BINARY}: mode is executable
 
 hosts file contains
     set service context to redis

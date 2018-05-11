@@ -3,7 +3,7 @@
 version: '3.2'
 services:
   app:
-    image: hubby/dc-nginx-python-redis_app:0.1
+    image: hubby/dc-nginx-python-redis:0.1
     depends_on:
       - redis
     environment:

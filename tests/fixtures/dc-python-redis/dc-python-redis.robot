@@ -1,11 +1,10 @@
 *** Settings ***
 Library     VnfValidator
-Variables   common.py
 
 *** Variables ***
 ${DESCRIPTOR}      ../dc-python-redis/docker-compose.yml
 ${USE_DEPLOYMENT}  'abc'
-# SKIP_UNDEPLOY = True
+${SKIP_UNDEPLOY}    True
 
 
 *** Test Cases ***
