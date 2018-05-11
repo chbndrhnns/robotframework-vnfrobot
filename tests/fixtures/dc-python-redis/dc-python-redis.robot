@@ -3,8 +3,7 @@ Library   VnfValidator
 
 *** Variables ***
 ${DESCRIPTOR}     docker-compose.yml
-#${USE_DEPLOYMENT}  'abc'
-#${SKIP_UNDEPLOY}  True
+${USE_DEPLOYMENT}  'fervent_wescoff'
 
 
 *** Test Cases ***

@@ -50,7 +50,7 @@ def _get_controller(source):
 
 def _get_deployment(instance):
     if instance.suite_source is None:
-        raise SetupError('Cannot determine directory of robot file.')
+        raise SetupError('\nCannot determine directory of robot file.')
 
     try:
         instance.docker_controller.find_stack(instance.deployment_name)
@@ -58,11 +58,9 @@ def _get_deployment(instance):
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
                           console=Settings.to_console)
     except DeploymentError:
-        raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
+        raise SetupError('\nExisting deployment {} not found.'.format(instance.deployment_name))
 
     try:
-        _health_check_services(instance)
-
         # retrieve and store services that belong to the deployment
         instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
         assert len(instance.services) > 0, \
@@ -73,12 +71,15 @@ def _get_deployment(instance):
             instance.containers.extend(instance.docker_controller.get_containers_for_service(service.name))
         assert len(instance.containers) >= len(instance.services), \
             "instance.containers should not be empty after get_or_create_deployment()"
+
+        _health_check_services(instance)
     except DeploymentError as exc:
-        raise SetupError('Error during health check: {}'.format(exc.message))
+        raise SetupError('\nError during health check: {}'.format(exc.message))
 
 
 def _health_check_services(instance):
-    assert instance.services, '_health_check_services: services list should not be empty'
+    if not instance.services:
+        raise SetupError('\n_health_check_services: services list should not be empty')
     wait_on_services_status(instance.docker_controller, instance.services)
 
 
@@ -100,7 +101,7 @@ def get_or_create_deployment(instance):
 
 def _check_file_exists(f):
     if not os.path.isfile(f):
-        raise SetupError('Descriptor "{}" not found.'.format(f))
+        raise SetupError('\nDescriptor "{}" not found.'.format(f))
     return f
 
 
@@ -111,7 +112,7 @@ def _check_valid_yaml(f):
             if not isinstance(res, dict):
                 raise ValueError
     except ValueError:
-        raise SetupError('Descriptor "{}" is not a valid YAML file.'.format(f))
+        raise SetupError('\nDescriptor "{}" is not a valid YAML file.'.format(f))
 
 
 def _create_deployment(instance):
@@ -129,7 +130,7 @@ def _create_deployment(instance):
         assert res
         _get_deployment(instance)
     except (DeploymentError, TypeError) as exc:
-        raise SetupError('Error during deployment of {}: {}'.format(deployment, exc))
+        raise SetupError('\nError during deployment of {}: {}'.format(deployment, exc))
 
 
 def remove_deployment(instance):

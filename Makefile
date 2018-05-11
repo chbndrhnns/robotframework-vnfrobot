@@ -1,9 +1,21 @@
 VENV:=. .robot/bin/activate
-VARS:=VNFROBOT_TO_CONSOLE=True PYTHONPATH=$PYTHONPATH:vnfrobot:tests
+TO_CONSOLE:=False
+VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=$PYTHONPATH:vnfrobot:tests
 PYTEST_CMD:=pytest -s
+LOGLEVEL:=INFO
+ROBOT_CMD:=robot -d logs --timestampoutputs --loglevel ${LOGLEVEL}
+APP1_DIR:=tests/fixtures/dc-python-redis/dc-python-redis.robot
+APP2_DIR:=tests/fixtures/dc-haproxy/dc-haproxy.robot
 
 run-logserver:
 	live-server --open=logs/report.html
+
+app1:
+	${VENV} && ${VARS} ${ROBOT_CMD} ${APP1_DIR}
+
+app2:
+	${VENV} && ${VARS} ${ROBOT_CMD} ${APP2_DIR}
+
 
 test-unit:
 	${VENV} && ${VARS} ${PYTEST_CMD} --ignore='tests/fixtures' --ignore 'tests/keywords' -m 'not integration' tests

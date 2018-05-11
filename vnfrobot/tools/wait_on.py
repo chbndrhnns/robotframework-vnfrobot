@@ -29,10 +29,10 @@ def start_process(base_dir, options):
 def wait_on_process(proc, returncode=0):
     stdout, stderr = proc.communicate()
     if proc.returncode != returncode:
-        BuiltIn().log("Stderr: {}".format(stderr),
+        BuiltIn().log("Stdout: {}".format(stdout),
                       level='DEBUG',
                       console=Settings.to_console)
-        BuiltIn().log("Stdout: {}".format(stdout),
+        BuiltIn().log("Stderr: {}".format(stderr),
                       level='DEBUG',
                       console=Settings.to_console)
         # assert proc.returncode == returncode
