@@ -3,18 +3,26 @@ TO_CONSOLE:=False
 VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=$PYTHONPATH:vnfrobot:tests
 PYTEST_CMD:=pytest -s
 LOGLEVEL:=INFO
-ROBOT_CMD:=robot -d logs --timestampoutputs --loglevel ${LOGLEVEL}
+
+# app1
 APP1_DIR:=tests/fixtures/dc-python-redis/dc-python-redis.robot
+APP1_LOGS:=logs/app1
+
+# app2
 APP2_DIR:=tests/fixtures/dc-haproxy/dc-haproxy.robot
+APP2_LOGS:=logs/app2
+
+ROBOT_CMD:=robot --timestampoutputs --loglevel ${LOGLEVEL}
+
 
 run-logserver:
 	live-server --open=logs/report.html
 
 app1:
-	${VENV} && ${VARS} ${ROBOT_CMD} ${APP1_DIR}
+	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}
 
 app2:
-	${VENV} && ${VARS} ${ROBOT_CMD} ${APP2_DIR}
+	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}
 
 
 test-unit:
