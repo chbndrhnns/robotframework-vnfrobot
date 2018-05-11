@@ -31,11 +31,16 @@ services:
       - "8001:80"
     networks:
       - web
+      - public
     deploy:
       placement:
         constraints: [node.role == manager]
 
 networks:
   web:
+    driver: overlay
+    attachable: True
+
+  public:
     driver: overlay
     attachable: True

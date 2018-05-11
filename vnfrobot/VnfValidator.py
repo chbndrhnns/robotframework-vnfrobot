@@ -69,22 +69,7 @@ class VnfValidator(DynamicCore):
 
     # noinspection PyUnusedLocal
     def _end_suite(self, name, attrs):
-        if self.deployment_options['SKIP_UNDEPLOY']:
-            BuiltIn().log('_end_suite(): Skipping: remove deployment',
-                          level='INFO',
-                          console=True)
-
-            return
-
-        if self.docker_controller and self.descriptor_file:
-            BuiltIn().log('Removing deployment "{}"'.format(self.descriptor_file),
-                          level='INFO',
-                          console=True)
-            orchestrator.remove_deployment(self)
-        else:
-            BuiltIn().log('_end_suite(): Skipping: remove deployment',
-                          level='INFO',
-                          console=True)
+        orchestrator.remove_deployment(self)
 
     def update_sut(self, **kwargs):
         # create a new namedtuple and use the old values if no new value is available

@@ -2,7 +2,7 @@
 Library     VnfValidator
 
 *** Variables ***
-${DESCRIPTOR}      ../dc-python-redis/docker-compose.yml
+${DESCRIPTOR}       docker-compose.yml
 #${USE_DEPLOYMENT}  'abc'
 #${SKIP_UNDEPLOY}    True
 

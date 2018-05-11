@@ -127,7 +127,7 @@ def _create_deployment(instance):
 
 
 def remove_deployment(instance):
-    if instance.deployment_options['SKIP_UNDEPLOY']:
+    if not instance.deployment_options['SKIP_UNDEPLOY']:
         if instance.services:
             BuiltIn().log('Removing deployment {}...'.format(instance.deployment_name), level='INFO',
                           console=True)
