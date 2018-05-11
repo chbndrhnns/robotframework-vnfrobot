@@ -44,9 +44,13 @@ def validate_matcher(matchers, limit_to=None):
             raise exc.ValidationError('Matchers {} not allowed here.'.format(invalid))
 
 
-def call_validator(entity, validator, context=None):
+def call_validator(entity, validator, context=None, override=None):
     if context is not None:
-        v = validator(context)
+        v = validator(context=context)
+    elif override is not None:
+        v = validator(override=override)
+    elif override is not None and context is not None:
+        v = validator(context=context, override=override)
     else:
         v = validator()
     if isinstance(v, Validator):

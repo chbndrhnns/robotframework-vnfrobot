@@ -77,6 +77,14 @@ def test__validate_entity__domain__pass():
     assert call_validator(inp, url_validator)
 
 
+def test__validate_entity__domain__override__pass():
+    inp = 'www.google.de'
+    override = ['awesome']
+    url_validator = validators.Domain
+
+    assert call_validator(inp, url_validator, override=override)
+
+
 def test__validate_entity__service__pass(sut):
     inp = 'sut'
     validator = validators.Service

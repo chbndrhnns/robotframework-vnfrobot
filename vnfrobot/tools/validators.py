@@ -15,8 +15,9 @@ from settings import Settings
 class Validator:
     __metaclass__ = ABCMeta
 
-    def __init__(self, context=None):
+    def __init__(self, context=None, override=None):
         self.context = context
+        self.override = [override] if isinstance(override, basestring) else override
         self.name = self.__class__.__name__
 
     @abstractmethod
@@ -55,12 +56,14 @@ class Port(Validator):
 
 
 class Domain(Validator):
-    def __init__(self):
-        Validator.__init__(self)
+    def __init__(self, override=None):
+        Validator.__init__(self, override=override)
+        if override is None:
+            self.override = []
 
     def validate(self, val):
         try:
-            return validators.domain(val)
+            return val in self.override or validators.domain(val)
         except validators.ValidationFailure:
             pass
 

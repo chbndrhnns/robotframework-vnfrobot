@@ -3,6 +3,8 @@ import os
 
 from docker import errors
 import pytest
+from docker.models.resource import Collection
+from docker.models.services import Service
 from pytest import fixture
 
 import VnfValidator
@@ -172,11 +174,12 @@ def instance(stack_infos, controller):
     lib = VnfValidator.VnfValidator()
     lib.suite_source = 'bla.robot'
     lib.goss_volume_name = 'goss-helper'
-    lib.deployment_name = None
+    lib.deployment_name = stack_infos[0]
     lib.descriptor_file = stack_infos[1]
     lib.docker_controller = controller
     lib.sut = None
     lib.sidecar = None
+    lib.services = [Collection().prepare_model(Service(attrs={"ID": "123456789098", "Spec": {"Name": stack_infos[0] + '_sut'}}))]
     return lib
 
 

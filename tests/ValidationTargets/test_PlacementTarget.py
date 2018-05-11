@@ -1,4 +1,6 @@
 import pytest
+from docker.models.resource import Collection
+from docker.models.services import Service
 
 from exc import SetupError, ValidationError
 from fixtures.test_data_Placement import placement_target_test_data, placement_target_test_data_fail
@@ -55,7 +57,6 @@ def test__run__pass(placement_with_instance, stack, data):
     name, path, success = stack
     e.instance.deployment_name = name
     e.instance.sut = SUT(target_type='service', target=name + '_sut', service_id=name + '_sut')
-    e.instance.services = [name + '_sut']
 
     test = data.get('test')
     set_test_data(e, test)

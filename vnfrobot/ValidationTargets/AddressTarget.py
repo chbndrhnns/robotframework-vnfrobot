@@ -3,7 +3,7 @@ from exc import ValidationError, SetupError
 from tools import validators
 from testtools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
-from tools.testutils import call_validator
+from tools.testutils import call_validator, set_breakpoint
 
 
 class Address(ValidationTarget):
@@ -42,7 +42,13 @@ class Address(ValidationTarget):
                 raise ValidationError('Value "{}" is invalid.'.format(self.entity))
             self.address = split_entity[0]
             self.port = split_entity[1] if len(split_entity) == 2 else '80'
-            call_validator(self.address, validators.Domain)
+
+            # valid in addition to domain names are: all container names, service names with and without stack name
+            override = [c.attrs['Config']['Hostname'] for c in self.instance.containers]
+            override.extend([s.name for s in self.instance.services])
+            override.extend([s.name.split('{}_'.format(self.instance.deployment_name))[1:][0]
+                             for s in self.instance.services])
+            call_validator(entity=self.address, validator=validators.Domain, override=override)
             call_validator(self.port, validators.Port)
         except (SetupError, ValidationError) as exc:
             raise exc

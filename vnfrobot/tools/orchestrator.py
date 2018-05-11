@@ -57,6 +57,11 @@ def _get_deployment(instance):
         if not instance.services:
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
                           console=Settings.to_console)
+    except DeploymentError:
+        raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
+
+    try:
+        _health_check_services(instance)
 
         # retrieve and store services that belong to the deployment
         instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
@@ -66,15 +71,8 @@ def _get_deployment(instance):
         # retrieve and store containers that belong to the deployment
         for service in instance.services:
             instance.containers.extend(instance.docker_controller.get_containers_for_service(service.name))
-        # set_breakpoint()
         assert len(instance.containers) >= len(instance.services), \
             "instance.containers should not be empty after get_or_create_deployment()"
-    except DeploymentError:
-        raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
-
-    try:
-        _health_check_services(instance)
-        return True
     except DeploymentError as exc:
         raise SetupError('Error during health check: {}'.format(exc.message))
 

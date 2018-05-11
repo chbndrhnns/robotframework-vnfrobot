@@ -1,6 +1,8 @@
 import json
 
 import pytest
+from docker.models.resource import Collection
+from docker.models.services import Service
 from ruamel import yaml
 
 from exc import ValidationError, SetupError
@@ -95,7 +97,6 @@ def test__run__network_context__pass(address_with_instance, stack, network, volu
     e.instance.deployment_name = name
 
     e.instance.sut = SUT(target_type='network', target=network.name, service_id=name + '_m2m')
-    e.instance.services = [name + '_sut']
     e.instance.test_volume = volume_with_goss
 
     test = test.get('test')
