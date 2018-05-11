@@ -41,18 +41,19 @@ class VnfValidator(DynamicCore):
         self.docker_controller = None
         self.deployment_options = {
             'SKIP_UNDEPLOY': False,
+            'USE_DEPLOYMENT': None
         }
         self.test_volume = None
         self.sidecar = None
         self.services = []
 
-        logger.info(u"Importing {}".format(self.__class__))
-
         try:
-            if BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
-                self.deployment_options['SKIP_UNDEPLOY'] = True
-
             self.deployment_name = (BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
+            if self.deployment_name or BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
+                self.deployment_options['SKIP_UNDEPLOY'] = True
+            BuiltIn().log('Options: {}'.format(self.deployment_options),
+                          level='INFO',
+                          console=Settings.to_console)
         except RobotNotRunningError:
             pass
 
