@@ -6,7 +6,7 @@ class ValueTransformer:
 
     def __init__(self, data):
         self.data = data
-        assert self.data, 'Cannot instanciate ValueTransformer class without providing data.'
+        assert self.data, 'Cannot instantiate ValueTransformer class without providing data.'
 
     @abstractproperty
     def transformed(self):
@@ -21,7 +21,7 @@ class GossFileModeTransformer(ValueTransformer):
     def transformed(self):
         value = self.data.get('value')
         if value in ['+x', 'executable']:
-            return '0777'
+            return '0755'
 
 
 class EchoTransformer(ValueTransformer):

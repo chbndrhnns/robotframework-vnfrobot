@@ -26,7 +26,9 @@ def check_or_create_test_tool_volume(instance, volume):
         if expected not in res.stdout:
             raise SetupError('Cannot find {} on volume {}'.format(expected, volume))
     except DeploymentError:
-        BuiltIn().log('Creating volume {}'.format(volume), level='DEBUG', console=Settings.to_console)
+        BuiltIn().log('Creating volume {}'.format(volume),
+                      level='INFO',
+                      console=Settings.to_console)
         instance.create_volume(volume)
         instance.add_data_to_volume(volume, os.path.join(path, 'goss'))
         res = instance.list_files_on_volume(volume)

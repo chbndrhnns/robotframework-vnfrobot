@@ -95,7 +95,7 @@ class VnfValidator(DynamicCore):
                 self.sut.target if self.sut.target else 'Not set'),
                     level='INFO', console=Settings.to_console)
         except NotFoundError as exc:
-            raise NotFoundError('update_sut: Fatal error: {} "{}" not found.'.format(temp_sut.target_type, temp_sut.target))
+            raise NotFoundError('update_sut: Fatal error: {} "{}" not found in deployment "{}".'.format(temp_sut.target_type, temp_sut.target, self.deployment_name))
 
     def _check_sut_availability(self, temp_sut):
         try:

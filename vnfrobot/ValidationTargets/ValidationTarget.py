@@ -86,7 +86,8 @@ class ValidationTarget:
             if not self.data:
                 self._prepare_transform()
             handler = self.options.get('transformation_handler', None)
-            assert handler, 'ValidationTarget:transform_to_goss() expects a class instance for the transformation handler'
+            assert handler, 'ValidationTarget:transform_to_goss() expects a ' \
+                            'class instance for the transformation handler'
             self.transformed_data = handler(self.data).transform_to_goss(handler)
             return self.transformed_data
 
@@ -198,7 +199,7 @@ class ValidationTarget:
     def _cleanup(self):
         if self.instance.sidecar:
             BuiltIn().log('Cleanup sidecar: removing {}'.format(self.instance.sidecar.name),
-                          level='DEBUG',
+                          level='INFO',
                           console=Settings.to_console)
             assert isinstance(self.instance.sidecar, Container)
             try:

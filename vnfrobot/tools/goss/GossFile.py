@@ -8,9 +8,9 @@ class GossFile(GossEntity):
         """file:
             {% for f in files %}
               {{ f.file }}:
-                exists: {{ f.exists }}
-                {% if f.mode %}mode: "{{ f.mode }}"{% endif %}
-                {% if f.contains %}contains: 
+                exists: {{ f.exists }}{% if f.mode %}
+                mode: "{{ f.mode }}"{% endif %}{% if f.contains %}
+                contains: 
                 - "{{ f.contains }}"
                 {% endif %}
             {% endfor %}

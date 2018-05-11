@@ -58,16 +58,20 @@ class GossTool(TestTool):
 
         assert isinstance(self.test_results['summary']['failed-count'], int)
 
-        BuiltIn().log(json.dumps(self.test_results, indent=4, sort_keys=True), level='DEBUG', console=Settings.to_console)
+        BuiltIn().log('process_results(): {}'.format(json.dumps(self.test_results, indent=4, sort_keys=True)),
+                      level='INFO',
+                      console=Settings.to_console)
 
         errors = [res for res in self.test_results['results'] if not res['successful']]
         if errors:
             for err in errors:
-                BuiltIn().log('Port {}: property {}, expected: {}, actual: {}'.format(
-                    target.entity,
-                    err.get('property', ''),
-                    err.get('expected'),
-                    err.get('found')), level='INFO', console=Settings.to_console)
+                BuiltIn().log('Port {}: property "{}", expected: {}, actual: {}'.format(
+                        target.entity,
+                        err.get('property', ''),
+                        err.get('expected'),
+                        err.get('found')),
+                    level='INFO',
+                    console=Settings.to_console)
             raise exc.ValidationError('Test not successful')
 
     @staticmethod
