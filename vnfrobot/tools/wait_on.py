@@ -6,7 +6,6 @@ from string import lower
 import docker
 from docker.models.containers import Container
 from docker.models.services import Service
-from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from exc import DeploymentError

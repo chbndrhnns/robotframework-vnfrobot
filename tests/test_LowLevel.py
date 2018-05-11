@@ -1,8 +1,7 @@
 import logging
 
 import pytest
-from mock import patch, Mock, MagicMock
-
+from mock import patch, MagicMock
 from unittest2 import TestCase
 
 from robot.api import TestSuite

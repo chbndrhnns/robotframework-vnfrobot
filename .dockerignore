@@ -1,0 +1,7 @@
+.cache
+.robot
+.pytest_cache
+apps
+src
+vnf-robot-old
+*.pyc

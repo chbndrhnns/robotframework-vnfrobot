@@ -14,43 +14,32 @@ APP2_LOGS:=logs/app2
 
 ROBOT_CMD:=robot --timestampoutputs --loglevel ${LOGLEVEL}
 
+prepare:
+	find . -name '*.pyc' -delete
 
 run-logserver:
 	live-server --open=logs/report.html
 
-app1:
+app1: prepare
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}
 
-app2:
+app2: prepare
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}
 
 
-test-unit:
+test-unit: prepare
 	${VENV} && ${VARS} ${PYTEST_CMD} --ignore='tests/fixtures' --ignore 'tests/keywords' -m 'not integration' tests
 
-test-integration:
+test-integration: prepare
 	${VENV} && ${VARS} ${PYTEST_CMD} -m 'integration' tests
 
-test-keywords:
+test-keywords: prepare
 	(docker stack ls | grep test-2svc) || (docker stack deploy -c tests/fixtures/dc-test-2svc.yml test-2svc)
 	${VENV} && ${VARS} ${PYTEST_CMD} -m 'keyword' tests
 	(docker stack rm test-2svc) || true
 
 test: test-unit test-integration test-keywords
 	echo true
-
-robot-tests:
-	. .robot/bin/activate && \
-	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
-	-d logs \
-	--timestampoutputs \
-	tests/*.robot
-
-easy-voting-tests:
-	. .robot/bin/activate; \
-	PYTHONPATH=$$PYTHONPATH:$$(pwd)/vnf-robot robot \
-	-d logs \
-	apps/easy-voting-app/easy-voting-app-simple.robot
 
 install-requirements:
 	npm install -g live-server

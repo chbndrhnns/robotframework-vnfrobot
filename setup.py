@@ -28,7 +28,7 @@ setup(
     author='Johannes Rueschel',
     author_email='code+robot@rueschel.de',
     url='',
-    description='Libraries that enable robotframework to work with VNF\'s.',
+    description='Libraries that enable robotframework to validate VNF\'s.',
     long_description=codecs.open('README.rst', 'rb', 'utf8').read(),
 
     # Classifiers (see https://pypi.python.org/pypi?%3Aaction=list_classifiers)

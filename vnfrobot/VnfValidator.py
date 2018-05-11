@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
-from robot.api import logger
 from robot.api.deco import keyword
 
 from ValidationTargets.CommandTarget import Command
@@ -16,7 +15,6 @@ from tools import orchestrator, matchers
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
-from tools.testutils import set_breakpoint
 from version import VERSION
 from tools.matchers import string_matchers, all_matchers
 
