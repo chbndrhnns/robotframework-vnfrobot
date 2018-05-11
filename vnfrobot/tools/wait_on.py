@@ -21,7 +21,7 @@ def start_process(base_dir, options):
         cwd=base_dir)
     BuiltIn().log("Running process: %s" % proc.pid,
                   level='DEBUG',
-                  console=Settings.to_console)
+                  console=False)
     return proc
 
 
@@ -30,10 +30,10 @@ def wait_on_process(proc, returncode=0):
     if proc.returncode != returncode:
         BuiltIn().log("Stdout: {}".format(stdout),
                       level='DEBUG',
-                      console=Settings.to_console)
+                      console=False)
         BuiltIn().log("Stderr: {}".format(stderr),
                       level='DEBUG',
-                      console=Settings.to_console)
+                      console=False)
         # assert proc.returncode == returncode
     return ProcessResult(stdout.decode('utf-8'), stderr.decode('utf-8'))
 
