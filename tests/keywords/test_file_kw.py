@@ -5,7 +5,6 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
-@pytest.mark.integration
 @pytest.mark.keyword
 @pytest.mark.kw_file
 def test__file_kw__pass():

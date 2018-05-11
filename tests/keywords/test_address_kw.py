@@ -7,7 +7,7 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
-@pytest.mark.integration
+@pytest.mark.kw_address
 @pytest.mark.keyword
 def test__address_kw__pass():
 

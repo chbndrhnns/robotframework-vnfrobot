@@ -5,7 +5,7 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
-@pytest.mark.integration
+@pytest.mark.kw_variable
 @pytest.mark.keyword
 def test__variable_kw__pass():
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/variable.robot'))

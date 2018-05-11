@@ -5,7 +5,6 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
-@pytest.mark.integration
 @pytest.mark.descriptor
 def test__address__pass():
 

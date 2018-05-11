@@ -1,17 +1,20 @@
+VENV:=. .robot/bin/activate
+VARS:=VNFROBOT_TO_CONSOLE=True PYTHONPATH=$PYTHONPATH:vnfrobot:tests
+PYTEST_CMD:=pytest -s tests
+
 run-logserver:
 	live-server --open=logs/report.html
 
 test-unit:
-	. .robot/bin/activate && \
-	PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'not integration'
+	${VENV} && ${VARS} ${PYTEST_CMD} -k 'not fixtures' -m 'not integration'
 
 test-integration:
-	. .robot/bin/activate && \
-    PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'not keyword' 
+	${VENV} && ${VARS} ${PYTEST_CMD} -m 'integration'
 
 test-keywords:
-	. .robot/bin/activate && \
-    PYTHONPATH=$PYTHONPATH:vnfrobot:tests pytest -s tests -m 'keyword'
+	(docker stack ls | grep test-2svc) || (docker stack deploy -c tests/fixtures/dc-test-2svc.yml test-2svc)
+	${VENV} && ${VARS} ${PYTEST_CMD} -m 'keyword'
+	(docker stack rm test-2svc) || true
 
 test: test-unit test-integration test-keywords
 	echo true

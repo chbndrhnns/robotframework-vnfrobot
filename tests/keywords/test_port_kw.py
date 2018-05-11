@@ -5,7 +5,7 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
-@pytest.mark.integration
+@pytest.mark.kw_port
 @pytest.mark.keyword
 def test__port_kw__pass():
 

@@ -7,8 +7,8 @@ from robot.running import TestSuiteBuilder
 from tests import path
 
 
-@pytest.mark.integration
 @pytest.mark.keyword
+@pytest.mark.kw_command
 def test__command_kw__pass():
 
     suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/robot/command.robot'))

@@ -11,8 +11,8 @@
 file_target_test_data_pass = [
     (['/bin/sh', 'state', 'is', 'existing']),
     (['/bin/sh', 'state', 'is not', 'existing']),
-    (['/bin/sh', 'mode', 'is', 'executable']),
     (['/bin/sh', 'mode', 'is', '0777']),
+    (['/goss/goss-linux-amd64', 'mode', 'is', 'executable']),
 ]
 
 file_target_test_data_fail = [
@@ -85,7 +85,7 @@ file_test_data = [
                     {
                         'file': '/bin/sh',
                         'exists': True,
-                        'mode': '0777'
+                        'mode': '0755'
                     }
                 ],
             },
@@ -94,7 +94,7 @@ file_test_data = [
             'expected_yaml': """file:
                   /bin/sh:
                     exists: true
-                    mode: "0777"
+                    mode: "0755"
                 """
         }
     ),

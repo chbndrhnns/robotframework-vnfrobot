@@ -21,7 +21,7 @@ def start_process(base_dir, options):
         stderr=subprocess.PIPE,
         cwd=base_dir)
     BuiltIn().log("Running process: %s" % proc.pid,
-                  level='INFO',
+                  level='DEBUG',
                   console=Settings.to_console)
     return proc
 
@@ -30,10 +30,10 @@ def wait_on_process(proc, returncode=0):
     stdout, stderr = proc.communicate()
     if proc.returncode != returncode:
         BuiltIn().log("Stderr: {}".format(stderr),
-                      level='INFO',
+                      level='DEBUG',
                       console=Settings.to_console)
         BuiltIn().log("Stdout: {}".format(stdout),
-                      level='INFO',
+                      level='DEBUG',
                       console=Settings.to_console)
         # assert proc.returncode == returncode
     return ProcessResult(stdout.decode('utf-8'), stderr.decode('utf-8'))
