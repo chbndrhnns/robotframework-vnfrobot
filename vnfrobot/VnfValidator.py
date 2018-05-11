@@ -46,6 +46,7 @@ class VnfValidator(DynamicCore):
         self.test_volume = None
         self.sidecar = None
         self.services = []
+        self.containers = []
 
         try:
             self.deployment_name = (BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')

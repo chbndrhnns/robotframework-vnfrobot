@@ -7,6 +7,7 @@ from DockerController import DockerController
 from exc import SetupError, DeploymentError
 from settings import Settings
 from tools import namesgenerator
+from tools.testutils import set_breakpoint
 from tools.wait_on import wait_on_services_status
 from . import path
 
@@ -56,7 +57,18 @@ def _get_deployment(instance):
         if not instance.services:
             BuiltIn().log('Using existing deployment: {}'.format(instance.deployment_name), level='INFO',
                           console=Settings.to_console)
+
+        # retrieve and store services that belong to the deployment
         instance.services.extend(instance.docker_controller.get_services(instance.deployment_name))
+        assert len(instance.services) > 0, \
+            "instance.services should not be empty after get_or_create_deployment()"
+
+        # retrieve and store containers that belong to the deployment
+        for service in instance.services:
+            instance.containers.extend(instance.docker_controller.get_containers_for_service(service.name))
+        # set_breakpoint()
+        assert len(instance.containers) >= len(instance.services), \
+            "instance.containers should not be empty after get_or_create_deployment()"
     except DeploymentError:
         raise SetupError('Existing deployment {} not found.'.format(instance.deployment_name))
 
@@ -84,7 +96,6 @@ def get_or_create_deployment(instance):
         elif len(instance.services) is 0:
             instance.deployment_name = namesgenerator.get_random_name()
             _create_deployment(instance)
-        assert len(instance.services) > 0, "instance.services should not be empty after get_or_create_deployment()"
     except (DeploymentError, SetupError) as exc:
         raise SetupError(exc)
 
@@ -118,10 +129,7 @@ def _create_deployment(instance):
                       console=True)
         res = instance.docker_controller.deploy_stack(descriptor, deployment)
         assert res
-        BuiltIn().log('Waiting for deployment {}...'.format(deployment), level='INFO', console=Settings.to_console)
-        instance.services.extend(ctl.get_services(deployment))
-        wait_on_services_status(ctl, instance.services)
-        return True
+        _get_deployment(instance)
     except (DeploymentError, TypeError) as exc:
         raise SetupError('Error during deployment of {}: {}'.format(deployment, exc))
 
