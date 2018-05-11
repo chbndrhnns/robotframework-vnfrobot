@@ -130,7 +130,7 @@ def _create_deployment(instance):
                       console=True)
         res = instance.docker_controller.deploy_stack(descriptor, deployment_name)
         assert res
-        _get_deployment(instance)
+        _get_deployment(instance, deployment_name)
     except (DeploymentError, TypeError) as exc:
         raise SetupError('\nError during deployment of {}: \n\t{}'.format(deployment_name, exc))
 
