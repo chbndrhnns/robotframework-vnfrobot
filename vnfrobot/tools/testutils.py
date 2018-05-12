@@ -6,21 +6,29 @@ from tools.matchers import string_matchers
 from tools.validators import Validator
 
 
-def get_truth(inp, relate, val):
+def get_truth(inp, relate, val=None):
     if inp is None:
         raise exc.ValidationError('get_truth: actual value not set.')
     if not relate:
         raise exc.ValidationError('get_truth: matcher not set.')
+
+    inp = inp.strip('\n\t ') if isinstance(inp, basestring) else inp
+
+    # empty/not empty is not part of the operators. suite
+    if isinstance(relate, basestring) and 'is empty' in relate:
+        return len(inp) == 0
+    if isinstance(relate, basestring) and 'is not empty' in relate:
+        return len(inp)
+
+    # from now on, we expect val to be not None
     if val is None:
         raise exc.ValidationError('get_truth: expected value not set.')
-
     # special case: contains not is not covered by the operator module
     if relate == 'contains_not':
         return val not in inp
     # for operator.contains, the order of arguments is reversed
     if relate.__name__ == 'contains':
         return relate(inp, val)
-
     try:
         inp_integer = int(inp)
         val_integer = int(val)
