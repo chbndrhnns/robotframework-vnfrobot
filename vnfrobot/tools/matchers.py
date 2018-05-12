@@ -22,8 +22,8 @@ string_matchers = dict(equality_matchers, **{
     'exists not': operator.not_,
     'contains': operator.contains,
     'contains not': 'contains_not',
-    'is empty': 'empty',
-    'is not empty': 'not empty'
+    'is empty': 'is empty',
+    'is not empty': 'is not empty'
 })
 
 all_matchers = dict(string_matchers, **number_matchers)

@@ -9,11 +9,11 @@ class File(ValidationTarget):
     allowed_contexts = ['service']
     properties = {
         'state': {
-            'matchers': matchers.boolean_matchers,
+            'matchers': matchers.equality_matchers,
             'values': ['existing']
         },
         'mode': {
-            'matchers': matchers.boolean_matchers,
+            'matchers': matchers.equality_matchers,
             'values': validators.Permission
         },
         'content': {

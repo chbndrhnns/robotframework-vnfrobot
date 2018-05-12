@@ -49,16 +49,17 @@ class DockerOrchestrator(Orchestrator):
         expected = 'goss-linux-amd64'
         BuiltIn().log('Preparing volume for test tool...', level='INFO', console=Settings.to_console)
         try:
-            res = self.robot_instance.list_files_on_volume(volume)
+            res = self.controller.list_files_on_volume(volume)
             if expected not in res.stdout:
-                raise SetupError('Cannot find {} on volume {}'.format(expected, volume))
+                raise SetupError('Cannot find {} on volume {}. Please remove the volume to ensure reliable testing.'.
+                                 format(expected, volume))
         except DeploymentError:
             BuiltIn().log('Creating volume {}'.format(volume),
                           level='INFO',
                           console=Settings.to_console)
-            self.robot_instance.create_volume(volume)
-            self.robot_instance.add_data_to_volume(volume, os.path.join(path, 'goss'))
-            res = self.robot_instance.list_files_on_volume(volume)
+            self.controller.create_volume(volume)
+            self.controller.add_data_to_volume(volume, os.path.join(path, 'goss'))
+            res = self.controller.list_files_on_volume(volume)
 
             assert 'goss-linux-amd64' in res.stdout
             assert 'goss-linux-386' in res.stdout

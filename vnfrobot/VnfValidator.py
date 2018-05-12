@@ -78,6 +78,9 @@ class VnfValidator(DynamicCore):
     def _end_suite(self, name, attrs):
         self.orchestrator.remove_deployment()
 
+    def start_keyword(self, name, attrs):
+        pass
+
     def update_sut(self, **kwargs):
         # create a new namedtuple and use the old values if no new value is available
         # noinspection PyProtectedMember
@@ -239,7 +242,11 @@ class VnfValidator(DynamicCore):
     def interface_kw(self):
         pass
 
-    @keyword('Variable ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
+    @keyword('Variable ${{raw_entity:{}}}: ${{matcher:{}}} ${{raw_val:{}}}'.format(
+        matchers.quoted_or_unquoted_string,
+        '|'.join(string_matchers.keys()),
+        matchers.quoted_or_unquoted_string,
+    ))
     def env_variable_kw(self, raw_entity, matcher, raw_val):
         try:
             validation_target = Variable(self)

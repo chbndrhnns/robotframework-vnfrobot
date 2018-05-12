@@ -17,6 +17,34 @@ def test__get_truth__empty_inp__fail():
         get_truth(inp, relate, val)
 
 
+@pytest.mark.parametrize('data', ['', '\n', ' '])
+def test__get_truth__is_empty__pass(data):
+    relate = 'is empty'
+
+    assert get_truth(data, relate, None)
+
+
+@pytest.mark.parametrize('data', ['a', ' a', '\na'])
+def test__get_truth__is_empty__fail(data):
+    relate = 'is empty'
+
+    assert not get_truth(data, relate, None)
+
+
+@pytest.mark.parametrize('data', ['a', ' a', '\na'])
+def test__get_truth__is_not_empty__pass(data):
+    relate = 'is not empty'
+
+    assert get_truth(data, relate, None)
+
+
+@pytest.mark.parametrize('data', ['', '\n', ' '])
+def test__get_truth__is_not_empty__fail(data):
+    relate = 'is not empty'
+
+    assert not get_truth(data, relate, None)
+
+
 def test__get_truth__contains_string():
     inp = 'abcd efg'
     relate = operator.contains

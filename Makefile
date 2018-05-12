@@ -32,6 +32,7 @@ app1: prepare
 	(VNFROBOT_USE_DEPLOYMENT=app1 \
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}) || echo true
 	@docker stack rm ${APP1_NAME}
+	@docker volume rm ${APP1_NAME}_redis_data
 
 
 app2: prepare

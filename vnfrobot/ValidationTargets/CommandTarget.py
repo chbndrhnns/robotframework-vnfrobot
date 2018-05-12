@@ -16,11 +16,11 @@ class Command(ValidationTarget):
             'values': String
         },
         'stdout': {
-            'matchers': ['is', 'is not', 'contains', 'contains not'],
+            'matchers': ['is', 'is not', 'contains', 'contains not', 'is empty', 'is not empty'],
             'values': String
         },
         'stderr': {
-            'matchers': ['is', 'is not', 'contains', 'contains not'],
+            'matchers': ['is', 'is not', 'contains', 'contains not', 'is empty', 'is not empty'],
             'values': String
         },
     }
@@ -39,8 +39,14 @@ class Command(ValidationTarget):
 
         call_validator(self.instance.sut.target_type, validators.Context, Command.allowed_contexts)
         call_validator(self.property, validators.Property, Command.properties)
+        if 'empty' in self.value:
+            if 'is' in self.matcher or 'is not' in self.matcher:
+                self.matcher = '{} {}'.format(self.matcher, self.value)
+                self.value = None
+
         call_validator(self.matcher, validators.InList, Command.properties.get(self.property, {}).get('matchers', []))
-        validate_value(Command.properties, self.property, self.value)
+        if 'empty' not in self.matcher:
+            validate_value(Command.properties, self.property, self.value)
 
     def _prepare_transform(self):
         self.options['sidecar_command'] = self.entity

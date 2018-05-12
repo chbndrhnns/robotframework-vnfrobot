@@ -54,11 +54,11 @@ class DockerTool(TestTool):
 
         if not get_truth(actual, all_matchers[target.matcher], target.value):
             raise ValidationError(
-                '{}: {} {} {}, actual: {}'.format(
+                'Expected: "{}": {} {} "{}", \nActual: {}'.format(
                     target.entity,
                     target.property if target.property else target.entity,
                     target.matcher,
-                    target.value,
+                    target.value if target.value else '',
                     actual)
             )
 

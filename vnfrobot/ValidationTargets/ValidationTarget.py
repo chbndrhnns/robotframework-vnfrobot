@@ -11,6 +11,7 @@ from testtools.GossTool import GossTool
 from testtools.TestTool import TestTool
 from tools.data_structures import SUT
 from tools.orchestrator import Orchestrator
+from tools.testutils import set_breakpoint
 
 
 class ValidationTarget:
@@ -140,6 +141,7 @@ class ValidationTarget:
             raise exc
 
         try:
+            # set_breakpoint()
             tool_instance.run(self)
         except (ValidationError, NotFoundError, DeploymentError) as exc:
             raise exc
