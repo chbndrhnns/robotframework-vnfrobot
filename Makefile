@@ -5,13 +5,13 @@ PYTEST_CMD:=pytest -s
 LOGLEVEL:=INFO
 
 # app1
-APP1_ROBOT:=dc-python-redis.robot
+APP1_ROBOT:=app1.robot
 APP1_DIR:=tests/fixtures/dc-python-redis
 APP1_LOGS:=logs/app1
 APP1_NAME:=app1
 
 # app2
-APP2_ROBOT:=dc-haproxy.robot
+APP2_ROBOT:=app2.robot
 APP2_DIR:=tests/fixtures/dc-haproxy
 APP2_LOGS:=logs/app2
 APP2_NAME:=app2

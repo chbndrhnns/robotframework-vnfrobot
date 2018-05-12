@@ -8,7 +8,7 @@ from tests import path
 @pytest.mark.descriptor
 def test__address__pass():
 
-    suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/dc-haproxy/dc-haproxy.robot'))
+    suite = TestSuiteBuilder().build(os.path.join(path, 'fixtures/dc-haproxy/app2.robot'))
     result = suite.run(output=None)
 
     assert result.return_code == 0
