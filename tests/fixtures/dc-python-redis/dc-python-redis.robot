@@ -15,7 +15,7 @@ Check that the image for the service 'app' contains the correct application code
 
 Check version of Python (2.7+)
   [Documentation]  As Python3 is known not to work with every piece of software, we want to validate that Python2.7
-  ... is in place.
+  ...  is in place.
   
 Redis instance is reachable from the app
   [Documentation]  We need to be able to reach Redis via the 'redis' hostname (see the environment variable)

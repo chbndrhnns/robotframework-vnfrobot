@@ -13,6 +13,8 @@ class Settings:
     log_level = (os.environ.get('LOG_LEVEL') or 'DEBUG').upper()
     timing = os.environ.get('VNFROBOT_TIMING') or False
     to_console = os.environ.get('VNFROBOT_TO_CONSOLE') or False
+    use_deployment = os.environ.get('VNFROBOT_USE_DEPLOYMENT') or ''
+    skip_undeploy = True if use_deployment else (os.environ.get('VNFROBOT_SKIP_UNDEPLOY') or False)
 
     # Docker orchestrator
     docker = {

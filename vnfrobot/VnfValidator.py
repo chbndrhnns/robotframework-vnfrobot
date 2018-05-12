@@ -16,6 +16,7 @@ from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
 from tools.orchestrator import DockerOrchestrator
+from tools.testutils import set_breakpoint
 from version import VERSION
 from tools.matchers import string_matchers, all_matchers
 
@@ -48,8 +49,13 @@ class VnfValidator(DynamicCore):
         self.orchestrator = None
 
         try:
-            self.deployment_options['USE_DEPLOYMENT'] = (BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
-            if self.deployment_options['USE_DEPLOYMENT'] or BuiltIn().get_variable_value("${SKIP_UNDEPLOY}"):
+            # set_breakpoint()
+            self.deployment_options['USE_DEPLOYMENT'] = \
+                (Settings.use_deployment or
+                    BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
+            if (self.deployment_options['USE_DEPLOYMENT'] or
+                    BuiltIn().get_variable_value("${SKIP_UNDEPLOY}") or
+                        Settings.skip_undeploy):
                 self.deployment_options['SKIP_UNDEPLOY'] = True
         except RobotNotRunningError:
             pass
@@ -88,9 +94,12 @@ class VnfValidator(DynamicCore):
                 self.sut.target_type if self.sut.target_type else 'Not set',
                 self.sut.service_id if self.sut.service_id else 'Not set',
                 self.sut.target if self.sut.target else 'Not set'),
-                    level='INFO', console=Settings.to_console)
+                level='INFO', console=Settings.to_console)
         except NotFoundError as exc:
-            raise NotFoundError('update_sut: Fatal error: {} "{}" not found in deployment "{}".'.format(temp_sut.target_type, temp_sut.target, self.deployment_name))
+            raise NotFoundError(
+                'update_sut: Fatal error: {} "{}" not found in deployment "{}".'.format(temp_sut.target_type,
+                                                                                        temp_sut.target,
+                                                                                        self.deployment_name))
 
     def _check_sut_availability(self, temp_sut):
         try:
@@ -100,9 +109,9 @@ class VnfValidator(DynamicCore):
                 self.orchestrator.controller.get_service(temp_sut.service_id)
             elif temp_sut.target_type == 'container':
                 self.orchestrator.controller.get_containers(filters={
-                                                          'name': temp_sut.service_id
-                                                      },
-                                                      all=True)
+                    'name': temp_sut.service_id
+                },
+                    all=True)
             else:
                 raise NotFoundError('_check_sut_availability: target_type {} is invalid'.format(temp_sut.target_type))
             return temp_sut

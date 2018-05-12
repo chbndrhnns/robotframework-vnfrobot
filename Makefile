@@ -1,16 +1,21 @@
 VENV:=. .robot/bin/activate
 TO_CONSOLE:=False
-VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=$PYTHONPATH:vnfrobot:tests
+VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=${PYTHONPATH}:vnfrobot:tests
 PYTEST_CMD:=pytest -s
 LOGLEVEL:=INFO
 
 # app1
-APP1_DIR:=tests/fixtures/dc-python-redis/dc-python-redis.robot
+APP1_ROBOT:=dc-python-redis.robot
+APP1_DIR:=tests/fixtures/dc-python-redis
 APP1_LOGS:=logs/app1
+APP1_NAME:=app1
 
 # app2
-APP2_DIR:=tests/fixtures/dc-haproxy/dc-haproxy.robot
+APP2_ROBOT:=dc-haproxy.robot
+APP2_DIR:=tests/fixtures/dc-haproxy
 APP2_LOGS:=logs/app2
+APP2_NAME:=app2
+
 
 ROBOT_CMD:=robot --timestampoutputs --loglevel ${LOGLEVEL}
 
@@ -23,10 +28,17 @@ run-logserver:
 	@live-server --open=logs/report.html
 
 app1: prepare
-	@${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}
+	(docker stack ps ${APP1_NAME} > /dev/null 2>&1) || (docker stack deploy -c ${APP1_DIR}/docker-compose.yml ${APP1_NAME})
+	(VNFROBOT_USE_DEPLOYMENT=app1 \
+	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}) || echo true
+	@docker stack rm ${APP1_NAME}
+
 
 app2: prepare
-	@${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}
+	(docker stack ps ${APP1_NAME} > /dev/null 2>&1 || docker stack deploy -c ${APP2_DIR}/docker-compose.yml ${APP2_NAME})
+	(VNF_USE_DEPLOYMENT=app2 \
+	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}) || echo true
+	@docker stack rm ${APP2_NAME}
 
 test-unit: prepare
 	${VENV} && ${VARS} ${PYTEST_CMD} --ignore='tests/fixtures' --ignore 'tests/keywords' -m 'not integration' tests
