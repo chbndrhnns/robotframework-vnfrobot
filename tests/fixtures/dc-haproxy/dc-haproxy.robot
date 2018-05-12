@@ -2,7 +2,7 @@
 Library   VnfValidator
 
 *** Variables ***
-${USE_DEPLOYMENT}   ha
+#${USE_DEPLOYMENT}   ha
 
 *** Test Cases ***
 Reducing amount of replicas of awesome and see if requrests are still answered

@@ -4,12 +4,13 @@ from docker.models.containers import Container
 from docker.errors import APIError
 from robot.libraries.BuiltIn import BuiltIn
 
+from InfrastructureController import InfrastructureController
 from exc import SetupError, ValidationError, NotFoundError, DeploymentError
 from settings import Settings
 from testtools.GossTool import GossTool
 from testtools.TestTool import TestTool
-from tools import orchestrator
 from tools.data_structures import SUT
+from tools.orchestrator import Orchestrator
 
 
 class ValidationTarget:
@@ -26,6 +27,9 @@ class ValidationTarget:
 
         self.data = {}
         self.transformed_data = {}
+
+        assert isinstance(self.instance.orchestrator, Orchestrator)
+        assert isinstance(self.instance.orchestrator.controller, InfrastructureController)
 
     @abstractproperty
     def options(self):
@@ -112,7 +116,7 @@ class ValidationTarget:
             raise exc
 
         try:
-            orchestrator.get_or_create_deployment(self.instance)
+            self.instance.orchestrator.get_or_create_deployment()
         except (ValidationError, NotFoundError, DeploymentError) as exc:
             self._cleanup()
             raise exc
@@ -126,7 +130,7 @@ class ValidationTarget:
             if not sidecar_required and test_volume_required:
                 self._connect_volume_to_sut()
             tool_instance = self.options.get('test_tool', None)(
-                controller=self.instance.docker_controller,
+                controller=self.instance.orchestrator.controller,
                 sut=self.instance.sut
             )
             self._prepare_run(tool_instance)
@@ -149,9 +153,9 @@ class ValidationTarget:
 
     def _create_sidecar(self, command=None):
         if not command:
-            command = GossTool(controller=self.instance.docker_controller).command
+            command = GossTool(controller=self.instance.orchestrator.controller).command
         network_name = self.instance.sut.service_id
-        assert self.instance.docker_controller.get_network(
+        assert self.instance.orchestrator.controller.get_network(
             network_name), '_create_sidecar: cannot find network {}'.format(network_name)
         volumes = {
             self.instance.test_volume: {
@@ -159,7 +163,7 @@ class ValidationTarget:
                 'mode': 'ro'
             }
         }
-        self.instance.sidecar = self.instance.docker_controller.get_or_create_sidecar(
+        self.instance.sidecar = self.instance.orchestrator.controller.get_or_create_sidecar(
             name='robot_sidecar_for_{}'.format(self.instance.deployment_name),
             command=command,
             network=network_name,
@@ -168,15 +172,14 @@ class ValidationTarget:
         assert network_name in self.instance.sidecar.attrs['NetworkSettings']['Networks'].keys()
 
     def _connect_volume_to_sut(self):
-        container = self.instance.docker_controller.connect_volume_to_service(
+        container = self.instance.orchestrator.controller.connect_volume_to_service(
             service=self.instance.sut.service_id,
             volume=self.instance.test_volume)
         assert isinstance(container, Container)
         self.instance.update_sut(target=container.name)
 
     def _create_test_volume(self):
-        self.instance.test_volume = orchestrator.check_or_create_test_tool_volume(
-            self.instance.docker_controller,
+        self.instance.test_volume = self.instance.orchestrator.check_or_create_test_tool_volume(
             Settings.goss_helper_volume
         )
 

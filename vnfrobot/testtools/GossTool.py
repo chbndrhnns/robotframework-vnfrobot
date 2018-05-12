@@ -81,7 +81,7 @@ class GossTool(TestTool):
                 f.write(target.transformed_data)
                 f.seek(0)
 
-                target.instance.docker_controller.put_file(
+                target.instance.orchestrator.controller.put_file(
                     entity=target.instance.sut.target,
                     file_to_transfer=f.name,
                     filename='goss.yaml')

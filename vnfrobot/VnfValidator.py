@@ -11,10 +11,11 @@ from ValidationTargets.AddressTarget import Address
 from ValidationTargets.PortTarget import Port
 from ValidationTargets.VariableTarget import Variable
 from settings import Settings
-from tools import orchestrator, matchers
+from tools import matchers
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
+from tools.orchestrator import DockerOrchestrator
 from version import VERSION
 from tools.matchers import string_matchers, all_matchers
 
@@ -36,7 +37,6 @@ class VnfValidator(DynamicCore):
         self.sut = SUT(None, None, None)
         self.ROBOT_LIBRARY_LISTENER = self
         self.suite_source = None
-        self.docker_controller = None
         self.deployment_options = {
             'SKIP_UNDEPLOY': False,
             'USE_DEPLOYMENT': None
@@ -45,6 +45,7 @@ class VnfValidator(DynamicCore):
         self.sidecar = None
         self.services = []
         self.containers = []
+        self.orchestrator = None
 
         try:
             self.deployment_options['USE_DEPLOYMENT'] = (BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
@@ -62,13 +63,14 @@ class VnfValidator(DynamicCore):
             BuiltIn().log('\nOptions: {}'.format(self.deployment_options),
                           level='INFO',
                           console=True)
-            orchestrator.get_or_create_deployment(self)
+            self.orchestrator = DockerOrchestrator(self)
+            self.orchestrator.get_or_create_deployment()
         except SetupError as exc:
             BuiltIn().fatal_error(exc)
 
     # noinspection PyUnusedLocal
     def _end_suite(self, name, attrs):
-        orchestrator.remove_deployment(self)
+        self.orchestrator.remove_deployment()
 
     def update_sut(self, **kwargs):
         # create a new namedtuple and use the old values if no new value is available
@@ -93,11 +95,11 @@ class VnfValidator(DynamicCore):
     def _check_sut_availability(self, temp_sut):
         try:
             if temp_sut.target_type == 'network':
-                self.docker_controller.get_network(temp_sut.service_id)
+                self.orchestrator.controller.get_network(temp_sut.service_id)
             elif temp_sut.target_type == 'service':
-                self.docker_controller.get_service(temp_sut.service_id)
+                self.orchestrator.controller.get_service(temp_sut.service_id)
             elif temp_sut.target_type == 'container':
-                self.docker_controller.get_containers(filters={
+                self.orchestrator.controller.get_containers(filters={
                                                           'name': temp_sut.service_id
                                                       },
                                                       all=True)
@@ -275,4 +277,4 @@ class VnfValidator(DynamicCore):
 
     @keyword('Remove deployment')
     def remove_deployment_kw(self):
-        orchestrator.remove_deployment(self)
+        self.orchestrator.remove_deployment(self)

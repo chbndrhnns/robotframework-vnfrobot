@@ -51,10 +51,10 @@ def set_context(instance, context_type=None, context=None):
 
 # noinspection PyProtectedMember
 def _prepare_service_context(controller, instance, service_id):
-    ctl = instance.docker_controller._docker
+    ctl = instance.orchestrator.controller._docker
     wait_on_service_container_status(ctl, service_id)
 
-    containers = instance.docker_controller.get_containers_for_service(service_id)
+    containers = ctl.get_containers_for_service(service_id)
 
     return containers[0].name
 

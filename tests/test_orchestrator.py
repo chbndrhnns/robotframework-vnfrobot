@@ -5,6 +5,7 @@ from pytest import fixture
 
 from exc import SetupError
 from tools import orchestrator
+from tools.orchestrator import DockerOrchestrator
 
 
 @fixture
@@ -19,16 +20,16 @@ def yaml_invalid():
     """
 
 
-def test___check_valid_yaml__pass(yaml_valid):
+def test___check_valid_yaml__pass(o, yaml_valid):
     with NamedTemporaryFile(mode='w+') as f:
         f.write(yaml_valid)
         f.seek(0)
-        orchestrator._check_valid_yaml(f.name)
+        o._check_valid_yaml(f.name)
 
 
-def test___check_valid_yaml__fail(yaml_invalid):
+def test___check_valid_yaml__fail(o, yaml_invalid):
     with pytest.raises(SetupError):
         with NamedTemporaryFile(mode='w+') as f:
             f.write(yaml_invalid)
             f.seek(0)
-            orchestrator._check_valid_yaml(f.name)
+            o._check_valid_yaml(f.name)

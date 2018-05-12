@@ -10,6 +10,7 @@ from docker.models.volumes import Volume
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
+from InfrastructureController import InfrastructureController
 from exc import NotFoundError, SetupError, DeploymentError
 from settings import Settings
 from tools import namesgenerator
@@ -18,8 +19,10 @@ from tools.wait_on import wait_on_container_status, wait_on_service_replication,
     start_process, wait_on_process
 
 
-class DockerController:
+class DockerController(InfrastructureController):
     def __init__(self, base_dir):
+        super(DockerController, self).__init__()
+
         self.base_dir = base_dir
         self._docker = docker.from_env()
         self._docker_api = docker.APIClient(base_url=Settings.docker.get('DOCKER_HOST'))
@@ -27,7 +30,8 @@ class DockerController:
 
         if not self.base_dir:
             self.base_dir = os.getcwd()
-            BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG', console=Settings.to_console)
+            BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG',
+                          console=Settings.to_console)
 
     def run_busybox(self, **kwargs):
         try:
@@ -285,7 +289,7 @@ class DockerController:
             c = self._docker.containers.get(name)
             c.remove()
         except (docker.errors.APIError, docker.errors.NotFound) as exc:
-            raise DeploymentError('Could not delete container {}'.format(name))
+            raise DeploymentError('Could not delete container {}: exc'.format(name, exc))
 
     def create_volume(self, name):
         try:
@@ -342,7 +346,7 @@ class DockerController:
         return res
 
     def get_or_create_sidecar(self, image='busybox', command='true', name='', volumes=None, network=None):
-        # TODO Do not reuse for the moment being as we are reading stdout and the stdout history is not reset between
+        # Do not reuse for the moment being as we are reading stdout and the stdout history is not reset between
         # different testtools runs. We end up with multiple json objects we cannot easily decode for now
         # # try to get an existing sidecar
         # if name:

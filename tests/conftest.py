@@ -14,6 +14,7 @@ from testtools.GossTool import GossTool
 from tools import namesgenerator
 from tools.data_structures import SUT
 from tools import orchestrator
+from tools.orchestrator import DockerOrchestrator
 from tools.wait_on import wait_on_services_status
 from . import path
 
@@ -117,8 +118,8 @@ def goss_volume_name(base_name):
 
 
 @fixture(scope='module')
-def volume_with_goss(controller, goss_volume_name):
-    orchestrator.check_or_create_test_tool_volume(controller, goss_volume_name)
+def volume_with_goss(o, controller, goss_volume_name):
+    o.check_or_create_test_tool_volume(goss_volume_name)
     yield goss_volume_name
     try:
         controller._docker_api.remove_volume(goss_volume_name)
@@ -130,7 +131,6 @@ def volume_with_goss(controller, goss_volume_name):
 def controller():
     assert path is not None
     return DockerController(base_dir=path)
-
 
 @fixture
 def container(base_name, controller):
@@ -169,19 +169,23 @@ def stack(controller, stack_infos):
 # Fixtures for entity tests
 @fixture(scope='module')
 @pytest.mark.usefixtures('stack_infos')
-@pytest.mark.usefixtures('controller')
-def instance(stack_infos, controller):
+def instance(stack_infos):
     lib = VnfValidator.VnfValidator()
     lib.suite_source = 'bla.robot'
     lib.goss_volume_name = 'goss-helper'
     lib.deployment_name = stack_infos[0]
     lib.descriptor_file = stack_infos[1]
-    lib.docker_controller = controller
+    lib.orchestrator = DockerOrchestrator(lib)
     lib.sut = None
     lib.sidecar = None
-    lib.services = [Collection().prepare_model(Service(attrs={"ID": "123456789098", "Spec": {"Name": stack_infos[0] + '_sut'}}))]
+    lib.services = [
+        Collection().prepare_model(Service(attrs={"ID": "123456789098", "Spec": {"Name": stack_infos[0] + '_sut'}}))]
     return lib
 
+
+@fixture(scope='module')
+def o(instance):
+    return DockerOrchestrator(instance)
 
 @fixture
 def sut(context='service'):

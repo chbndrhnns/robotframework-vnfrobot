@@ -10,15 +10,9 @@ def address_data():
 
 
 @fixture(scope='module')
-def address(address_data):
-    address = Address()
+@pytest.mark.usefixture('instance')
+def address_with_instance(address_data, instance):
+    address = Address(instance)
     for k, v in address_data.iteritems():
         address.set(k, v)
-    return address
-
-
-@fixture(scope='module')
-@pytest.mark.usefixture('instance')
-def address_with_instance(address, instance):
-    address.instance = instance
     return address

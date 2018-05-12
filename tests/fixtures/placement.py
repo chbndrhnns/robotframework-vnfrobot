@@ -10,16 +10,10 @@ def placement_data():
 
 
 @fixture
-def placement(port_data):
-    placement = Placement()
-    for k, v in port_data.iteritems():
-        placement.set(k, v)
-    return placement
-
-
-@fixture
 @pytest.mark.usefixture('instance')
-def placement_with_instance(placement, instance):
-    placement.instance = instance
-    return placement
+def placement_with_instance(placement_data, instance):
+    p = Placement(instance)
+    for k, v in placement_data.iteritems():
+        p.set(k, v)
+    return p
 

@@ -1,5 +1,4 @@
 import pytest
-from mock import MagicMock, Mock, patch
 
 from exc import SetupError, ValidationError
 from fixtures.test_data_File import file_target_test_data_pass, file_target_test_data_fail, file_test_data

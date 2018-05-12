@@ -17,15 +17,9 @@ def command_data():
 
 
 @fixture(scope='module')
-def command(command_data):
-    address = Command()
-    for k, v in command_data.iteritems():
-        address.set(k, v)
-    return address
-
-
-@fixture(scope='module')
 @pytest.mark.usefixture('instance')
-def command_with_instance(command, instance):
-    command.instance = instance
+def command_with_instance(command_data, instance):
+    command = Command(instance)
+    for k, v in command_data.iteritems():
+        command.set(k, v)
     return command

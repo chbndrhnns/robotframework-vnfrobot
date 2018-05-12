@@ -58,7 +58,7 @@ def test__run__service_context__pass(port_with_instance, stack, volume_with_goss
 
     name, path, success = stack
     service = name + '_sut'
-    container = e.instance.docker_controller.get_containers_for_service(service)[0]
+    container = e.instance.orchestrator.controller.get_containers_for_service(service)[0]
     e.instance.deployment_name = name
     e.instance.sut = SUT(target_type='service', target=container.name, service_id=service)
     e.instance.test_volume = volume_with_goss
