@@ -82,8 +82,9 @@ class VnfValidator(DynamicCore):
         self.test_cases = [t for t in self.parsed_descriptor.testcases]
         assert self.test_cases, "A robot file should contain test cases."
 
-        if not self._check_test_steps():
-            return
+        # comment out check of test steps
+        # if not self._check_test_steps():
+        #     return
 
         try:
             BuiltIn().log('\nOptions: {}'.format(self.deployment_options),
