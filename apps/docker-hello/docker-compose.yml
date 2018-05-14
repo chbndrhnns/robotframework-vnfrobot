@@ -1,8 +1,0 @@
-version: "3"
-
-services:
-  hello:
-    image: hello-world:latest
-    entrypoint: /testtools/testtools-linux-amd64
-    volumes:
-      - ../testtools:/testtools
