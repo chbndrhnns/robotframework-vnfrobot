@@ -13,7 +13,6 @@ from testtools.DockerTool import DockerTool
 from testtools.GossTool import GossTool
 from tools import namesgenerator
 from tools.data_structures import SUT
-from tools import orchestrator
 from tools.orchestrator import DockerOrchestrator
 from tools.wait_on import wait_on_services_status
 from . import path

@@ -1,9 +1,7 @@
 from __future__ import absolute_import
 
-import os
 import re
 from abc import ABCMeta, abstractmethod
-from tempfile import TemporaryFile, NamedTemporaryFile
 
 import validators
 from robot.libraries.BuiltIn import BuiltIn

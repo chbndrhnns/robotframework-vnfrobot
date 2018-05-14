@@ -30,7 +30,7 @@ class DockerController(InfrastructureController):
 
         if not self.base_dir:
             self.base_dir = os.getcwd()
-            BuiltIn().log('base_dir not specified. Assuming current working dir: {}', level='DEBUG',
+            BuiltIn().log('base_dir not specified. Assuming current working dir: {}'.format(self.base_dir), level='DEBUG',
                           console=Settings.to_console)
 
     def run_busybox(self, **kwargs):

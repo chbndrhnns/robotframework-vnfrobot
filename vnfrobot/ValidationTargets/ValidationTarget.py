@@ -6,12 +6,11 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from InfrastructureController import InfrastructureController
 from exc import SetupError, ValidationError, NotFoundError, DeploymentError
-from settings import Settings
+from settings import Settings, set_breakpoint
 from testtools.GossTool import GossTool
 from testtools.TestTool import TestTool
 from tools.data_structures import SUT
 from tools.orchestrator import Orchestrator
-from tools.testutils import set_breakpoint
 
 
 class ValidationTarget:
@@ -97,8 +96,15 @@ class ValidationTarget:
             return self.transformed_data
 
     def run_test(self):
+        set_breakpoint()
+        if self.instance.fatal_error:
+            raise ValidationError('We do not start validation as a fatal error occured during test setup.')
+
         if not self.instance.sut.target_type:
             raise ValidationError('No context given. Context must be set with "Set <context_type> context to <target>.')
+
+        # set a flag to indicate that we at least tried to execute a test
+        self.instance.validation_attempted = True
 
         # override sidecar decision for network context
         if 'network' in self.instance.sut.target_type:

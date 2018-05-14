@@ -6,6 +6,18 @@ ${DESCRIPTOR}     docker-compose.yml
 
 
 *** Test Cases ***
+We have the services: app, redis
+  [Documentation]  According to the architecture of the application, two services are required. We validate that they exist.
+  [Tags]  deployment_context
+
+  Set deployment context
+  Service "app": exists
+  Service "redis": exists
+
+Check service "app"
+  [Tags]  app1
+  Set service context to app
+
 Check that the image for the service 'app' contains the correct application code
   [Documentation]  We would like the correct version of the app to be in the Docker image
   ...  (side note: putting the code directly next to the image might be bad)

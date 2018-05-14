@@ -3,7 +3,7 @@ from exc import ValidationError, SetupError
 from tools import validators
 from testtools.GossTool import GossTool
 from tools.goss.GossAddr import GossAddr
-from tools.testutils import call_validator, set_breakpoint
+from tools.testutils import call_validator
 
 
 class Address(ValidationTarget):

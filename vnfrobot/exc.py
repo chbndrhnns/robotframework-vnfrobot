@@ -31,6 +31,7 @@ class TransformationError(RuntimeError):
 
 class ValidationError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = False
+    ROBOT_CONTINUE_ON_FAILURE = False
 
 
 class TeardownError(RuntimeError):

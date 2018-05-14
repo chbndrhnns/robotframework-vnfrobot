@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
+
+from rflint.parser import parser
 from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
 from robot.api.deco import keyword
@@ -16,7 +19,6 @@ from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
 from tools.data_structures import SUT
 from tools.orchestrator import DockerOrchestrator
-from tools.testutils import set_breakpoint
 from version import VERSION
 from tools.matchers import string_matchers, all_matchers
 
@@ -30,14 +32,19 @@ class VnfValidator(DynamicCore):
 
     def __init__(self):
         DynamicCore.__init__(self, [])
-
-        self.descriptor_file = None
-        self.deployment_name = None
-        self.context_type = None
-        self.context = None
-        self.sut = SUT(None, None, None)
         self.ROBOT_LIBRARY_LISTENER = self
+
+        # inputs
+        self.descriptor_file = None
         self.suite_source = None
+        self.parsed_descriptor = None
+
+        # Suite config
+        self.deployment_name = None
+        self.orchestrator = None
+
+        # Test case config
+        self.sut = SUT(None, None, None)
         self.deployment_options = {
             'SKIP_UNDEPLOY': False,
             'USE_DEPLOYMENT': None
@@ -46,16 +53,20 @@ class VnfValidator(DynamicCore):
         self.sidecar = None
         self.services = []
         self.containers = []
-        self.orchestrator = None
+
+        # keep state of test
+        self.test_cases = []
+        self.current_keywords = []
+        self.fatal_error = False
+        self.validation_attempted = False
 
         try:
-            # set_breakpoint()
             self.deployment_options['USE_DEPLOYMENT'] = \
                 (Settings.use_deployment or
-                    BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
+                 BuiltIn().get_variable_value("${USE_DEPLOYMENT}") or '').strip('\'')
             if (self.deployment_options['USE_DEPLOYMENT'] or
                     BuiltIn().get_variable_value("${SKIP_UNDEPLOY}") or
-                        Settings.skip_undeploy):
+                    Settings.skip_undeploy):
                 self.deployment_options['SKIP_UNDEPLOY'] = True
         except RobotNotRunningError:
             pass
@@ -63,7 +74,16 @@ class VnfValidator(DynamicCore):
     # noinspection PyUnusedLocal
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
-        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}") or 'docker-compose.yml'
+        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}") or \
+                               os.path.join('fixtures', 'docker-compose.yml')
+
+        # parse robot file
+        self.parsed_descriptor = parser.RobotFactory(self.suite_source)
+        self.test_cases = [t for t in self.parsed_descriptor.testcases]
+        assert self.test_cases, "A robot file should contain test cases."
+
+        if not self._check_test_steps():
+            return
 
         try:
             BuiltIn().log('\nOptions: {}'.format(self.deployment_options),
@@ -72,14 +92,24 @@ class VnfValidator(DynamicCore):
             self.orchestrator = DockerOrchestrator(self)
             self.orchestrator.get_or_create_deployment()
         except SetupError as exc:
-            BuiltIn().fatal_error(exc)
+            BuiltIn().log('_start_suite: {}'.format(exc), level='ERROR')
+            self.fatal_error = True
+
+    def _check_test_steps(self):
+        for test_case in self.test_cases:
+            context_steps_count = len([step for step in test_case.steps if len(step) > 1 and 'context' in step[1]])
+            if (len(test_case.steps) - context_steps_count) < 1:
+                BuiltIn().log('_start_suite: Error with Test case: \n"{}"\n'
+                              'Every test case requires at least ONE context statement and ONE validation statement'
+                              .format(test_case.name), level='ERROR')
+                self.fatal_error = True
+                return False
+        return True
 
     # noinspection PyUnusedLocal
     def _end_suite(self, name, attrs):
-        self.orchestrator.remove_deployment()
-
-    def start_keyword(self, name, attrs):
-        pass
+        if self.orchestrator:
+            self.orchestrator.remove_deployment()
 
     def update_sut(self, **kwargs):
         # create a new namedtuple and use the old values if no new value is available
@@ -137,7 +167,7 @@ class VnfValidator(DynamicCore):
     def set_context_kw(self, context_type=None, context=None):
         try:
             set_context(self, context_type, context)
-        except NotFoundError as exc:
+        except (NotFoundError, SetupError) as exc:
             BuiltIn().fatal_error(exc)
 
     @keyword('Command ${{raw_entity:{}}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:{}}}'.format(

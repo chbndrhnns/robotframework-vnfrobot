@@ -1,3 +1,4 @@
+pydevd
 jinja2
 validators
 unittest2
@@ -5,6 +6,7 @@ mock
 pytest
 lxml
 robotframework==3.0.4
+robotframework-lint
 docker==2.7.0
 python-dotenv
 pytest-mock

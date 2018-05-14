@@ -1,6 +1,6 @@
 from robot.libraries.BuiltIn import BuiltIn
 
-from exc import NotFoundError, SetupError
+from exc import NotFoundError, SetupError, ValidationError
 from tools.wait_on import wait_on_service_container_status
 
 
@@ -9,6 +9,9 @@ def _generate_sidecar_name(service_id):
 
 
 def set_context(instance, context_type=None, context=None):
+    if instance.fatal_error:
+        raise ValidationError('set_context: Fatal error has occured during suite setup.')
+
     context_types = ['application', 'service', 'node', 'network']
 
     if context_type not in context_types:

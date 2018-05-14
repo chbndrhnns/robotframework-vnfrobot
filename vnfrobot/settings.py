@@ -3,6 +3,17 @@ import os
 from dotenv import load_dotenv, find_dotenv
 
 
+def set_breakpoint():
+    a = Settings.respect_breakpoints
+    if a is True:
+        import pydevd
+        pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
+
+
+def str2bool(val):
+    return val.lower() in ("yes", "true", "t", "1")
+
+
 class Settings:
     def __init__(self):
         pass
@@ -15,6 +26,7 @@ class Settings:
     to_console = os.environ.get('VNFROBOT_TO_CONSOLE') or False
     use_deployment = os.environ.get('VNFROBOT_USE_DEPLOYMENT') or ''
     skip_undeploy = True if use_deployment else (os.environ.get('VNFROBOT_SKIP_UNDEPLOY') or False)
+    respect_breakpoints = str2bool(os.environ.get('VNFROBOT_RESPECT_BREAKPOINTS')) or False
 
     # Docker orchestrator
     docker = {

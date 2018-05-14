@@ -147,31 +147,19 @@ def run_keyword_tests(test_instance, tests=None, setup=None, expected_result=Res
     # test_name = regex_method.findall(caller_name)[0]
 
     run_count = 0
-    context = test_instance.suite.tests
+    context = test_instance.tests
     for t in tests:
         run_count += 1
-        with test_instance.subTest(test=t):
-            test = context.create(u'Expect {}: {}'.format(Result.get(expected_result), t))
-            test.keywords.append(t)
+        test = context.create(u'Expect {}: {}'.format(Result.get(expected_result), t))
+        test.keywords.append(t)
 
-    result = test_instance.suite.run(output=None)
+    result = test_instance.run(output=None)
 
     if expected_result is Result.FAIL:
-        test_instance.assertEqual(run_count, result.statistics.total.all.failed,
-                                  'Expected failure count does not match actual failure count.')
+        assert run_count == result.statistics.total.all.failed, 'Expected failure count does not match actual failure count.'
     if expected_result is Result.PASS:
-        test_instance.assertEqual(run_count, result.statistics.total.all.passed,
-                                  'Expected pass count does not match actual pass count.')
+        assert run_count == result.statistics.total.all.passed, 'Expected pass count does not match actual pass count.'
 
     if expected_message:
         for result in result.suite.tests:
             test_instance.assertIn(expected_message, result.message)
-
-
-def str2bool(val):
-    return val.lower() in ("yes", "true", "t", "1")
-
-
-def set_breakpoint():
-    import pydevd
-    pydevd.settrace('localhost', port=65000, stdoutToServer=True, stderrToServer=True)
