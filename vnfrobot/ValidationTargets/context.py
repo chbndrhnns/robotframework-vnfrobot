@@ -1,6 +1,7 @@
 from robot.libraries.BuiltIn import BuiltIn
 
 from exc import NotFoundError, SetupError, ValidationError
+from settings import set_breakpoint
 from tools.wait_on import wait_on_service_container_status
 
 

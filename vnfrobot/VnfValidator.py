@@ -13,7 +13,7 @@ from exc import SetupError, NotFoundError, DataFormatError, ValidationError
 from ValidationTargets.AddressTarget import Address
 from ValidationTargets.PortTarget import Port
 from ValidationTargets.VariableTarget import Variable
-from settings import Settings
+from settings import Settings, set_breakpoint
 from tools import matchers
 from ValidationTargets.context import set_context
 from robotlibcore import DynamicCore
@@ -74,8 +74,7 @@ class VnfValidator(DynamicCore):
     # noinspection PyUnusedLocal
     def _start_suite(self, name, attrs):
         self.suite_source = attrs.get('source', None)
-        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}") or \
-                               os.path.join('fixtures', 'docker-compose.yml')
+        self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}") or 'docker-compose.yml'
 
         # parse robot file
         self.parsed_descriptor = parser.RobotFactory(self.suite_source)

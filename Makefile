@@ -1,5 +1,5 @@
 VENV:=. .robot/bin/activate
-TO_CONSOLE:=False
+TO_CONSOLE:=True
 VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=${PYTHONPATH}:vnfrobot:tests
 PYTEST_CMD:=pytest -s
 LOGLEVEL:=INFO
@@ -39,7 +39,7 @@ app2: prepare
 	(docker stack ps ${APP1_NAME} > /dev/null 2>&1 || docker stack deploy -c ${APP2_DIR}/docker-compose.yml ${APP2_NAME})
 	(VNF_USE_DEPLOYMENT=app2 \
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}) || echo true
-	@docker stack rm ${APP2_NAME}
+	@docker volume rm -f ${APP2_NAME}_redis_data || echo true
 
 test-unit: prepare
 	${VENV} && ${VARS} ${PYTEST_CMD} --ignore='tests/fixtures' --ignore 'tests/keywords' -m 'not integration' tests
