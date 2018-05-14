@@ -6,13 +6,13 @@ LOGLEVEL:=INFO
 
 # app1
 APP1_ROBOT:=app1.robot
-APP1_DIR:=tests/fixtures/dc-python-redis
+APP1_DIR:=apps/dc-python-redis
 APP1_LOGS:=logs/app1
 APP1_NAME:=app1
 
 # app2
 APP2_ROBOT:=app2.robot
-APP2_DIR:=tests/fixtures/dc-haproxy
+APP2_DIR:=apps/dc-haproxy
 APP2_LOGS:=logs/app2
 APP2_NAME:=app2
 
@@ -32,7 +32,7 @@ app1: prepare
 	(VNFROBOT_USE_DEPLOYMENT=app1 \
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}) || echo true
 	@docker stack rm ${APP1_NAME}
-	@docker volume rm ${APP1_NAME}_redis_data
+	@docker volume rm -f ${APP1_NAME}_redis_data || echo true
 
 
 app2: prepare
