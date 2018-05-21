@@ -20,7 +20,18 @@ from tools.wait_on import wait_on_container_status, wait_on_service_replication,
 
 
 class DockerController(InfrastructureController):
+    """
+    DockerController connects to a Docker instance and provides any functionality that is needed by the VnfValidator
+    in terms of stacks, services, containers, networks and images
+    """
+
     def __init__(self, base_dir):
+        """
+        The controller connects to the Docker host that is specified in the settings or to the socket on locallhost.
+
+        Args:
+            base_dir: str - is used to find docker-compose files.
+        """
         super(DockerController, self).__init__()
 
         self.base_dir = base_dir
@@ -34,6 +45,17 @@ class DockerController(InfrastructureController):
                           console=Settings.to_console)
 
     def run_busybox(self, **kwargs):
+        """
+        Helper method for conftest.py to create a running dummy container.
+
+        Args:
+            **kwargs: any argument that a Container object takes except for image, command, name and detach
+
+        Returns:
+            Container
+
+        """
+
         try:
             name = namesgenerator.get_random_name()
             self._docker.containers.run('busybox', 'true', name=name, detach=True, **kwargs)
@@ -44,6 +66,20 @@ class DockerController(InfrastructureController):
             raise DeploymentError(exc)
 
     def execute(self, entity=None, command=None):
+        """
+        Executes a command within a Docker container.
+
+        Args:
+            entity: Container object or container name or container id
+            command: str or list - command to execute in the container
+
+        Returns:
+            dict: {
+                'code': int,
+                'rest': str
+            }
+
+        """
         target = entity if isinstance(entity, Container) else None
 
         if not target:
@@ -64,6 +100,16 @@ class DockerController(InfrastructureController):
             return self._run_in_container(container=target, command=command)
 
     def _run_in_container(self, container=None, command=None):
+        """
+        Helper method for execute().
+
+        Args:
+            container:
+            command:
+
+        Returns:
+
+        """
         if not command:
             raise ValueError('_command parameter must not be empty.')
 
@@ -84,6 +130,17 @@ class DockerController(InfrastructureController):
             raise SetupError(exc)
 
     def get_containers_for_service(self, service, state='running'):
+        """
+        For the given service, wait until a timeout occurs or at least one container is in the specified state.
+
+        Args:
+            service: Service or service name or service id
+            state: expected state of service
+
+        Returns:
+            [Container]
+
+        """
         service = service.name if isinstance(service, Service) else service
         assert isinstance(service, basestring)
 
@@ -102,6 +159,18 @@ class DockerController(InfrastructureController):
             raise NotFoundError(exc)
 
     def get_container_config(self, entity, key=None):
+        """
+        Retrieve Config dictionary for a container. If key is specified, only return the key within the Config
+        dictionary.
+
+        Args:
+            entity: Service or Container or service id or service name or container id or container name
+            key: desired config key
+
+        Returns:
+            dict
+
+        """
         if not entity:
             raise NotFoundError('No entity provided')
 
@@ -123,9 +192,29 @@ class DockerController(InfrastructureController):
             return c.attrs['Config']
 
     def get_node(self, node_id):
+        """
+        Retrieves a Node object for a given node ide
+
+        Args:
+            node_id: str
+
+        Returns:
+            docker.models.nodes.Node
+
+        """
         return self._docker.nodes.get(node_id)
 
     def get_service(self, service):
+        """
+        Wait for service replication and retrieve a service.
+
+        Args:
+            service: Service or service id or service name
+
+        Returns:
+            docker.models.services.Service
+
+        """
         try:
             wait_on_service_replication(self._docker, service)
             return self._docker.services.get(service)
@@ -133,18 +222,50 @@ class DockerController(InfrastructureController):
             raise NotFoundError('Cannot find service {}: {}'.format(service, exc))
 
     def get_container(self, container):
+        """
+        Retrieves a container by its name or id.
+
+        Args:
+            container: container name or container id
+
+        Returns:
+            docker.models.containers.Container
+
+        """
         try:
             return self._docker.containers.get(container)
         except (docker.errors.NotFound, docker.errors.APIError) as exc:
             raise NotFoundError(exc)
 
     def get_containers(self, **kwargs):
+        """
+        Retrieve containers that match the filters specified by **kwargs. Refer to the Docker help for available
+        filters.
+
+        Args:
+            **kwargs: filters
+
+        Returns:
+            [Container]
+
+        """
         try:
             return self._docker.containers.list(**kwargs)
         except docker.errors.APIError as exc:
             raise NotFoundError('get_containers failed: {}'.format(exc))
 
     def connect_network_to_service(self, service, network):
+        """
+        Connect the given network to the given service. To do this, the service is updated with the network.
+
+        Args:
+            service: docker.models.services.Service
+            network: docker.models.networks.Network
+
+        Returns:
+            docker.models.containers.Container
+
+        """
         try:
             wait_on_service_replication(self._docker, service)
             wait_on_service_container_status(self, service)
@@ -167,7 +288,7 @@ class DockerController(InfrastructureController):
         Update a service using the map of configuration values.
 
         Args:
-            service: Service instance
+            service: docker.models.services.Service
             **kwargs: any parameters available for updating a service
 
         Returns:
@@ -208,6 +329,18 @@ class DockerController(InfrastructureController):
         return c
 
     def connect_volume_to_service(self, service, volume):
+        """
+        Connect a given volume to a given service.
+        In case the volume is already connect, just return the service.
+
+        Args:
+            service: docker.models.services.Service
+            volume: docker.models.volumes.Volume
+
+        Returns:
+            Container
+
+        """
         if not volume:
             raise DeploymentError('You must provide a volume to connect it to a service.')
         if not service:
@@ -240,9 +373,27 @@ class DockerController(InfrastructureController):
             raise DeploymentError('Could not connect network to container: {}'.format(exc))
 
     def clean_networks(self):
+        """
+        Helper method. Sometimes the list of networks is in an unclean state and requires manual cleanup.
+
+        Returns:
+            None
+
+        """
         self._docker_api.prune_networks()
 
     def deploy_stack(self, descriptor, name):
+        """
+        Deploy a docker-compose.yml file on a Docker Swarm.
+
+        Args:
+            descriptor: str
+            name: str
+
+        Returns:
+            True
+
+        """
         assert name, "name is required for deploy_stack"
         assert descriptor, "descriptor is required for deploy_stack"
         res = self._dispatch(['stack', 'deploy', '-c', descriptor, name])
@@ -251,17 +402,49 @@ class DockerController(InfrastructureController):
         return True
 
     def undeploy_stack(self, name):
+        """
+        Removes a docker-compose.yml deployment from a Docker Swarm
+
+        Args:
+            name: str
+
+        Returns:
+            ProcessResult
+
+        """
         a = self._dispatch(['stack', 'rm', name])
         self.clean_networks()
         return a
 
     def get_network(self, name):
+        """
+        Retrieves a network by name
+
+        Args:
+            name: str
+
+        Returns:
+            docker.models.networks.Network
+
+        """
         try:
             return self._docker.networks.get(name)
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
 
     def get_or_create_network(self, name, driver='overlay'):
+        """
+        Retrieves a network by name and creates it if it does not yet exist.
+        The network driver defaults to 'overlay'.
+
+        Args:
+            name: str
+            driver: str
+
+        Returns:
+            docker.models.networks.Network
+
+        """
         try:
             return self._docker.networks.create(
                 name=name,
@@ -277,6 +460,16 @@ class DockerController(InfrastructureController):
         # return self.get_network(name)
 
     def delete_network(self, name):
+        """
+        Deletes a network.
+
+        Args:
+            name: str
+
+        Returns:
+            None
+
+        """
         n = self._docker.networks.get(name)
         if n.containers:
             for c in n.containers:
@@ -285,6 +478,16 @@ class DockerController(InfrastructureController):
         n.remove()
 
     def delete_container(self, name):
+        """
+        Deletes a container.
+
+        Args:
+            name: str
+
+        Returns:
+            None
+
+        """
         try:
             c = self._docker.containers.get(name)
             c.remove()
@@ -292,6 +495,16 @@ class DockerController(InfrastructureController):
             raise DeploymentError('Could not delete container {}: exc'.format(name, exc))
 
     def create_volume(self, name):
+        """
+        Creates a volume.
+
+        Args:
+            name: str
+
+        Returns:
+            docker.models.volumes.Volume
+
+        """
         try:
             return self._docker.volumes.create(name)
         except docker.errors.NotFound:
@@ -300,6 +513,16 @@ class DockerController(InfrastructureController):
             raise DeploymentError('Could not create volume {}: {}'.format(name, exc))
 
     def delete_volume(self, name):
+        """
+        Deletes a volume.
+
+        Args:
+            name: str
+
+        Returns:
+            None
+
+        """
         try:
             v = self._docker.volumes.get(name)
             v.remove(force=True)
@@ -309,12 +532,34 @@ class DockerController(InfrastructureController):
             raise DeploymentError('Could not remove volume {}: {}'.format(name, exc))
 
     def get_volume(self, name):
+        """
+        Retrieves a volume by name.
+
+        Args:
+            name: str
+
+        Returns:
+            docker.models.volumes.Volume
+
+        """
         try:
             return self._docker.volumes.get(name)
         except (docker.errors.NotFound, docker.errors.APIError) as exc:
             raise DeploymentError('Could not find volume {}: {}'.format(name, exc if exc else ''))
 
     def add_data_to_volume(self, volume, path):
+        """
+        Adds data to a volume. For that, it mounts the volume to a busybox container, copies the files from the local
+        file system and removes the container.
+
+        Args:
+            volume: str - name of the volume
+            path: str - local path with the files to be copied
+
+        Returns:
+            None
+
+        """
         try:
             self._kill_and_delete_container(self.helper)
         except docker.errors.NotFound:
@@ -335,6 +580,17 @@ class DockerController(InfrastructureController):
             assert len(res.stderr) == 0
 
     def list_files_on_volume(self, volume):
+        """
+        Retrieves a list of files on a volume. Tailored for goss at the moment.
+        For that, a `ls /data` is executed on the volume.
+
+        Args:
+            volume: str - name of the volume
+
+        Returns:
+            str
+
+        """
         try:
             self.get_volume(volume)
         except DeploymentError as exc:
@@ -346,6 +602,23 @@ class DockerController(InfrastructureController):
         return res
 
     def get_or_create_sidecar(self, image='busybox', command='true', name='', volumes=None, network=None):
+        """
+        Helper method for run_sidecar().
+        A container is created with the provided parameters.
+        An existing sidecar with an identical name is removed first.
+
+        Args:
+            image: str - image
+            command: str - command
+            name: str - name
+            volumes:
+            network:
+
+        Returns:
+            docker.models.containers.Container
+
+        """
+
         # Do not reuse for the moment being as we are reading stdout and the stdout history is not reset between
         # different testtools runs. We end up with multiple json objects we cannot easily decode for now
         # # try to get an existing sidecar
@@ -392,6 +665,16 @@ class DockerController(InfrastructureController):
             raise DeploymentError('Error: {}'.format(exc))
 
     def get_or_pull_image(self, image):
+        """
+        Retrieves an image from hub.docker.com.
+
+        Args:
+            image: str - image name
+
+        Returns:
+            None
+
+        """
         try:
             self._docker.images.get(image)
         except docker.errors.ImageNotFound:
@@ -403,6 +686,22 @@ class DockerController(InfrastructureController):
                 raise NotFoundError('Image {} not found: {}'.format(image, exc))
 
     def run_sidecar(self, name='', sidecar=None, image='busybox', command='true', volumes=None, network=None):
+        """
+        Run a sidecar container with the specified parameters. It waits for the command to finish and returns stdout.
+        If stderr is not empty, a DeploymentError is raised with stderr.
+
+        Args:
+            name: str - name of the container
+            sidecar: docker.models.containers.Container
+            image: str - name of the image
+            command: str - command to run
+            volumes:
+            network:
+
+        Returns:
+            str - stdout
+
+        """
 
         # maybe try this:
         # docker service create --network dockercoins_default --name set_breakpoint \
@@ -444,12 +743,33 @@ class DockerController(InfrastructureController):
             self._kill_and_delete_container(sidecar)
 
     def _dispatch(self, options, project_options=None, returncode=0):
+        """
+        Helper method to run Docker commands that are not available via the API.
+
+        Args:
+            options:
+            project_options:
+            returncode:
+
+        Returns:
+
+        """
         project_options = project_options or []
         o = project_options + options
         proc = start_process(self.base_dir, o)
         return wait_on_process(proc, returncode=returncode)
 
     def find_stack(self, deployment_name):
+        """
+        Find a stack by name.
+
+        Args:
+            deployment_name: str - name of the stack
+
+        Returns:
+            True
+
+        """
         res = self._dispatch(['stack', 'ps', deployment_name, '--format', '" {{ .Name }}"'])
 
         if deployment_name not in res.stdout.strip('\n\r'):
@@ -457,6 +777,19 @@ class DockerController(InfrastructureController):
         return True
 
     def put_file(self, entity, file_to_transfer='', destination='/', filename=None):
+        """
+        Copy a file onto a running container.
+
+        Args:
+            entity: docker.models.containers.Container
+            file_to_transfer: local file object
+            destination: path to the destination
+            filename: destination file name
+
+        Returns:
+            None
+
+        """
         if not os.path.isfile(file_to_transfer):
             raise NotFoundError('File {} not found'.format(file_to_transfer))
 
@@ -471,6 +804,19 @@ class DockerController(InfrastructureController):
             self._send_file(content, destination, entity, filename)
 
     def _send_file(self, content, destination, entity, filename):
+        """
+        Helper method for put_file().
+        Creates a temporary tar file with the specified content.
+
+        Args:
+            content:
+            destination:
+            entity:
+            filename:
+
+        Returns:
+
+        """
         to_send = Archive('w').add_text_file(filename, content).close()
         try:
             res = self._docker_api.put_archive(entity, destination, to_send.buffer)
@@ -480,6 +826,18 @@ class DockerController(InfrastructureController):
             raise DeploymentError(exc)
 
     def get_file(self, entity, path, filename):
+        """
+        Retrieves a file from a container.
+
+        Args:
+            entity: docker.models.containers.Container
+            path: path to file
+            filename: filename on container
+
+        Returns:
+            Archive
+
+        """
         try:
             strm, stat = self._docker_api.get_archive(entity, '{}/{}'.format(path, filename))
         except docker.errors.APIError as exc:
@@ -488,12 +846,32 @@ class DockerController(InfrastructureController):
         return Archive('r', strm.read()).get_text_file(filename)
 
     def get_services(self, stack):
+        """
+        Retrieve services for a stack.
+
+        Args:
+            stack: str - name of deployment
+
+        Returns:
+            [Service]
+
+        """
         try:
             return self._docker.services.list(filters={'name': '{}_'.format(stack)})
         except docker.errors.APIError as exc:
             raise DeploymentError('Could not get services for {}: {}'.format(stack, exc))
 
     def _kill_and_delete_container(self, name):
+        """
+        Removes a container.
+
+        Args:
+            name: str - name of container
+
+        Returns:
+            None
+
+        """
         try:
             c = self._docker.containers.get(name) if isinstance(name, basestring) else name
             if hasattr(c, 'status') and lower(c.status) == 'running':
