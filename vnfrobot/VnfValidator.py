@@ -24,7 +24,12 @@ from tools.matchers import string_matchers, all_matchers
 
 
 class VnfValidator(DynamicCore):
-    """The VnfValidator module contains low-level keywords for the VNF Robot."""
+    """
+    The VnfValidator is the base library that contains low-level keywords for the VNF Robot.
+    The class implements the DynamicCore interface provided by the Robot Framework.
+
+    For every test suite, one instance of the class is created.
+    """
 
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
     ROBOT_LISTENER_API_VERSION = 2
@@ -55,6 +60,7 @@ class VnfValidator(DynamicCore):
         self.containers = []
 
         # keep state of test
+        self.context = None
         self.test_cases = []
         self.current_keywords = []
         self.fatal_error = False
@@ -73,6 +79,17 @@ class VnfValidator(DynamicCore):
 
     # noinspection PyUnusedLocal
     def _start_suite(self, name, attrs):
+        """
+        Listener method by the Robot Framework that is called when on suite setup.
+
+        Args:
+            name: name of the suite
+            attrs: attributes of the suite
+
+        Returns:
+            None
+
+        """
         self.suite_source = attrs.get('source', None)
         self.descriptor_file = BuiltIn().get_variable_value("${DESCRIPTOR}") or 'docker-compose.yml'
 
@@ -84,7 +101,6 @@ class VnfValidator(DynamicCore):
         # comment out check of test steps
         # if not self._check_test_steps():
         #     return
-
         try:
             BuiltIn().log('\nOptions: {}'.format(self.deployment_options),
                           level='INFO',
@@ -96,6 +112,15 @@ class VnfValidator(DynamicCore):
             self.fatal_error = True
 
     def _check_test_steps(self):
+        """
+        Helper method to check if for every test case in the suite, there is at least one command for
+        setting the context and one validation statement
+
+        Returns:
+            True: if the conditions are met
+            False: if the conditions are not met
+
+        """
         for test_case in self.test_cases:
             context_steps_count = len([step for step in test_case.steps if len(step) > 1 and 'context' in step[1]])
             if (len(test_case.steps) - context_steps_count) < 1:
@@ -108,10 +133,32 @@ class VnfValidator(DynamicCore):
 
     # noinspection PyUnusedLocal
     def _end_suite(self, name, attrs):
+        """
+            Listener method by the Robot Framework that is called when on suite setup.
+
+            Args:
+                name: name of the suite
+                attrs: attributes of the suite
+
+            Returns:
+                None
+        """
         if self.orchestrator:
             self.orchestrator.remove_deployment()
 
     def update_sut(self, **kwargs):
+        """
+        Update the sut object with the values provided in **kwargs.
+
+        Before the update takes place, we check if the updated SUT is available.
+
+        Args:
+            **kwargs: target_type, target, service_id
+
+        Returns:
+            None
+
+        """
         # create a new namedtuple and use the old values if no new value is available
         # noinspection PyProtectedMember
         temp_sut = self.sut._replace(
@@ -135,6 +182,16 @@ class VnfValidator(DynamicCore):
                                                                                         self.deployment_name))
 
     def _check_sut_availability(self, temp_sut):
+        """
+        Helper method to determine if an SUT is available. Makes use of the Orchestrator instance.
+
+        Args:
+            temp_sut: namedtuple
+
+        Returns:
+            temp_sut: namedtuple
+
+        """
         try:
             if temp_sut.target_type == 'network':
                 self.orchestrator.controller.get_network(temp_sut.service_id)
@@ -153,7 +210,8 @@ class VnfValidator(DynamicCore):
 
     def run_keyword(self, name, args, kwargs):
         """
-        Mandatory method for using robot dynamic libraries
+        Mandatory method in dynamic libraries of the Robot Framework. Gets called by the framework if a keyword was
+        identified as belonging to that library.
 
         Returns:
             None
@@ -165,6 +223,17 @@ class VnfValidator(DynamicCore):
 
     @keyword('Set ${context_type:\S+} context to ${context:\S+}')
     def set_context_kw(self, context_type=None, context=None):
+        """
+        Keyword 'Set context'
+
+        Args:
+            context_type: str
+            context: str
+
+        Returns:
+            None
+
+        """
         try:
             set_context(self, context_type, context)
         except (NotFoundError, SetupError) as exc:
@@ -176,6 +245,19 @@ class VnfValidator(DynamicCore):
         '|'.join(all_matchers.keys()),
         matchers.quoted_or_unquoted_string))
     def command_kw(self, raw_entity, raw_prop, matcher, raw_val):
+        """
+        'Command' keyword.
+
+        Args:
+            raw_entity: str
+            raw_prop: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             validation_target = Command(self)
             validation_target.set_as_dict({
@@ -217,6 +299,18 @@ class VnfValidator(DynamicCore):
         '|'.join(string_matchers.keys()),
         matchers.quoted_or_unquoted_string))
     def file_kw_content(self, raw_entity, matcher, raw_val):
+        """
+        'File' keyword (no property)
+
+        Args:
+            raw_entity: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             validation_target = File(self)
             validation_target.set_as_dict({
@@ -235,6 +329,19 @@ class VnfValidator(DynamicCore):
         '|'.join(all_matchers.keys()),
         matchers.quoted_or_unquoted_string))
     def file_kw(self, raw_entity, raw_prop, matcher, raw_val):
+        """
+        'File' keyword (with property)
+
+        Args:
+            raw_entity: str
+            raw_prop: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             validation_target = File(self)
             validation_target.set_as_dict({
@@ -253,6 +360,18 @@ class VnfValidator(DynamicCore):
 
     @keyword('Address ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
     def address_kw(self, raw_entity, matcher, raw_val):
+        """
+        'Address' keyword
+
+        Args:
+            raw_entity: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             entity = Address(self)
             entity.set_as_dict({
@@ -275,9 +394,20 @@ class VnfValidator(DynamicCore):
     @keyword('Variable ${{raw_entity:{}}}: ${{matcher:{}}} ${{raw_val:{}}}'.format(
         matchers.quoted_or_unquoted_string,
         '|'.join(string_matchers.keys()),
-        matchers.quoted_or_unquoted_string,
-    ))
+        matchers.quoted_or_unquoted_string))
     def env_variable_kw(self, raw_entity, matcher, raw_val):
+        """
+        'Variable' keyword
+
+        Args:
+            raw_entity: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             validation_target = Variable(self)
             validation_target.set_as_dict({
@@ -293,6 +423,19 @@ class VnfValidator(DynamicCore):
         '|'.join(Port.properties.keys()),
         '|'.join(string_matchers.keys())))
     def port_kw(self, raw_entity, raw_prop, matcher, raw_val):
+        """
+        'Port' keyword
+
+        Args:
+            raw_entity: str
+            raw_prop: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             validation_target = Port(self)
             validation_target.set_as_dict({
@@ -309,6 +452,18 @@ class VnfValidator(DynamicCore):
         '|'.join(Placement.properties.keys()),
         '|'.join(string_matchers.keys())))
     def placement_kw(self, raw_prop, matcher, raw_val):
+        """
+        'Placement' keyword
+
+        Args:
+            raw_prop: str
+            matcher: str
+            raw_val: str
+
+        Returns:
+            None
+
+        """
         try:
             validation_target = Placement(self)
             validation_target.set_as_dict({
@@ -323,4 +478,11 @@ class VnfValidator(DynamicCore):
 
     @keyword('Remove deployment')
     def remove_deployment_kw(self):
+        """
+        'Remove deployment' keyword
+
+        Returns:
+            None
+
+        """
         self.orchestrator.remove_deployment(self)
