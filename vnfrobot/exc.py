@@ -3,63 +3,45 @@ class DataError(RuntimeError):
     ROBOT_EXIT_ON_FAILURE = False
 
 
-class ParseError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = False
-
-
-class AssertError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = False
-    ROBOT_CONTINUE_ON_FAILURE = True
-
-
-class DataFormatError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = False
-    ROBOT_CONTINUE_ON_FAILURE = True
-
-
 class SetupError(RuntimeError):
+    """
+    Error that is thrown if the test setup fails.
+    """
     ROBOT_EXIT_ON_FAILURE = True
 
 
 class TestToolError(RuntimeError):
+    """
+    Error that is thrown if there is an error when running a test tool.
+    """
     pass
 
 
 class TransformationError(RuntimeError):
+    """
+    Error that is thrown if there is an error in the apply_mappings stage during value transformation.
+    """
     pass
 
 
 class ValidationError(RuntimeError):
+    """
+    Error that is thrown if a general validation error occurs. This can be either during the actual test or before a
+    test when the keyword parameters are validated.
+    """
     ROBOT_EXIT_ON_FAILURE = False
     ROBOT_CONTINUE_ON_FAILURE = False
 
 
-class TeardownError(RuntimeError):
-    # ROBOT_EXIT_ON_FAILURE = True
-    pass
-
-
-class ConnectionError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = False
-    ROBOT_CONTINUE_ON_FAILURE = True
-
-
-class TimeoutError(RuntimeError):
-    ROBOT_EXIT_ON_FAILURE = False
-    ROBOT_CONTINUE_ON_FAILURE = True
-
-
-class ArgumentMissingException(BaseException):
-    pass
-
-
-class InvalidPathException(BaseException):
-    pass
-
-
 class NotFoundError(RuntimeError):
+    """
+    Error that is thrown if an object is not found.
+    """
     pass
 
 
 class DeploymentError(RuntimeError):
+    """
+    Error that is thrown if there is a problem with a deployment.
+    """
     pass

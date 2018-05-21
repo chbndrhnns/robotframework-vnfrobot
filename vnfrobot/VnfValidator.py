@@ -267,7 +267,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('Process')
@@ -320,7 +320,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('File ${{raw_entity:{}}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:{}}}'.format(
@@ -351,7 +351,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('Symbolic Link')
@@ -380,7 +380,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             entity.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('DNS')
@@ -416,7 +416,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('Port ${{raw_entity:\S+}}: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
@@ -445,7 +445,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('Placement: ${{raw_prop:{}}} ${{matcher:{}}} ${{raw_val:\S+}}'.format(
@@ -473,7 +473,7 @@ class VnfValidator(DynamicCore):
                 'matcher': matcher,
                 'value': raw_val})
             validation_target.run_test()
-        except (DataFormatError, ValidationError) as exc:
+        except ValidationError as exc:
             BuiltIn().fail(exc)
 
     @keyword('Remove deployment')
