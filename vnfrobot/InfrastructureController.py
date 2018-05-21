@@ -2,6 +2,9 @@ from abc import ABCMeta, abstractmethod
 
 
 class InfrastructureController:
+    """
+    Class that can be used to add a controller for a specific infrastructure type.
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self):
