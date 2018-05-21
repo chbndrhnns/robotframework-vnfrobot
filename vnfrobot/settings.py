@@ -4,6 +4,14 @@ from dotenv import load_dotenv, find_dotenv
 
 
 def set_breakpoint():
+    """
+    Helper method to set a PyCharm breakpoint in case a remote debugger is running. If it is called somewhere with no
+    remote debugger connected, the program will wait for the debugger. And wait. And wait...
+
+    Returns:
+        None
+
+    """
     a = Settings.respect_breakpoints
     if a is True:
         import pydevd
@@ -11,10 +19,26 @@ def set_breakpoint():
 
 
 def str2bool(val):
+    """
+    Converts a string to a boolean
+
+    Args:
+        val: str
+
+    Returns:
+        boolean
+
+    """
     return val.lower() in ("yes", "true", "t", "1")
 
 
 class Settings:
+    """
+    Settings class. It looks in the environment variables and in a .env file for settings that are applied to the
+    VnfValidator globally.
+
+    Useful default values are used if no settings are found.
+    """
     def __init__(self):
         pass
 
