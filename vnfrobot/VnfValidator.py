@@ -195,6 +195,8 @@ class VnfValidator(DynamicCore):
                 self.orchestrator.controller.get_network(temp_sut.service_id)
             elif temp_sut.target_type == 'service':
                 self.orchestrator.controller.get_service(temp_sut.service_id)
+                set_breakpoint()
+                self.orchestrator.controller.get_containers_for_service(temp_sut.service_id)
             elif temp_sut.target_type == 'container':
                 self.orchestrator.controller.get_containers(filters={
                     'name': temp_sut.service_id

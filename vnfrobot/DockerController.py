@@ -155,7 +155,13 @@ class DockerController(InfrastructureController):
                                                })
             # BuiltIn().log('Get containers for services {}: {}'.format(
             #     service, [c.name for c in res ] if res else 'None'), level='DEBUG', console=Settings.to_console)
-            return res
+            if res:
+                return res
+            else:
+                BuiltIn().log('No containers found for service {}'.format(service), level='INFO', console=True)
+                raise NotFoundError
+        except NotFoundError:
+            raise
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
 
