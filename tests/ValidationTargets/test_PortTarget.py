@@ -7,6 +7,11 @@ from tools.data_structures import SUT
 from utils import set_test_data
 
 
+def test__set_as_dict(port_with_instance):
+    port_with_instance.set_as_dict({'value': ' abc'})
+    assert port_with_instance.value == 'abc'
+
+
 @pytest.mark.target
 def test__context__invalid__fail(port_with_instance):
     with pytest.raises(SetupError, match='No SUT'):

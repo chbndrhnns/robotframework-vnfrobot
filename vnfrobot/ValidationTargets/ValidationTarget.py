@@ -69,7 +69,7 @@ class ValidationTarget:
 
         for key, val in data.iteritems():
             try:
-                self.set(key, val)
+                self.set(key, val.strip())
             except AttributeError:
                 raise
 
@@ -96,7 +96,6 @@ class ValidationTarget:
             return self.transformed_data
 
     def run_test(self):
-        set_breakpoint()
         if self.instance.fatal_error:
             raise ValidationError('We do not start validation as a fatal error occured during test setup.')
 

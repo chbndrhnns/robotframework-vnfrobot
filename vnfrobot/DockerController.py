@@ -58,7 +58,8 @@ class DockerController(InfrastructureController):
 
         try:
             name = namesgenerator.get_random_name()
-            self._docker.containers.run('busybox', 'true', name=name, detach=True, **kwargs)
+            command = kwargs.pop('command', 'sh -c "while true; do $(echo date "GET / HTTP/1.1"); sleep 1; done"')
+            self._docker.containers.run('busybox', command=command, name=name, detach=True, **kwargs)
             return self._docker.containers.get(name)
         except docker.errors.NotFound as exc:
             raise NotFoundError(exc)
@@ -253,6 +254,17 @@ class DockerController(InfrastructureController):
             return self._docker.containers.list(**kwargs)
         except docker.errors.APIError as exc:
             raise NotFoundError('get_containers failed: {}'.format(exc))
+
+    def get_container_logs(self, container):
+        try:
+            if not isinstance(container, Container):
+                container = self.get_container(container)
+            return {
+                'res': container.logs(),
+                'code': 0
+            }
+        except docker.errors.APIError as exc:
+            raise NotFoundError('get_container_logs failed: {}'.format(exc))
 
     def connect_network_to_service(self, service, network):
         """

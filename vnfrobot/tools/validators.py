@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import re
 from abc import ABCMeta, abstractmethod
+from string import lower
 
 import validators
 from robot.libraries.BuiltIn import BuiltIn
@@ -81,12 +82,18 @@ class IpAddress(Validator):
 
 
 class Context(Validator):
+    valid_contexts = ['application', 'service', 'node', 'network']
+
     def __init__(self, context):
         super(Context, self).__init__(context)
         if not self.context:
             raise exc.ValidationError('Context is necessary for the validator "{}"'.format(self.name))
 
     def validate(self, entity=None):
+        if lower(entity) not in self.valid_contexts:
+            BuiltIn().log('Context "{}" not valid. Must be any of {}'.format(entity, self.context), level='ERROR',
+                          console=Settings.to_console)
+            return False
         if entity not in self.context:
             BuiltIn().log('Context "{}" not allowed. Must be any of {}'.format(entity, self.context), level='ERROR',
                           console=Settings.to_console)
@@ -131,7 +138,7 @@ class Regex(Validator):
         if not self.context:
             raise exc.ValidationError('Context is necessary for the validator "{}"'.format(self.name))
         if not isinstance(self.context, basestring):
-            raise exc.ValidationError('Context must be of instance basestring()'.format())
+            raise exc.ValidationError('Context must be of instance basestring(). Got {}'.format(type(self.context)))
         else:
             try:
                 re.compile(self.context)
@@ -149,11 +156,24 @@ class Regex(Validator):
 
 class String(Validator):
     def validate(self, entity):
-        if not isinstance(entity, basestring):
-            BuiltIn().log('Value "{}" not allowed. Must be string'.format(entity), level='ERROR',
-                          console=Settings.to_console)
-            return False
-        return True
+        if isinstance(entity, basestring) or isinstance(entity, unicode):
+            return True
+
+        BuiltIn().log('Value "{}" not allowed. Must be string'.format(entity), level='ERROR',
+                      console=Settings.to_console)
+        return False
+
+
+class NonEmptyString(Validator):
+    def validate(self, entity):
+        if isinstance(entity, basestring) or isinstance(entity, unicode):
+            if len(entity.strip()) > 0:
+                return True
+
+        BuiltIn().log('Value "{}" not allowed. Must be string'.format(entity), level='ERROR',
+                      console=Settings.to_console)
+        return False
+
 
 
 class Permission(Validator):

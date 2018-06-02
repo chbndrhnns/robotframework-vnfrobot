@@ -46,21 +46,32 @@ def test__get_truth__is_not_empty__fail(data):
 
 
 def test__get_truth__contains_string():
-    inp = 'abcd efg'
+    val = 'abcd efg'
     relate = operator.contains
-    val = 'cd'
+    inp = 'cd'
 
-    res = get_truth(inp, relate, val)
+    res = get_truth(val, relate, inp)
 
     assert res
 
 
 def test__get_truth__contains_list():
-    inp = ['a', 'ab', 'abc']
+    val = ['a', 'ab', 'abc']
     relate = operator.contains
-    val = 'abc'
+    inp = 'abc'
 
-    res = get_truth(inp, relate, val)
+    res = get_truth(val, relate, inp)
+
+    assert res
+
+
+@pytest.mark.parametrize('data', ["""I'm""", u"I'm", "I\'m", u"<h1>I'm"])
+def test__get_truth__contains__special_chars(data):
+    relate = operator.contains
+    # val = """<h1>I'm 4021fdc268d2</h1>"""
+    val = '<h1>I\'m 4021fdc268d2</h1>'
+
+    res = get_truth(unicode(val), relate, unicode(data))
 
     assert res
 

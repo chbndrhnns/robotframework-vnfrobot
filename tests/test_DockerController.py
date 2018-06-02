@@ -243,3 +243,11 @@ def test__inject_goss_data_into_stack_container__pass(controller, stack_infos, g
 
     c = controller.get_containers_for_service(service_id)
     assert len(c) > 0
+
+
+@pytest.mark.integration
+def test__get_container_logs__pass(controller, container):
+    # b = container.exec_run(tty=True)
+    logs = controller.get_container_logs(container)
+
+    assert logs

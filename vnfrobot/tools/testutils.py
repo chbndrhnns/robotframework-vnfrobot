@@ -23,12 +23,16 @@ def get_truth(inp, relate, val=None):
     # from now on, we expect val to be not None
     if val is None:
         raise exc.ValidationError('get_truth: expected value not set.')
-    # special case: contains not is not covered by the operator module
+    # special case: 'contains' not is not covered by the operator module
     if relate == 'contains_not':
         return val not in inp
     # for operator.contains, the order of arguments is reversed
     if relate.__name__ == 'contains':
-        return relate(inp, val)
+        try:
+            return relate(inp, val)
+        except TypeError as e:
+            raise exc.ValidationError(e)
+
     try:
         inp_integer = int(inp)
         val_integer = int(val)

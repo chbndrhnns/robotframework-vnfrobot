@@ -6,7 +6,7 @@ from ruamel import yaml
 
 from DockerController import DockerController
 from exc import SetupError, DeploymentError
-from settings import Settings
+from settings import Settings, set_breakpoint
 from tools import namesgenerator
 from tools.wait_on import wait_on_services_status
 from . import path
@@ -93,8 +93,10 @@ class DockerOrchestrator(Orchestrator):
             # retrieve and store containers that belong to the deployment
             for service in self.robot_instance.services:
                 self.robot_instance.containers.extend(self.controller.get_containers_for_service(service.name))
+            # set_breakpoint()
             assert len(self.robot_instance.containers) >= len(self.robot_instance.services), \
-                "instance.containers should not be empty after get_or_create_deployment()"
+                "len(instance.containers) should at greater or equal len(self.robot_instance.services) " \
+                "after get_deployment()"
 
             self._health_check_services(self.robot_instance)
             self.robot_instance.deployment_name = deployment_name

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-
 from rflint.parser import parser
 from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
@@ -9,7 +7,7 @@ from robot.api.deco import keyword
 from ValidationTargets.CommandTarget import Command
 from ValidationTargets.FileTarget import File
 from ValidationTargets.PlacementTarget import Placement
-from exc import SetupError, NotFoundError, DataFormatError, ValidationError
+from exc import SetupError, NotFoundError, ValidationError
 from ValidationTargets.AddressTarget import Address
 from ValidationTargets.PortTarget import Port
 from ValidationTargets.VariableTarget import Variable

@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import os
+from time import sleep
 
+import requests
 from docker import errors
 import pytest
 from docker.models.resource import Collection
@@ -25,6 +27,7 @@ pytest_plugins = [
     "tests.fixtures.command",
     "tests.fixtures.address",
     "tests.fixtures.file",
+    "tests.fixtures.logs",
     "tests.fixtures.port",
     "tests.fixtures.goss",
     "tests.fixtures.placement",
@@ -157,6 +160,12 @@ def stack(controller, stack_infos):
     assert res
     services = controller.get_services(name)
     wait_on_services_status(controller, services)
+
+    # make sure there is some entry in the docker logs for the nginx container
+    nginx_port = services[0].attrs.get('Endpoint', {}).get('Ports', {})[0].get('PublishedPort', None)
+    assert nginx_port > 0, "Got no nginx port"
+    sleep(1)
+    requests.get('http://localhost:{}'.format(nginx_port))
 
     yield (name, path, res)
 

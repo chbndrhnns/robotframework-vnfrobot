@@ -17,7 +17,7 @@ class File(ValidationTarget):
             'values': validators.Permission
         },
         'content': {
-            'matchers': ['contains'],
+            'matchers': ['contains', 'contains not'],
             'values': validators.String
         }
     }

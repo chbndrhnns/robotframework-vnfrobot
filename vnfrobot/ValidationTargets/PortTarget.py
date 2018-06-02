@@ -1,7 +1,7 @@
 from ValidationTargets.ValidationTarget import ValidationTarget
 from tools import validators
 from tools.testutils import validate_port, validate_property, validate_value, validate_matcher, call_validator
-from tools.validators import IpAddress
+from tools import validators
 from testtools.GossTool import GossTool
 from tools.goss.GossPort import GossPort
 
@@ -15,7 +15,7 @@ class Port(ValidationTarget):
         },
         'listening address': {
             'matchers': [],
-            'values': IpAddress
+            'values': validators.IpAddress
         }
     }
     options = {
