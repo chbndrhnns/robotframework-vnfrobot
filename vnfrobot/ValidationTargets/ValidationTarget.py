@@ -69,7 +69,7 @@ class ValidationTarget:
 
         for key, val in data.iteritems():
             try:
-                self.set(key, val.strip())
+                self.set(key, val)
             except AttributeError:
                 raise
 

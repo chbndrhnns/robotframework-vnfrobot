@@ -94,9 +94,10 @@ class DockerOrchestrator(Orchestrator):
             for service in self.robot_instance.services:
                 self.robot_instance.containers.extend(self.controller.get_containers_for_service(service.name))
             # set_breakpoint()
-            assert len(self.robot_instance.containers) >= len(self.robot_instance.services), \
-                "len(instance.containers) should at greater or equal len(self.robot_instance.services) " \
-                "after get_deployment()"
+            if len(self.robot_instance.containers) >= len(self.robot_instance.services):
+                BuiltIn().log("There are not enough containers for the number of services. Something is wrong "
+                              "with the deployment", level='ERROR', console=True)
+                raise DeploymentError('Not all containers are alive and well.')
 
             self._health_check_services(self.robot_instance)
             self.robot_instance.deployment_name = deployment_name
@@ -109,6 +110,7 @@ class DockerOrchestrator(Orchestrator):
         wait_on_services_status(self.controller, instance.services)
 
     def get_or_create_deployment(self):
+        set_breakpoint()
         try:
             f = os.path.realpath(os.path.join(
                 os.path.dirname(self.robot_instance.suite_source),
