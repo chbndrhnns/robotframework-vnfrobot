@@ -1,19 +1,21 @@
 VENV:=. .robot/bin/activate
-TO_CONSOLE:=True
+TO_CONSOLE:=$(or ${VNFROBOT_T_CONSOLE}, True)
+LOGLEVEL:=$(or ${VNFROBOT_LOG_LEVEL}, DEBUG)
 VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=${PYTHONPATH}:vnfrobot:tests
 PYTEST_CMD:=pytest -s
-LOGLEVEL:=INFO
+
 
 # app1
 APP1_ROBOT:=app1.robot
 APP1_DIR:=apps/dc-python-redis
-APP1_LOGS:=logs/app1
+APP1_LOGS:=logs/app1/
+APP1_LOGS_ITER:=logs/app1-iter/
 APP1_NAME:=app1
 
 # app2
 APP2_ROBOT:=app2.robot
 APP2_DIR:=apps/dc-haproxy
-APP2_LOGS:=logs/app2
+APP2_LOGS:=logs/app2/
 APP2_NAME:=app2
 
 
@@ -28,17 +30,45 @@ run-logserver:
 	@live-server --open=logs/report.html
 
 app1: prepare
+	(docker-compose -f ${APP1_DIR}/docker-compose.yml pull)
 	(docker stack ps ${APP1_NAME} > /dev/null 2>&1) || (docker stack deploy -c ${APP1_DIR}/docker-compose.yml ${APP1_NAME})
 	(VNFROBOT_USE_DEPLOYMENT=app1 \
 	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP1_DIR}) || echo true
 	@docker stack rm ${APP1_NAME}
 	@docker volume rm -f ${APP1_NAME}_redis_data || echo true
 
+app1-steps: prepare app1-iter-1 app1-iter-2 app1-iter-3
+
+app1-iter-1: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-1.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-1.robot) || echo true
+	@docker stack rm app1-iter-1
+	@docker volume rm -f app1-iter-1_redis_data || echo true
+
+app1-iter-2: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-2.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-2.robot) || echo true
+	@docker stack rm app1-iter-2
+	@docker volume rm -f app1-iter-2_redis_data || echo true
+
+app1-iter-2-refactor: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-2-refactor.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-2-refactor.robot) || echo true
+	@docker stack rm app1-iter-2-refactor
+	@docker volume rm -f app1-iter-2-refactor_redis_data || echo true
+
+app1-iter-3: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-3.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-3.robot) || echo true
+	@docker stack rm app1-iter-3
+	@docker volume rm -f app1-iter-3_redis_data || echo true
+
+
 
 app2: prepare
 	(docker stack ps ${APP1_NAME} > /dev/null 2>&1 || docker stack deploy -c ${APP2_DIR}/docker-compose.yml ${APP2_NAME})
 	(VNF_USE_DEPLOYMENT=app2 \
-	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS} ${APP2_DIR}) || echo true
+	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP2_LOGS} ${APP2_DIR}) || echo true
 	@docker volume rm -f ${APP2_NAME}_redis_data || echo true
 
 test-unit: prepare

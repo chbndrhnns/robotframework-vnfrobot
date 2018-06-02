@@ -1,4 +1,5 @@
 from exc import ValidationError
+from settings import set_breakpoint
 from testtools.TestTool import TestTool
 from tools.matchers import all_matchers
 from tools.testutils import get_truth
@@ -24,6 +25,11 @@ class DockerTool(TestTool):
 
     def get_container_labels(self):
         self.test_results = self.controller.get_container_config(self.sut.service_id, 'Labels')
+
+    def logs(self):
+        container = self.controller.get_containers_for_service(self.sut.service_id)
+        assert len(container) > 0, "DockerTool: logs(): we need at least one container to continue here."
+        self.test_results = self.controller.get_container_logs(container[0])
 
     def run_in_container(self):
         if 'service' in self.sut.target_type:
@@ -52,10 +58,12 @@ class DockerTool(TestTool):
 
         actual = res[0] if isinstance(res, list) else res
 
+        set_breakpoint()
+
         if not get_truth(actual, all_matchers[target.matcher], target.value):
             raise ValidationError(
-                'Expected: "{}": {} {} "{}", \nActual: {}'.format(
-                    target.entity,
+                'Expected: {} {} {} "{}", \nActual: {}'.format(
+                    '"{}":'.format(target.entity) if target.entity else '',
                     target.property if target.property else target.entity,
                     target.matcher,
                     target.value if target.value else '',
@@ -64,6 +72,9 @@ class DockerTool(TestTool):
 
     def _process_env_vars(self, entity):
         return [e.split('=')[1] for e in self.test_results if entity == e.split('=')[0]]
+
+    def _process_logs(self, entity):
+        return self.test_results.get('res')
 
     def _process_placement(self, entity):
         # role is in obj.attrs['Spec']['Role']
