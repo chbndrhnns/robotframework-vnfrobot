@@ -2,5 +2,6 @@ version: '3.2'
 services:
   app:
     image: jfloff/alpine-python
+    command: sleep 1000000000000
   redis:
     image: redis

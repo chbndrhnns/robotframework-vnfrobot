@@ -1,7 +1,7 @@
 VENV:=. .robot/bin/activate
 TO_CONSOLE:=$(or ${VNFROBOT_T_CONSOLE}, True)
 LOGLEVEL:=$(or ${VNFROBOT_LOG_LEVEL}, DEBUG)
-VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} PYTHONPATH=${PYTHONPATH}:vnfrobot:tests
+VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} VNFROBOT_RESPECT_BREAKPOINTS=False PYTHONPATH=${PYTHONPATH}:vnfrobot:tests
 PYTEST_CMD:=pytest -s
 
 
@@ -57,11 +57,29 @@ app1-iter-2-refactor: prepare
 	@docker stack rm app1-iter-2-refactor
 	@docker volume rm -f app1-iter-2-refactor_redis_data || echo true
 
-app1-iter-3: prepare
-	(docker-compose -f ${APP1_DIR}/app1-iter-3.yml pull)
-	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-3.robot) || echo true
-	@docker stack rm app1-iter-3
-	@docker volume rm -f app1-iter-3_redis_data || echo true
+app1-iter-3-1: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-3-1.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-3-1.robot) || echo true
+	@docker stack rm app1-iter-3-1
+	@docker volume rm -f app1-iter-3-1_redis_data || echo true
+
+app1-iter-3-2: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-3-2.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-3-2.robot) || echo true
+	@docker stack rm app1-iter-3-2
+	@docker volume rm -f app1-iter-3-2_redis_data || echo true
+
+app1-iter-4-1: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-4-1.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-4-1.robot) || echo true
+	@docker stack rm app1-iter-4-1
+	@docker volume rm -f app1-iter-4-1_redis_data || echo true
+
+app1-iter-4-2: prepare
+	(docker-compose -f ${APP1_DIR}/app1-iter-4-2.yml pull)
+	(${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP1_LOGS_ITER} ${APP1_DIR}/app1-iter-4-2.robot) || echo true
+	@docker stack rm app1-iter-4-2
+	@docker volume rm -f app1-iter-4-2_redis_data || echo true
 
 
 

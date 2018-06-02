@@ -2,5 +2,6 @@ version: '3.2'
 services:
   app:
     image: jfloff/alpine-python
+    command: "sh -c \"while true; do $$(echo date); sleep 1; done\""
   redis:
     image: redis

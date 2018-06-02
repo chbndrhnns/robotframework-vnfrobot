@@ -2,7 +2,7 @@
 Library   VnfValidator
 
 *** Variables ***
-${DESCRIPTOR}     app1-iter-3.yml
+${DESCRIPTOR}     app1-iter-2-refactor.yml
 
 *** Test Cases ***
 The deployment has the required services

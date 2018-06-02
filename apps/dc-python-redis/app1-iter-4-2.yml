@@ -1,0 +1,8 @@
+version: '3.2'
+services:
+  app:
+    image: hubby/dc-nginx-python-redis:0.1
+    environment:
+      - REDIS_HOST=redis
+  redis:
+    image: redis
