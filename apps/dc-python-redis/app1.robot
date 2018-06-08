@@ -6,14 +6,6 @@ ${DESCRIPTOR}     docker-compose.yml
 
 
 *** Test Cases ***
-We have the services: app, redis
-  [Documentation]  According to the architecture of the application,
-  ...  two services are required. We validate that they exist.
-  [Tags]  app
-
-  Set service context to app
-
-
 [ex1-tc01] Check that the image for the service 'app' contains the correct application code
   [Documentation]  We would like the correct version of the app to be in the
   ...  Docker image
@@ -43,15 +35,6 @@ We have the services: app, redis
   Set service context to redis
   Address "app:5000": is reachable
 
-[ex1-tc08] Redis: Persistency is enabled
-  [Documentation]  Redis keeps entries in memory by default. We want to store the votes,
-  ...  so persistency needs to be enabled. Writes should happen every second, not instantly.
-  [Tags]  redis
-
-  Set service context to redis
-  Command "redis-cli CONFIG GET appendfsync": stdout contains "appendfsync"
-  Command "redis-cli CONFIG GET appendfsync": stdout contains "everysec"
-  Command "redis-cli CONFIG GET appendfsync": stdout contains not "always"
 
 [ex1-tc05] Volume for redis is empty after deployment
   [Documentation]  A volume is mounted for redis. It should be empty (contain no files).
@@ -67,26 +50,6 @@ We have the services: app, redis
   set service context to app
   Variable REDIS_HOST: is "redis"
 
-[ex1-tc09] App is listening on port 5000
-  [Documentation]  The app exposes port 5000 to the public. We make sure that the
-  ...  port is actually open.
-
-  Set service context to app
-  Port 5000: state is open
-
-[ex1-tc10] Redis service is not reachable from a public network
-  [Documentation]  Communication between redis and app happens in private,
-  ...  so there is no need to reach redis from the public network.
-  [Tags]  redis
-
-  Set network context to public
-  Address "redis:6379": is not reachable
-
-In the network m2m, there are two services
-  [Documentation]  Make sure there are only two services at all.
-
-#  Set network context to m2m
-#  ${services}=
 
 [ex1-tc07] The redis counter increases after sending an HTTP GET
   [Documentation]  Validates that the visits to the web site are actually recorded.
@@ -98,6 +61,43 @@ In the network m2m, there are two services
 
   set service context to redis
   Command "redis-cli get hits": stdout is 1
+
+
+[ex1-tc08] Redis: Persistency is enabled
+  [Documentation]  Redis keeps entries in memory by default. We want to store the votes,
+  ...  so persistency needs to be enabled. Writes should happen every second, not instantly.
+  [Tags]  redis
+
+  Set service context to redis
+  Command "redis-cli CONFIG GET appendfsync": stdout contains "appendfsync"
+  Command "redis-cli CONFIG GET appendfsync": stdout contains "everysec"
+  Command "redis-cli CONFIG GET appendfsync": stdout contains not "always"
+
+
+[ex1-tc09] App is listening on port 5000
+  [Documentation]  The app exposes port 5000 to the public. We make sure that the
+  ...  port is actually open.
+
+  Set service context to app
+  Port 5000: state is open
+
+
+[ex1-tc10] Redis service is not reachable from a public network
+  [Documentation]  Communication between redis and app happens in private,
+  ...  so there is no need to reach redis from the public network.
+  [Tags]  redis
+
+  Set network context to public
+  Address "redis:6379": is not reachable
+
+
+We have the services: app, redis
+  [Documentation]  According to the architecture of the application,
+  ...  two services are required. We validate that they exist.
+  [Tags]  app
+
+  Set service context to app
+  set service context to redis
 
 
 *** Keywords ***
