@@ -3,7 +3,7 @@ TO_CONSOLE:=$(or ${VNFROBOT_T_CONSOLE}, True)
 LOGLEVEL:=$(or ${VNFROBOT_LOG_LEVEL}, DEBUG)
 VARS:=VNFROBOT_TO_CONSOLE=${TO_CONSOLE} VNFROBOT_RESPECT_BREAKPOINTS=False PYTHONPATH=${PYTHONPATH}:vnfrobot:tests
 PYTEST_CMD:=pytest -s
-
+PWD:=$(shell pwd)
 
 # app1
 APP1_ROBOT:=app1.robot
@@ -26,8 +26,18 @@ prepare:
 	@docker ps > /dev/null 2>&1 || echo "Docker is not running."
 	@(docker info | grep "Swarm: active" > /dev/null 2>&1) || echo "Docker needs to be running Swarm mode."
 
+prepare-steps:
+	@rm -rf ${APP1_LOGS_ITER}*.html
+
 run-logserver:
 	@live-server --open=logs/report.html
+
+app1-steps-pdf:
+	for file in ${APP1_LOGS_ITER}*.html; do \
+		puppeteer print ${PWD}/$${file} ${PWD}/$${file}.pdf; \
+	done
+
+app1-steps: prepare prepare-steps app1-iter-1 app1-iter-2 app1-iter-2-refactor app1-iter-3-1 app1-iter-3-2 app1-iter-4-1 app1-iter-4-2 app1-steps-pdf
 
 app1: prepare
 	(docker-compose -f ${APP1_DIR}/docker-compose.yml pull)
@@ -37,7 +47,6 @@ app1: prepare
 	@docker stack rm ${APP1_NAME}
 	@docker volume rm -f ${APP1_NAME}_redis_data || echo true
 
-app1-steps: prepare app1-iter-1 app1-iter-2 app1-iter-3
 
 app1-iter-1: prepare
 	(docker-compose -f ${APP1_DIR}/app1-iter-1.yml pull)
