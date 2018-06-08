@@ -26,7 +26,7 @@ setup(
     name='vnfrobot',
     version=version,
     author='Johannes Rueschel',
-    author_email='code+robot@rueschel.de',
+    author_email='code@rueschel.de',
     url='',
     description='Libraries that enable robotframework to validate VNF\'s.',
     long_description=codecs.open('README.rst', 'rb', 'utf8').read(),
