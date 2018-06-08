@@ -15,7 +15,11 @@ class TestTool:
 
     @abstractmethod
     def run(self, target):
-        pass
+        raise NotImplementedError('must be implemented by the subclass')
+
+    @abstractmethod
+    def process_results(self, target):
+        raise NotImplementedError('must be implemented by the subclass')
 
     @property
     def command(self):
@@ -33,6 +37,3 @@ class TestTool:
     def test_results(self, value):
         self._test_results = value
 
-    @abstractmethod
-    def process_results(self, target):
-        pass
