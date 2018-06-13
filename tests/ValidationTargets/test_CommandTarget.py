@@ -8,20 +8,11 @@ from fixtures.test_data_CommandTarget import command_target_test_data_pass, comm
 from tools.data_structures import SUT
 from utils import set_test_data
 
+
 @pytest.mark.target
 def test__context__invalid__fail(command_with_instance):
     with pytest.raises(SetupError, match='No SUT'):
         command_with_instance.validate()
-
-
-@pytest.mark.target
-@pytest.mark.parametrize('test', command_target_test_data_pass)
-def test__validate__pass(command_with_instance, sut, test):
-    e = command_with_instance
-    e.instance.sut = sut
-
-    set_test_data(e, test)
-    e.validate()
 
 
 @pytest.mark.target
