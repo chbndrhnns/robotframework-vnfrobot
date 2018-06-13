@@ -61,7 +61,7 @@ class DockerTool(TestTool):
 
         """
         if 'service' in self.sut.target_type:
-            target = self.sut.service_id
+            target = self.controller.get_containers_for_service(self.sut.service_id)[0]
         else:
             target = self.sut.target
         self.test_results = self.controller.execute(target, self.target.entity)
