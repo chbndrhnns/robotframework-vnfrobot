@@ -270,30 +270,6 @@ class VnfValidator(DynamicCore):
         except ValidationError as exc:
             BuiltIn().fail(exc)
 
-    @keyword('Process')
-    def process_kw(self):
-        pass
-
-    @keyword('Service')
-    def service_kw(self):
-        pass
-
-    @keyword('Kernel Parameter')
-    def kernel_parameter_kw(self):
-        pass
-
-    @keyword('Container')
-    def container_kw(self):
-        pass
-
-    @keyword('User')
-    def user_kw(self):
-        pass
-
-    @keyword('Group')
-    def group_kw(self):
-        pass
-
     @keyword('File ${{raw_entity:{}}}: ${{matcher:{}}} ${{raw_val:{}}}'.format(
         matchers.quoted_or_unquoted_string,
         '|'.join(string_matchers.keys()),
@@ -353,10 +329,6 @@ class VnfValidator(DynamicCore):
             validation_target.run_test()
         except ValidationError as exc:
             BuiltIn().fail(exc)
-
-    @keyword('Symbolic Link')
-    def symlink_kw(self):
-        pass
 
     @keyword('Address ${{raw_entity:\S+}}: ${{matcher:{}}} ${{raw_val:\S+}}'.format('|'.join(string_matchers.keys())))
     def address_kw(self, raw_entity, matcher, raw_val):
