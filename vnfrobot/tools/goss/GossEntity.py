@@ -13,7 +13,8 @@ class GossEntity:
     __metaclass__ = ABCMeta
 
     """
-    GossEntity is used to represent an module of the goss tool.
+    GossEntity is used to represent a module of the goss tool.
+    A GossEntity is created for each validation statement that uses the GossTool.
     
     Required fields:
     - name: the identifier used in the transform() method of the validation target to hold the data

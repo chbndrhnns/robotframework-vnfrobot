@@ -7,6 +7,17 @@ from tools.validators import Validator
 
 
 def get_truth(inp, relate, val=None):
+    """
+    Perform a comparison based on `relate`
+
+    Args:
+        inp: str - input value
+        relate:
+        val:
+
+    Returns:
+
+    """
     if inp is None:
         raise exc.ValidationError('get_truth: actual value not set.')
     if not relate:

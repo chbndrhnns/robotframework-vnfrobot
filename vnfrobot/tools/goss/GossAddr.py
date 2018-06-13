@@ -2,6 +2,10 @@ from tools.goss.GossEntity import GossEntity
 
 
 class GossAddr(GossEntity):
+    """
+    Goss test: `address`
+
+    """
     name = 'addresses'
     template = \
         """addr:

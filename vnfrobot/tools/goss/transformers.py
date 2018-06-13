@@ -2,6 +2,10 @@ from abc import ABCMeta, abstractproperty
 
 
 class ValueTransformer:
+    """
+    Base class for value transformer subclasses. Used to transform a value for the use with a test tool.
+
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, data):
@@ -10,6 +14,13 @@ class ValueTransformer:
 
     @abstractproperty
     def transformed(self):
+        """
+        Returns the transformed value
+
+        Returns:
+            val
+
+        """
         raise NotImplementedError('Needs implementing.')
 
 

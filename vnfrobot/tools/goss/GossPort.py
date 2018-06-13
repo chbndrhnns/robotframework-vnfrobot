@@ -2,6 +2,11 @@ from tools.goss.GossEntity import GossEntity
 
 
 class GossPort(GossEntity):
+    """
+    Goss test: `port`
+
+    """
+
     name = 'ports'
     template = \
         """port:

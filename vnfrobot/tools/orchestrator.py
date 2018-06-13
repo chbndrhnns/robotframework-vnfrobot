@@ -16,6 +16,11 @@ class Orchestrator:
     __metaclass__ = ABCMeta
 
     def __init__(self, robot_instance):
+        """
+
+        Args:
+            robot_instance: VnfValidator
+        """
         from VnfValidator import VnfValidator
         assert isinstance(robot_instance, VnfValidator), \
             '__init__(): Parameter "robot_instance" needs to be of type VnfValidator'
@@ -24,10 +29,24 @@ class Orchestrator:
 
     @abstractmethod
     def get_or_create_deployment(self):
+        """
+        Creates a deployment using a descriptor file
+
+        Returns:
+            None
+
+        """
         raise NotImplementedError('Needs implementation.')
 
     @abstractmethod
     def remove_deployment(self):
+        """
+        Terminates and removes a deployment
+
+        Returns:
+            None
+
+        """
         raise NotImplementedError('Needs implementation.')
 
 

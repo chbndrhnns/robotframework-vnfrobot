@@ -12,16 +12,36 @@ from settings import Settings
 
 
 class Validator:
+    """
+    Base class for validation activities
+
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, context=None, override=None):
+        """
+
+        Args:
+            context: list - valid values
+            override: list - edge cases that are also valid in addition to the default validator
+        """
         self.context = context
         self.override = [override] if isinstance(override, basestring) else override
         self.name = self.__class__.__name__
 
     @abstractmethod
     def validate(self, entity):
-        pass
+        """
+        Perform the validation
+
+        Args:
+            entity: entity to validate
+
+        Returns:
+            bool
+
+        """
+        raise NotImplementedError('must be implemented by the subclass')
 
 
 class Service(Validator):

@@ -60,7 +60,3 @@ class Settings:
     }
 
     goss_helper_volume = 'goss-helper'
-
-    # Library: HTTP
-    http_get_timeout = (os.environ.get('HTTP_GET_TIMEOUT') or '0.5')
-    http_max_retries = (os.environ.get('HTTP_MAX_RETRIES') or '2')

@@ -3,6 +3,10 @@ from tools.goss.GossEntity import GossEntity
 
 
 class GossFile(GossEntity):
+    """
+    Goss test: `file`
+
+    """
     name = 'files'
     template = \
         """file:
