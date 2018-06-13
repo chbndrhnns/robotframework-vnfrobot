@@ -21,17 +21,45 @@ class DockerTool(TestTool):
             raise ValidationError('DockerTool: run(): Cannot find command "{}" in DockerTool.'.format(self.command))
 
     def env_vars(self):
+        """
+        Retrieve environment variables for a container or service
+
+        Returns:
+            list
+
+        """
         self.test_results = self.controller.get_container_config(self.sut.service_id, 'Env')
 
     def get_container_labels(self):
+        """
+        Retrieve labels for a container
+
+        Returns:
+            list
+
+        """
         self.test_results = self.controller.get_container_config(self.sut.service_id, 'Labels')
 
     def logs(self):
+        """
+        Retrieve standard error and standard output logs for a container
+
+        Returns:
+            dict
+
+        """
         container = self.controller.get_containers_for_service(self.sut.service_id)
         assert len(container) > 0, "DockerTool: logs(): we need at least one container to continue here."
         self.test_results = self.controller.get_container_logs(container[0])
 
     def run_in_container(self):
+        """
+        Run a command inside a container (aka docker exec)
+
+        Returns:
+            dict
+
+        """
         if 'service' in self.sut.target_type:
             target = self.sut.service_id
         else:
@@ -39,6 +67,12 @@ class DockerTool(TestTool):
         self.test_results = self.controller.execute(target, self.target.entity)
 
     def placement(self):
+        """
+        Retrieve placement information for a container
+
+        Returns:
+
+        """
         labels = self.controller.get_container_config(self.sut.service_id, 'Labels')
         node_id = labels.get('com.docker.swarm.node.id')
         node = self.controller.get_node(node_id)

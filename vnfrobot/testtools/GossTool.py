@@ -76,6 +76,15 @@ class GossTool(TestTool):
 
     @staticmethod
     def inject_gossfile(target):
+        """
+        Inject a gossfile that contains the validation statement into a container
+
+        Args:
+            target: docker.models.Service, docker.model.Container
+
+        Returns:
+
+        """
         with tempfile.NamedTemporaryFile() as f:
             try:
                 f.write(target.transformed_data)
