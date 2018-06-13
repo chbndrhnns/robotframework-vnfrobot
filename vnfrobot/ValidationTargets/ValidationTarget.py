@@ -116,7 +116,7 @@ class ValidationTarget:
         """
         try:
             if isinstance(value, basestring):
-                value = value.strip('"\'\n')
+                value = value.strip(' "\'\n')
             setattr(self, prop, unicode(value))
         except AttributeError:
             raise
