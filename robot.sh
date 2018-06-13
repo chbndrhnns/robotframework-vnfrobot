@@ -3,4 +3,4 @@
 set +x
 
 . .robot/bin/activate
-PYTHONPATH=$PYTHONPATH:$(pwd)/vnfrobot robot $*
+PYTHONPATH=$PYTHONPATH:$(pwd)/vnfrobot robot -e 'no' $*
