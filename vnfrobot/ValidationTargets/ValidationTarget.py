@@ -14,9 +14,22 @@ from tools.orchestrator import Orchestrator
 
 
 class ValidationTarget:
+    """
+    Base class for a validation targets.
+
+
+
+
+
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, instance=None):
+        """
+
+        Args:
+            instance: VnfValidator instance
+        """
         self.instance = instance
         self._test_results = None
 
@@ -37,13 +50,37 @@ class ValidationTarget:
 
     @property
     def test_results(self):
+        """
+        Return test results
+
+        Returns:
+            str
+
+        """
         return self._test_results
 
     @test_results.setter
     def test_results(self, value):
+        """
+        Set test results
+
+        Args:
+            value: str
+
+        Returns:
+            None
+
+        """
         self._test_results = value
 
     def get_as_dict(self):
+        """
+        Return the parameters of a test case
+
+        Returns:
+            dict
+
+        """
         return {
             'context': getattr(self, 'context', None),
             'entity': getattr(self, 'entity', None),
@@ -53,9 +90,30 @@ class ValidationTarget:
         }
 
     def get(self, prop):
+        """
+        Return a specific property of the test case
+
+        Args:
+            prop:
+
+        Returns:
+            str
+
+        """
         return getattr(self, prop, None)
 
     def set(self, prop, value):
+        """
+        Set a specific property of the test case
+
+        Args:
+            prop: name of property
+            value: value of property
+
+        Returns:
+            None
+
+        """
         try:
             if isinstance(value, basestring):
                 value = value.strip('"\'\n')
@@ -75,17 +133,49 @@ class ValidationTarget:
 
     @abstractmethod
     def validate(self):
+        """
+        Validates the parameters of a test case
+
+        Returns:
+            None
+
+        """
         pass
 
     @abstractmethod
     def _prepare_transform(self):
+        """
+        Hook that is called before the transformation step
+
+        Returns:
+            None
+
+        """
         raise NotImplementedError('must be implemented by the subclass')
 
     @abstractmethod
     def _prepare_run(self, tool_instance):
+        """
+        Hook that is called before the run step
+
+        Args:
+            tool_instance: TestTool
+
+        Returns:
+            None
+
+        """
         raise NotImplementedError('must be implemented by the subclass')
 
     def transform(self):
+        """
+        Determines if a transformation is necessary, gets the specified transformation handler and returns the
+        transformed data.
+
+        Returns:
+            dict
+
+        """
         if self.options.get('transformation_handler'):
             if not self.data:
                 self._prepare_transform()
@@ -96,6 +186,13 @@ class ValidationTarget:
             return self.transformed_data
 
     def run_test(self):
+        """
+        Entry point for a test run. The step methods are called here.
+
+        Returns:
+            None
+
+        """
         if self.instance.fatal_error:
             raise ValidationError('We do not start validation as a fatal error occured during test setup.')
 
@@ -159,6 +256,16 @@ class ValidationTarget:
             raise exc
 
     def _create_sidecar(self, command=None):
+        """
+        Helper method to create a sidecar service.
+
+        Args:
+            command: the command that the sidecar service should run
+
+        Returns:
+            None
+
+        """
         if not command:
             command = GossTool(controller=self.instance.orchestrator.controller).command
         network_name = self.instance.sut.service_id
@@ -179,6 +286,13 @@ class ValidationTarget:
         assert network_name in self.instance.sidecar.attrs['NetworkSettings']['Networks'].keys()
 
     def _connect_volume_to_sut(self):
+        """
+        Helper method for connecting a Docker volume to a service
+
+        Returns:
+            None
+
+        """
         container = self.instance.orchestrator.controller.connect_volume_to_service(
             service=self.instance.sut.service_id,
             volume=self.instance.test_volume)
@@ -186,27 +300,63 @@ class ValidationTarget:
         self.instance.update_sut(target=container.name)
 
     def _create_test_volume(self):
+        """
+        Helper method to create a volume
+
+        Returns:
+            None
+
+        """
         self.instance.test_volume = self.instance.orchestrator.check_or_create_test_tool_volume(
             Settings.goss_helper_volume
         )
 
     def evaluate_results(self, tool_instance):
+        """
+        Evaluates the results of a test run.
+
+        Args:
+            tool_instance:
+
+        Returns:
+            None
+
+        """
         if not isinstance(tool_instance, TestTool):
             raise TypeError('evaluate_results must be called with an instance of TestTool.')
         tool_instance.process_results(self)
 
     def _find_robot_instance(self):
+        """
+        Helper method to determine if an instance of the VnfValidator and a SUT object are available
+
+        Returns:
+            None
+
+        """
         if not self.instance:
             raise SetupError('No robot instance found.')
         if not isinstance(self.instance.sut, SUT):
             raise SetupError('No SUT declared.')
 
     def _check_test_data(self):
+        """
+        Check that all required parameters were supplied for a test case
+
+        Returns:
+
+        """
         missing = [key for key, value in self.get_as_dict().iteritems() if not value]
         if missing:
             raise ValidationError('Checking test data: No value supplied for {}'.format(missing))
 
     def _cleanup(self):
+        """
+        After a test run, clean up the sidecar
+
+        Returns:
+
+        """
         if self.instance.sidecar:
             BuiltIn().log('Cleanup sidecar: removing {}'.format(self.instance.sidecar.name),
                           level='INFO',
