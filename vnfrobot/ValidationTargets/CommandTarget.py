@@ -24,14 +24,16 @@ class Command(ValidationTarget):
             'values': String
         },
     }
-    options = {
-        'test_tool': DockerTool,
-        'command': 'run_in_container'
-    }
     allowed_contexts = ['service', 'network']
 
     def __init__(self, instance=None):
         super(Command, self).__init__(instance)
+
+        self.options = {
+            'test_tool': DockerTool,
+            'command': 'run_in_container',
+            'sidecar_required': False,
+        }
 
     def validate(self):
         self._find_robot_instance()

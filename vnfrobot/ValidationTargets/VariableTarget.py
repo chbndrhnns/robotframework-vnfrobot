@@ -5,11 +5,6 @@ from tools.testutils import call_validator
 
 
 class Variable(ValidationTarget):
-    options = {
-        'test_tool': DockerTool,
-        'command': 'env_vars'
-    }
-
     properties = {
         'entity': {
             'matchers': matchers.all_matchers.keys(),
@@ -23,6 +18,11 @@ class Variable(ValidationTarget):
     def __init__(self, instance=None):
         super(Variable, self).__init__(instance)
         self.context_validator = validators.Context(['service'])
+
+        self.options = {
+            'test_tool': DockerTool,
+            'command': 'env_vars'
+        }
 
     def validate(self):
         self.property = self.entity if not self.property else self.property

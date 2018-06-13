@@ -16,14 +16,15 @@ class LogsTarget(ValidationTarget):
             'values': validators.NonEmptyString
         }
     }
-    options = {
-        'test_tool': DockerTool,
-        'command': 'logs'
-    }
+
     allowed_contexts = ['service']
 
     def __init__(self, instance=None):
         super(LogsTarget, self).__init__(instance)
+        self.options = {
+            'test_tool': DockerTool,
+            'command': 'logs'
+        }
 
     def validate(self):
         self._find_robot_instance()

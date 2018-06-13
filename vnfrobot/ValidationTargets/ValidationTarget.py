@@ -1,3 +1,4 @@
+import copy
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 from docker.models.containers import Container
@@ -13,14 +14,9 @@ from tools.data_structures import SUT
 from tools.orchestrator import Orchestrator
 
 
-class ValidationTarget:
+class ValidationTarget(object):
     """
     Base class for a validation targets.
-
-
-
-
-
     """
     __metaclass__ = ABCMeta
 
@@ -40,13 +36,23 @@ class ValidationTarget:
 
         self.data = {}
         self.transformed_data = {}
+        self._options = None
 
         assert isinstance(self.instance.orchestrator, Orchestrator)
         assert isinstance(self.instance.orchestrator.controller, InfrastructureController)
 
-    @abstractproperty
+    @property
     def options(self):
-        raise NotImplementedError('must be implemented by the subclass')
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        del self.options
+        self._options = options
+
+    @options.deleter
+    def options(self):
+        del self._options
 
     @property
     def test_results(self):
@@ -203,7 +209,7 @@ class ValidationTarget:
         self.instance.validation_attempted = True
 
         # override sidecar decision for network context
-        if 'network' in self.instance.sut.target_type:
+        if 'network' == self.instance.sut.target_type:
             self.options['sidecar_required'] = True
             self.options['test_volume_required'] = True
 
@@ -268,9 +274,11 @@ class ValidationTarget:
         """
         if not command:
             command = GossTool(controller=self.instance.orchestrator.controller).command
-        network_name = self.instance.sut.service_id
-        assert self.instance.orchestrator.controller.get_network(
+        network_name = self.instance.sut.service_id if 'network' in self.instance.sut.target_type else None
+        if network_name:
+            assert self.instance.orchestrator.controller.get_network(
             network_name), '_create_sidecar: cannot find network {}'.format(network_name)
+
         volumes = {
             self.instance.test_volume: {
                 'bind': '/goss',
@@ -283,7 +291,8 @@ class ValidationTarget:
             network=network_name,
             volumes=volumes)
         self.instance.update_sut(target_type='container', target=self.instance.sidecar.name)
-        assert network_name in self.instance.sidecar.attrs['NetworkSettings']['Networks'].keys()
+        if network_name:
+            assert network_name in self.instance.sidecar.attrs['NetworkSettings']['Networks'].keys()
 
     def _connect_volume_to_sut(self):
         """

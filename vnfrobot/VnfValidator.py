@@ -166,6 +166,7 @@ class VnfValidator(DynamicCore):
         )
 
         try:
+            # set_breakpoint()
             self.sut = self._check_sut_availability(temp_sut)
 
             BuiltIn().log('\nUpdating context: target_type={}, service_id={}, target={}'.format(
@@ -195,7 +196,6 @@ class VnfValidator(DynamicCore):
                 self.orchestrator.controller.get_network(temp_sut.service_id)
             elif temp_sut.target_type == 'service':
                 self.orchestrator.controller.get_service(temp_sut.service_id)
-                set_breakpoint()
                 self.orchestrator.controller.get_containers_for_service(temp_sut.service_id)
             elif temp_sut.target_type == 'container':
                 self.orchestrator.controller.get_containers(filters={
@@ -259,6 +259,7 @@ class VnfValidator(DynamicCore):
 
         """
         try:
+            set_breakpoint()
             validation_target = Command(self)
             validation_target.set_as_dict({
                 'context': self.sut,

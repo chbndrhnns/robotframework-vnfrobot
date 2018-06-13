@@ -18,11 +18,6 @@ class Port(ValidationTarget):
             'values': validators.IpAddress
         }
     }
-    options = {
-        'test_volume_required': True,
-        'test_tool': GossTool,
-        'transformation_handler': GossPort
-    }
 
     def __init__(self, instance=None):
         super(Port, self).__init__(instance)
@@ -31,6 +26,12 @@ class Port(ValidationTarget):
         self.port = None
         self.protocol = 'tcp'
         self.transformed_data = None
+
+        self.options = {
+            'test_volume_required': True,
+            'test_tool': GossTool,
+            'transformation_handler': GossPort
+        }
 
     def validate(self):
         self._find_robot_instance()

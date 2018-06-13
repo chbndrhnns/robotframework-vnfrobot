@@ -21,14 +21,14 @@ class File(ValidationTarget):
             'values': validators.String
         }
     }
-    options = {
-        'test_volume_required': True,
-        'test_tool': GossTool,
-        'transformation_handler': GossFile
-    }
 
     def __init__(self, instance=None):
         super(File, self).__init__(instance)
+        self.options = {
+            'test_volume_required': True,
+            'test_tool': GossTool,
+            'transformation_handler': GossFile
+        }
 
     def validate(self):
         self._find_robot_instance()

@@ -13,17 +13,19 @@ class Address(ValidationTarget):
             'values': ['reachable']
         }
     }
-    options = {
-        'test_tool': GossTool,
-        'test_volume_required': True,
-        'transformation_handler': GossAddr
-    }
     allowed_contexts = ['service', 'network']
 
     def __init__(self, instance=None):
         super(Address, self).__init__(instance)
         self.port = None
         self.address = None
+
+        self.options = {
+            'test_tool': GossTool,
+            'test_volume_required': True,
+            'transformation_handler': GossAddr
+        }
+
 
     def validate(self):
         self.property = self.entity if not self.property else self.property

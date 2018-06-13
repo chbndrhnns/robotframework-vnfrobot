@@ -16,15 +16,15 @@ class Placement(ValidationTarget):
             'values': validators.NonEmptyString
         },
     }
-    options = {
-        'test_tool': DockerTool,
-        'command': 'placement'
-    }
     allowed_contexts = ['service']
     tool = DockerTool
 
     def __init__(self, instance=None):
         super(Placement, self).__init__(instance)
+        self.options = {
+            'test_tool': DockerTool,
+            'command': 'placement'
+        }
 
     def validate(self):
         self._find_robot_instance()
