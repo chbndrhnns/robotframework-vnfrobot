@@ -32,6 +32,7 @@ Proxy returns HTTP 200 OK for GET requests
 [ex2-tc03] proxy discovers two services
   [Documentation]  HAProxy should have discovered as many services as replicas are
   ...  specified for the service "awesome". Should be two during the test.
+  [Tags]  no
 
   Set service context to proxy
   HAProxy "discovered services": amount is 2
@@ -40,6 +41,7 @@ Proxy returns HTTP 200 OK for GET requests
 [ex2-tc04] HAProxy load balancing mode is set to least_connected
   [Documentation]  HAProxy supports different ways of load balancing
   ...  (https://poweruphosting.com/blog/haproxy-load-balancing-algorithms/)
+  [Tags]  no
 
   Set service context to proxy
   HAProxy: "load balancing mode" is least_connected
@@ -47,6 +49,8 @@ Proxy returns HTTP 200 OK for GET requests
 
 [ex2-tc05] Web server ignores HTTP POST requests
   [Documentation]  The web server should throw away any other requests than GET
+  [Tags]  no
+
 
   Set service context to proxy
   HTTP POST "http://proxy": response code is 400
@@ -56,6 +60,7 @@ Proxy returns HTTP 200 OK for GET requests
   [Documentation]  All responses for a number of requests should be within
   ...  the specified limit. The parametrization for this test should be:
   ...  - send 500 requests with 50 being in flimaght at the same time
+  [Tags]  no
 
   Set service context to proxy
   ab "scenario_01": result is "passed"
@@ -64,6 +69,8 @@ Proxy returns HTTP 200 OK for GET requests
 [ex2-tc07] Reducing amount of replicas of awesome and see if requrests are still answered
   [Documentation]  The proxy directs incoming requests to the discovered web servers.
   ...  After changing the amount of available web server, all requests should still be answered.
+  [Tags]  no
+
 
   Set service context to awesome
   Deployment "service_replicas=1": amount is 1
@@ -74,6 +81,8 @@ Proxy returns HTTP 200 OK for GET requests
   ...  socket to retrieve information about the labels of other containers.
   ...  Whenever a SERVICE_PORT label occurs, this container is added to
   ...  the instances used for load balancing.
+  [Tags]  no
+
 
   Set service context to proxy
   Placement: node.role is manager

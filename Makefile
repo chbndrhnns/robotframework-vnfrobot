@@ -98,7 +98,7 @@ app1-iter-4-2: prepare
 app2: prepare
 	(docker stack ps ${APP1_NAME} > /dev/null 2>&1 || docker stack deploy -c ${APP2_DIR}/docker-compose.yml ${APP2_NAME})
 	(VNF_USE_DEPLOYMENT=app2 \
-	${VENV} && ${VARS} ${ROBOT_CMD} -d ${APP2_LOGS} ${APP2_DIR}) || echo true
+	${VENV} && ${VARS} ${ROBOT_CMD} -e 'no' -d ${APP2_LOGS} ${APP2_DIR}) || echo true
 	@docker volume rm -f ${APP2_NAME}_redis_data || echo true
 
 # run unit tests
